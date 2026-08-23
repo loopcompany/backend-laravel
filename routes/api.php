@@ -55,6 +55,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\OrganizationContractController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ShahkarController;
 use App\Http\Middleware\SetLocaleFromApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,9 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     Route::get('/contact/phone', [ContactController::class, 'getPhoneContact'])->name('api.contact.phone');
     Route::get('/pdf-documents', [MainController::class, 'pdf_documents'])->name('api.pdf.documents');
     Route::get('/min-price', [MainController::class, 'min_price'])->name('api.min.price');
+
+    // Shahkar inquiry (mobile <-> national code match) - standalone, usable from any registration/verification flow
+    Route::post('/shahkar/inquiry', [ShahkarController::class, 'inquiry'])->name('api.shahkar.inquiry');
 
     // Authentication routes (no middleware required)
     Route::prefix('auth')->group(function () {

@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\OrganizationContractGallery;
 use App\Models\OrganizationContractRequest;
+use App\Services\AdminPanelNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -66,7 +67,7 @@ class ContractController extends Controller
             ],
         ]);
     }
-    public function submitRequest(Request $request): JsonResponse
+    public function submitRequest(Request $request, AdminPanelNotificationService $adminNotifications): JsonResponse
     {
         $user = $request->user();
         if (!$user || !$user->isOrganization()) {
@@ -86,8 +87,13 @@ class ContractController extends Controller
                 'organization_id' => $user->organization->id,
             ]);
             if ($send_request) {
+                $adminNotifications->sendToAdmins(
+                    'درخواست جدید سازمانی/شرکتی',
+                    'درخواست قرارداد جدید از ' . ($user->organization?->organization_name ?: 'یک سازمان') . ' ثبت شد.'
+                );
+
                 $admin_contact = Contact::where('type', 'sms')->first();
-                if($admin_contact->link){
+                if($admin_contact?->link){
 
                     Helper::send_sms($admin_contact->link, 163936, ['NAME'], [$user->organization?->organization_name]);
                 }
@@ -109,7 +115,7 @@ class ContractController extends Controller
             ], 429);
         }
     }
-    public function submitInformationForRequest(Request $request): JsonResponse
+    public function submitInformationForRequest(Request $request, AdminPanelNotificationService $adminNotifications): JsonResponse
     {
         $user = $request->user();
 
@@ -149,6 +155,11 @@ class ContractController extends Controller
                 ]);
             }
         }
+
+        $adminNotifications->sendToAdmins(
+            'مدارک درخواست سازمانی دریافت شد',
+            'اطلاعات یا مدارک درخواست قرارداد سازمانی شماره ' . $contract_request->id . ' ارسال شد.'
+        );
 
         return response()->json([
             'success' => true,

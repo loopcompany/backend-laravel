@@ -56,6 +56,11 @@ return [
     
     // Organization Templates
     'organization_welcome_template_id' => env('SMSIR_ORGANIZATION_WELCOME_TEMPLATE_ID', 537149),
+
+    // Technician approval templates. Set these to the template IDs created in SMS.ir.
+    // Approved template variables: NAME. Rejected template variables: NAME, REASON.
+    'technician_approved_template_id' => env('SMSIR_TECHNICIAN_APPROVED_TEMPLATE_ID'),
+    'technician_rejected_template_id' => env('SMSIR_TECHNICIAN_REJECTED_TEMPLATE_ID'),
     
     // Product Status Templates
     'product_status_submitted_by_technician_to_user_template_id' => env('SMSIR_PRODUCT_STATUS_SUBMITTED_BY_TECHNICIAN_TO_USER_TEMPLATE_ID', 335842),

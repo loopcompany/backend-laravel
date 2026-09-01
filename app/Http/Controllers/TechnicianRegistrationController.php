@@ -8,11 +8,16 @@ use App\Http\Requests\TechnicianLoginRequest;
 use App\Http\Requests\TechnicianForgotPasswordRequest;
 use App\Services\TechnicianRegistrationService;
 use App\Services\LoginActivityService;
+use App\Services\AdminPanelNotificationService;
 use Illuminate\Http\Request;
 
 class TechnicianRegistrationController extends Controller
 {
-    public function register(TechnicianRegistrationRequest $request, TechnicianRegistrationService $service)
+    public function register(
+        TechnicianRegistrationRequest $request,
+        TechnicianRegistrationService $service,
+        AdminPanelNotificationService $adminNotifications
+    )
     {
 
 
@@ -40,6 +45,11 @@ class TechnicianRegistrationController extends Controller
                 'error_code' => $result['error_code'] ?? 'REGISTRATION_ERROR'
             ], $statusCode);
         }
+
+        $adminNotifications->sendToAdmins(
+            'ثبت‌نام تکنسین جدید',
+            'درخواست ثبت‌نام یک تکنسین جدید برای بررسی در پنل ثبت شد.'
+        );
 
         return response()->json([
             'success' => true,

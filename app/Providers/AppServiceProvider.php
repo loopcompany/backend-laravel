@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\DigitalBusinessCard;
 use App\Models\Order;
 use App\Observers\OrderObserver;
+use App\Observers\TechnicianObserver;
+use App\Observers\OrganizationObserver;
 use App\Models\User;
 use App\Observers\UserObserver;
 use App\Models\Contact;
@@ -31,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(\App\Services\FirebaseNotificationService::class);
+
         $this->app->bind(
             LoopLearnRegisterationRepositoryInterface::class,
             EloquentLoopLearnRegistrationRepository::class
@@ -48,6 +52,8 @@ class AppServiceProvider extends ServiceProvider
 
         // ثبت Observer برای مدل Order
         Order::observe(OrderObserver::class);
+        \App\Models\Technician::observe(TechnicianObserver::class);
+        \App\Models\Organization::observe(OrganizationObserver::class);
 
         // ثبت Observer برای مدل User (تولید خودکار کد کاربر)
         User::observe(UserObserver::class);

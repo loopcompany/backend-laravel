@@ -57,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('admin')
             ->authPasswordBroker('admins')
             ->profile()
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Blue,
                 'gray' => Color::Slate,

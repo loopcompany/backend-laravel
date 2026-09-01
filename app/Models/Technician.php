@@ -206,6 +206,11 @@ class Technician extends Authenticatable
         return $this->hasMany(Chat::class);
     }
 
+    public function firebaseDeviceTokens(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(FirebaseDeviceToken::class, 'tokenable');
+    }
+
     public function tickets(): HasMany
     {
         return $this->hasMany(TechnicianTicket::class);

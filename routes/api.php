@@ -55,6 +55,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\OrganizationContractController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\FirebaseDeviceTokenController;
 use App\Http\Controllers\ShahkarController;
 use App\Http\Middleware\SetLocaleFromApi;
 use Illuminate\Http\Request;
@@ -194,6 +195,12 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
+        // Firebase Cloud Messaging device registration
+        Route::post('/notifications/device-token', [FirebaseDeviceTokenController::class, 'store'])
+            ->name('api.notifications.device-token.store');
+        Route::delete('/notifications/device-token', [FirebaseDeviceTokenController::class, 'destroy'])
+            ->name('api.notifications.device-token.destroy');
+
         // User info
         Route::get('/user', [LoginController::class, 'me'])->name('api.user.me');
 

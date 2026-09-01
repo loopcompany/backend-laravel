@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OrganizationContract;
 use App\Models\OrganizationContractRequest;
+use App\Services\AdminPanelNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -57,7 +58,7 @@ class OrganizationContractController extends Controller
     /**
      * آپلود یا ویرایش قرارداد سازمان
      */
-    public function upload(Request $request): JsonResponse
+    public function upload(Request $request, AdminPanelNotificationService $adminNotifications): JsonResponse
     {
         $user = $request->user();
 
@@ -111,6 +112,11 @@ class OrganizationContractController extends Controller
         $user->organization->update([
             'contract_status' => 'pending'
         ]);
+
+        $adminNotifications->sendToAdmins(
+            'قرارداد سازمانی برای بررسی ارسال شد',
+            'قرارداد امضاشده درخواست شماره ' . $latestContract->id . ' توسط ' . ($user->organization->organization_name ?: 'یک سازمان') . ' بارگذاری شد.'
+        );
 
         return response()->json([
             'success' => true,

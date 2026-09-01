@@ -53,6 +53,12 @@ class OrderObserver
             // ارسال پیامک به کاربر
             if ($order->user && $order->user->phone) {
                 $smsService->sendOrderCancelledByAdminToUser($order->user->phone, $order->id);
+                $this->sendPush(
+                    $order->user,
+                    'لغو سفارش',
+                    'سفارش شما توسط مدیر لغو شد.',
+                    ['type' => 'order_cancelled', 'order_id' => $order->id, 'screen' => 'order-detail']
+                );
 
                 Log::info('پیامک لغو سفارش توسط ادمین به کاربر ارسال شد', [
                     'order_id' => $order->id,
@@ -63,6 +69,12 @@ class OrderObserver
             // ارسال پیامک به تکنسین (در صورت وجود)
             if ($order->technician_id && $order->technician && $order->technician->phone) {
                 $smsService->sendOrderCancelledByAdminToTechnician($order->technician->phone, $order->id);
+                $this->sendPush(
+                    $order->technician,
+                    'لغو سفارش',
+                    'سفارش توسط مدیر لغو شد.',
+                    ['type' => 'order_cancelled', 'order_id' => $order->id, 'screen' => 'order-detail']
+                );
 
                 Log::info('پیامک لغو سفارش توسط ادمین به تکنسین ارسال شد', [
                     'order_id' => $order->id,
@@ -81,6 +93,12 @@ class OrderObserver
             // ارسال پیامک به تکنسین
             if ($order->technician && $order->technician->phone) {
                 $smsService->sendOrderAssignedByAdminToTechnician($order->technician->phone, $order->id);
+                $this->sendPush(
+                    $order->technician,
+                    'سفارش جدید',
+                    'یک سفارش جدید به شما اختصاص داده شد.',
+                    ['type' => 'order_assigned', 'order_id' => $order->id, 'screen' => 'order-detail']
+                );
 
                 Log::info('پیامک اختصاص سفارش به تکنسین ارسال شد', [
                     'order_id' => $order->id,
@@ -123,6 +141,12 @@ class OrderObserver
 
             // ارسال پیامک به کاربر
             $smsService->sendTimeChangeOrDescriptionByTechnicianToUser($order->user->phone, $order->id);
+            $this->sendPush(
+                $order->user,
+                'به‌روزرسانی سفارش',
+                'زمان یا توضیحات سفارش شما تغییر کرد.',
+                ['type' => 'order_updated', 'order_id' => $order->id, 'screen' => 'order-detail']
+            );
 
             Log::info('پیامک تغییر زمان/توضیحات به کاربر ارسال شد', [
                 'order_id' => $order->id,
@@ -152,6 +176,31 @@ class OrderObserver
                 ['createdAt'],
                 [$createdAtJalali]
             );
+
+        }
+
+        $this->sendPush(
+            $user,
+            'ثبت سفارش',
+            'سفارش شما با موفقیت ثبت شد.',
+            ['type' => 'order_created', 'order_id' => $order->id, 'screen' => 'order-detail']
+        );
+    }
+
+    private function sendPush(object $notifiable, string $title, string $body, array $data): void
+    {
+        if (!config('firebase.enabled')) {
+            return;
+        }
+
+        try {
+            \App\Jobs\SendFirebaseNotificationJob::dispatch($notifiable, $title, $body, $data);
+        } catch (\Throwable $exception) {
+            // Push delivery must not roll back an order update/create operation.
+            Log::warning('Firebase push notification could not be sent.', [
+                'title' => $title,
+                'error' => $exception->getMessage(),
+            ]);
         }
     }
 

@@ -74,7 +74,73 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'wallet' => 'integer',
+            'is_special' => 'boolean',
         ];
+    }
+
+    /**
+     * انواع حساب سازمانی (دولتی و نیمه‌دولتی زیرمجموعه‌ی «سازمانی» هستند)
+     */
+    const ORGANIZATION_ACCOUNT_TYPES = ['organization', 'g_organization', 's_g_organization'];
+
+    /**
+     * دسته‌بندی‌های کاربر برای سرچ گروهی/تکی.
+     *
+     * @return array<string, string>
+     */
+    public static function categories(): array
+    {
+        return [
+            'individual_normal' => 'کاربر عادی',
+            'individual_special' => 'کاربر ویژه',
+            'organization_normal' => 'سازمانی عادی',
+            'organization_special' => 'سازمانی ویژه',
+            'company_normal' => 'شرکتی عادی',
+            'company_special' => 'شرکتی ویژه',
+        ];
+    }
+
+    /**
+     * فیلتر بر اساس یک یا چند دسته‌بندی (کلیدهای متد categories()).
+     */
+    public function scopeInCategories($query, string|array $categories)
+    {
+        $categories = array_values(array_filter((array) $categories));
+
+        if (empty($categories)) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($categories) {
+            foreach ($categories as $category) {
+                $outer->orWhere(function ($q) use ($category) {
+                    static::constrainCategory($q, $category);
+                });
+            }
+        });
+    }
+
+    /**
+     * اعمال شرط یک دسته‌بندی مشخص روی کوئری.
+     */
+    protected static function constrainCategory($query, string $category): void
+    {
+        [$type, $level] = array_pad(explode('_', $category, 2), 2, 'normal');
+
+        match ($type) {
+            'individual' => $query->where('account_type', 'individual'),
+            'organization' => $query->whereIn('account_type', self::ORGANIZATION_ACCOUNT_TYPES),
+            'company' => $query->where('account_type', 'company'),
+            default => $query->whereRaw('1 = 0'),
+        };
+
+        if ($level === 'special') {
+            $query->where('is_special', true);
+        } else {
+            $query->where(function ($q) {
+                $q->where('is_special', false)->orWhereNull('is_special');
+            });
+        }
     }
 
     /**

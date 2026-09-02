@@ -467,8 +467,22 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('category')
+                    ->label('دسته‌بندی')
+                    ->multiple()
+                    ->options(User::categories())
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->inCategories($data['values'] ?? []);
+                    }),
+
+                Tables\Filters\TernaryFilter::make('is_special')
+                    ->label('اکانت ویژه')
+                    ->trueLabel('ویژه')
+                    ->falseLabel('عادی'),
+
                 Tables\Filters\SelectFilter::make('account_type')
                     ->label('نوع حساب')
+                    ->multiple()
                     ->options([
                         'individual' => 'فردی',
                         // 'organization' => 'سازمان',

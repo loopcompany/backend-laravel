@@ -376,6 +376,7 @@ class AdminRoleService
                         'name' => $data['name'],
                         'password' => Hash::make($data['password']),
                         'is_active' => true,
+                        'staff_type' => Admin::STAFF_MANAGER,
                     ]
                 );
 

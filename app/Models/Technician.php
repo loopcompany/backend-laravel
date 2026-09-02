@@ -19,6 +19,43 @@ class Technician extends Authenticatable
     const APPROVAL_APPROVED = 'approved';
     const APPROVAL_REJECTED = 'rejected';
 
+    // گروه‌بندی تکنسین (technician_type)
+    const TYPE_FIELD = 'تکنسین میدانی';
+    const TYPE_INTERNAL = 'تکنسین داخلی';
+
+    /**
+     * گروه‌بندی‌های تکنسین برای سرچ گروهی/تکی.
+     *
+     * @return array<string, string>
+     */
+    public static function types(): array
+    {
+        return [
+            self::TYPE_FIELD => 'تکنسین میدانی',
+            self::TYPE_INTERNAL => 'تکنسین داخلی',
+        ];
+    }
+
+    /**
+     * فیلتر بر اساس گروه‌بندی تکنسین (میدانی | داخلی) - تکی یا گروهی.
+     * از LIKE استفاده می‌کند تا مقادیر قدیمی مثل «تکنسین جامع میدانی» هم پوشش داده شوند.
+     */
+    public function scopeOfTypes($query, string|array $types)
+    {
+        $types = array_values(array_filter((array) $types));
+
+        if (empty($types)) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($types) {
+            foreach ($types as $type) {
+                $keyword = str_contains($type, 'داخلی') ? 'داخلی' : 'میدانی';
+                $outer->orWhere('technician_type', 'like', "%{$keyword}%");
+            }
+        });
+    }
+
     protected $fillable = [
         // اطلاعات شخصی (طبق migration)
         'name',

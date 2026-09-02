@@ -242,6 +242,7 @@ class TechnicianResource extends Resource
                         Forms\Components\Tabs\Tab::make('اطلاعات مالی')->schema([
                             Forms\Components\TextInput::make('commission')
                                 ->numeric()
+                                ->default(80)
                                 ->label('سهم تکنسین از هر سفارش به درصد'),
                             Forms\Components\TextInput::make('bank_card_number')
                                 ->maxLength(191)
@@ -434,10 +435,11 @@ class TechnicianResource extends Resource
 
                 Tables\Filters\SelectFilter::make('technician_type')
                     ->label('گروه بندی تکنسین')
-                    ->options([
-                        'تکنسین میدانی' => 'تکنسین میدانی',
-                        'تکنسین داخلی' => 'تکنسین داخلی'
-                    ]),
+                    ->multiple()
+                    ->options(Technician::types())
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->ofTypes($data['values'] ?? []);
+                    }),
             ])
             ->actions([
                 Tables\Actions\Action::make('approve')

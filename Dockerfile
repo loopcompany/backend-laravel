@@ -12,13 +12,16 @@ RUN npm run build
 FROM composer:2 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
+# The composer image lacks ext-gd/intl/bcmath; the runtime stage installs them,
+# so skip the platform check here and only resolve the locked packages.
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
     --no-scripts \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --ignore-platform-reqs
 
 FROM php:8.3-cli-bookworm
 
@@ -61,7 +64,8 @@ RUN chmod +x /usr/local/bin/laravel-entrypoint \
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+# start-period is generous: the first boot runs all migrations before serve listens.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 \
     CMD curl --fail http://127.0.0.1:8000/up || exit 1
 
 ENTRYPOINT ["laravel-entrypoint"]

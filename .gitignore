@@ -1,6 +1,8 @@
 # Environment
 .env
 .env.backup
+compose.override.yaml
+docker-compose.override.yml
 .env.production
 .env.*.local
 auth.json

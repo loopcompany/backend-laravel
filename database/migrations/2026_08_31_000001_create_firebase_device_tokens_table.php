@@ -19,7 +19,8 @@ return new class extends Migration
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
 
-            $table->index(['tokenable_type', 'tokenable_id', 'platform']);
+            // Explicit short name: the auto-generated one exceeds MySQL's 64-char identifier limit.
+            $table->index(['tokenable_type', 'tokenable_id', 'platform'], 'fdt_tokenable_platform_index');
         });
     }
 

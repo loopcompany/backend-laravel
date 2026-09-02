@@ -18,6 +18,11 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
      */
     protected string $guard_name = 'admin';
 
+    // انواع پرسنل (staff_type)
+    const STAFF_OFFICE = 'اداری';
+    const STAFF_FIELD = 'میدانی';
+    const STAFF_MANAGER = 'مدیر';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -26,6 +31,9 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
     protected $fillable = [
         'name',
         'email',
+        'personnel_code',
+        'phone',
+        'staff_type',
         'password',
         'is_active',
         'avatar',
@@ -56,6 +64,20 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     /**
+     * انواع پرسنل قابل انتخاب
+     *
+     * @return array<string, string>
+     */
+    public static function staffTypes(): array
+    {
+        return [
+            self::STAFF_OFFICE => 'کارمند اداری',
+            self::STAFF_FIELD => 'کارمند میدانی',
+            self::STAFF_MANAGER => 'مدیر',
+        ];
+    }
+
+    /**
      * Check if admin has super admin role
      */
     public function isSuperAdmin(): bool
@@ -69,6 +91,14 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * فیلتر بر اساس نوع پرسنل (اداری | میدانی | مدیر) - تکی یا گروهی
+     */
+    public function scopeStaffType($query, string|array $types)
+    {
+        return $query->whereIn('staff_type', (array) $types);
     }
     
     public function canAccessPanel(Panel $panel): bool

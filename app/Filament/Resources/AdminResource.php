@@ -24,11 +24,11 @@ class AdminResource extends Resource
     
     protected static ?string $navigationGroup = 'مدیریت کاربران';
     
-    protected static ?string $navigationLabel = 'ادمین‌ها';
-    
-    protected static ?string $modelLabel = 'مدیر';
-    
-    protected static ?string $pluralModelLabel = 'ادمین‌ها';
+    protected static ?string $navigationLabel = 'کارکنان و مدیران';
+
+    protected static ?string $modelLabel = 'پرسنل';
+
+    protected static ?string $pluralModelLabel = 'کارکنان و مدیران';
 
     // ساده‌ترین کنترل دسترسی
     public static function canViewAny(): bool
@@ -72,6 +72,19 @@ class AdminResource extends Resource
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
+                        Forms\Components\Select::make('staff_type')
+                            ->label('نوع پرسنل')
+                            ->options(Admin::staffTypes())
+                            ->required()
+                            ->native(false),
+                        Forms\Components\TextInput::make('personnel_code')
+                            ->label('شناسه پرسنلی')
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(50),
+                        Forms\Components\TextInput::make('phone')
+                            ->label('شماره تلفن موبایل')
+                            ->tel()
+                            ->maxLength(20),
                         Forms\Components\FileUpload::make('avatar')
                             ->label('تصویر پروفایل')
                             ->image()
@@ -134,10 +147,30 @@ class AdminResource extends Resource
                     ->label('نام')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('personnel_code')
+                    ->label('شناسه پرسنلی')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—'),
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('موبایل')
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('email')
                     ->label('ایمیل')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('staff_type')
+                    ->label('نوع پرسنل')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => Admin::staffTypes()[$state] ?? ($state ?: '—'))
+                    ->colors([
+                        'primary' => Admin::STAFF_OFFICE,
+                        'success' => Admin::STAFF_FIELD,
+                        'danger' => Admin::STAFF_MANAGER,
+                    ]),
                 Tables\Columns\TextColumn::make('roles.name')
                     ->label('سمت‌ها')
                     ->badge()
@@ -160,6 +193,10 @@ class AdminResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('staff_type')
+                    ->label('دسته‌بندی')
+                    ->multiple()
+                    ->options(Admin::staffTypes()),
                 Tables\Filters\SelectFilter::make('roles')
                     ->label('نقش')
                     ->relationship('roles', 'name')

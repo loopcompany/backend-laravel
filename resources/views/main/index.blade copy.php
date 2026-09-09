@@ -575,7 +575,7 @@
                         <span>App Store</span>
                     </div>
                 </a>
-                <a href="https://user-panel.clpiran.com/" class="btnapp" style="background: #04257c">
+                <a href="{{ rtrim(config('app.user_panel_url'), '/') }}" class="btnapp" style="background: #04257c">
                     نسخه وب اپلیکیشن لوپ
                 </a>
                 <a class="btnapp">

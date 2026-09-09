@@ -7,7 +7,7 @@
 <!-- ================= HERO ================= -->
 <section class="hero" id="hero">
   <a
-    href="https://user-panel.clpiran.com/"
+    href="{{ rtrim(config('app.user_panel_url'), '/') }}"
     target="_blank"
     rel="noopener noreferrer"
     aria-label="ورود به پنل کاربری لوپ"

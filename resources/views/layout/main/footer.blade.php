@@ -205,7 +205,7 @@
             <div class="loop-footer-col">
                 <h6>همکاری و راهنما</h6>
                 <ul>
-                    <li><a href="https://tech-panel.clpiran.com/">ثبت‌نام تکنسین لوپ</a></li>
+                    <li><a href="{{ config('app.technician_register_url') }}">ثبت‌نام تکنسین لوپ</a></li>
                     <li><a href="{{ route('loop.learn') }}">کلاس‌های آموزش رایگان</a></li>
                     <li><a href="{{ asset('assets/guid/tech.pdf') }}">راهنمای اپلیکیشن تکنسین</a></li>
                     <li><a href="{{ asset('assets/guid/user.pdf') }}">راهنمای اپلیکیشن کاربر</a></li>

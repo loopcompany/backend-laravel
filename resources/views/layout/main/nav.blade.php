@@ -80,16 +80,16 @@
                              <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
                              <li><a href="{{ route('web.faqs') }}">سوالات متداول</a></li>
                              <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
-                             <li><a href="https://user-panel.clpiran.com" target="_blank">پنل کاربر</a></li>
-                             <li><a href="https://tech-panel.clpiran.com" target="_blank">پنل تکنسین</a></li>
+                             <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
+                             <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل تکنسین</a></li>
                          </ul>
 
                          <!-- منوی استیکی -->
                          <ul class="nav_scroll nav-sticky">
-                             <li><a href="https://user-panel.clpiran.com/grouping" target="_blank">پنل
+                             <li><a href="{{ config('app.user_panel_grouping_url') }}" target="_blank">پنل
                                      سازمانی/شرکتی</a></li>
-                             <li><a href="https://user-panel.clpiran.com" target="_blank">پنل کاربر</a></li>
-                             <li><a href="https://tech-panel.clpiran.com" target="_blank">پنل تکنسین</a></li>
+                             <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
+                             <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل تکنسین</a></li>
                              <li><a href="#contact">راهنما</a>
                                  <ul class="sub-menu">
                                      <li><a href="{{ asset('assets/guid/user.pdf') }}">راهنمای اپلیکیشن کاربر</a></li>
@@ -123,8 +123,8 @@
                      <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
                      <li><a href="{{ route('web.faqs') }}">سوالات متداول</a></li>
                      <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
-                     <li><a href="https://user-panel.clpiran.com/" target="_blank">پنل کاربر</a></li>
-                     <li><a href="https://tech-panel.clpiran.com/folder" target="_blank">پنل متخصص</a></li>
+                     <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
+                     <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل متخصص</a></li>
                  </ul>
              </nav>
          </div>

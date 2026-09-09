@@ -54,6 +54,14 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'user_panel_url' => env('USER_PANEL_URL', 'https://user-panel.clpiran.com'),
+
+    'user_panel_grouping_url' => env('USER_PANEL_GROUPING_URL', 'https://user-panel.clpiran.com/grouping'),
+
+    'technician_panel_url' => env('TECHNICIAN_PANEL_URL', 'https://tech-panel.clpiran.com'),
+
+    'technician_register_url' => env('TECHNICIAN_REGISTER_URL', 'https://tech-panel.clpiran.com/'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

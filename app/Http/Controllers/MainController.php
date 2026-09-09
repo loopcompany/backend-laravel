@@ -48,7 +48,7 @@ class MainController extends Controller
 
         // دریافت اطلاعات تماس برای نمایش در صفحه اصلی (فقط انواع مورد نیاز)
         $contacts = Contact::whereIn('type', ['office', 'email', 'phone'])
-            ->orderByRaw("FIELD(type, 'office', 'email', 'phone')")
+            ->orderByRaw("CASE type WHEN 'office' THEN 1 WHEN 'email' THEN 2 WHEN 'phone' THEN 3 ELSE 4 END")
             ->get();
 
         return view('main.index', compact('leafCategories', 'recentBlogs', 'testimonials', 'contacts'));

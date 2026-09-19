@@ -14,6 +14,11 @@ if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
     chown www-data:www-data "$sqlite_database"
 fi
 
+# The Compose database volume covers the whole database directory. Sync the
+# image's migrations into that volume so upgrades do not hide new migrations.
+mkdir -p database/migrations
+cp -f /opt/laravel-migrations/*.php database/migrations/
+
 if [ -z "${APP_KEY:-}" ] && ! grep -Eq '^APP_KEY=base64:.+' .env; then
     php artisan key:generate --force --no-interaction
 fi

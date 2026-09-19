@@ -53,6 +53,7 @@ class OrderPaymentService
             }
             $pay_type = 'order';
             $discountAmount = 0;
+            $referralDiscountAmount = 0;
 
             if ((($order?->status == 4 && $order?->technician_cancel_reason != 'اعلام حضور / لغو از سوی تکنسین') || ($order?->status == 3 && $order?->arrived_at))) {
 
@@ -72,8 +73,9 @@ class OrderPaymentService
                     $totalBeforeDiscount -= ($order->loop_cost_estimate * $order->prepayment / 100);
                 }
                 $discountAmount = $this->orderRepo->calculateDiscountFromUse($order);
+                $referralDiscountAmount = $order->referralDiscountAmount($totalBeforeDiscount);
 
-                $totalPrice = max(0, $totalBeforeDiscount - $discountAmount);
+                $totalPrice = max(0, $totalBeforeDiscount - $discountAmount - $referralDiscountAmount);
 
                 if ($totalPrice < $min_price?->price) {
                     $totalPrice += 200000;

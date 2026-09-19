@@ -72,16 +72,6 @@ class RegistrationRequest extends FormRequest
                     // Allow unverified emails for re-registration
                 },
             ],
-            'other_referral_code' => [
-                'nullable',
-                'string',
-                'exists:users,referral_code',
-                function ($attribute, $value, $fail) {
-                    if ($value && $this->input('phone') && \App\Models\User::where('referral_code', $value)->where('phone', $this->input('phone'))->exists()) {
-                        $fail(__("You cannot use your own identifier code."));
-                    }
-                },
-            ],
             'province_id' => 'nullable|exists:provinces,id',
             'hashApp' => 'nullable|string',
             'city_id' => 'nullable|exists:cities,id',
@@ -131,8 +121,6 @@ class RegistrationRequest extends FormRequest
             'email.required' => 'The email address is required.',
             'email.email' => 'The email format is invalid.',
             'email.unique' => 'This email has already been registered.',
-
-            'other_referral_code.exists' => 'The entered referral code is invalid.',
 
             'g-recaptcha-response.required' => 'Captcha verification is required.',
             'g-recaptcha-response.captcha' => 'The captcha is incorrect. Please try again.',

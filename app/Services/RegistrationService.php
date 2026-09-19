@@ -37,7 +37,6 @@ class RegistrationService
                     $userData = [
                         'melicode' => $dto->melicode,
                         'email' => $dto->email,
-                        'other_referral_code' => $dto->other_referral_code,
                         'province_id' => $dto->province_id,
                         'city_id' => $dto->city_id,
                         'region_id' => $dto->region_id,
@@ -71,20 +70,15 @@ class RegistrationService
                 } else {
                     // New user - create new record
                     $isUpdate = false;
-                    
-                    // Generate unique referral code
-                    $referralCode = $this->userRepository->generateUniqueReferralCode();
 
                     // Create user data
                     $userData = [
                         'melicode' => $dto->melicode,
                         'phone' => $dto->phone,
                         'email' => $dto->email,
-                        'other_referral_code' => $dto->other_referral_code,
                         'province_id' => $dto->province_id,
                         'city_id' => $dto->city_id,
                         'region_id' => $dto->region_id,
-                        'referral_code' => $referralCode,
                     ];
 
                     // Create user
@@ -94,7 +88,6 @@ class RegistrationService
                         'user_id' => $user->id,
                         'phone' => $dto->phone,
                         'email' => $dto->email,
-                        'referral_code' => $referralCode,
                     ]);
                 }
 
@@ -182,25 +175,6 @@ class RegistrationService
                 'error' => $e->getMessage()
             ];
         }
-    }
-
-    /**
-     * Validate referral code
-     */
-    public function validateReferralCode(?string $referralCode, string $userPhone): bool
-    {
-        if (!$referralCode) {
-            return true; // Optional field
-        }
-
-        $referralUser = $this->userRepository->findByReferralCode($referralCode);
-        
-        if (!$referralUser) {
-            return false;
-        }
-
-        // Check if user is not trying to use their own referral code
-        return $referralUser->phone != $userPhone;
     }
 
     /**

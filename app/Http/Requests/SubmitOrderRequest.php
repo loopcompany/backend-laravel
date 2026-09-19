@@ -27,6 +27,7 @@ class SubmitOrderRequest extends FormRequest
             'male_count' => 'nullable|integer|min:0',
             'unspecified_count' => 'nullable|integer|min:0',
             'discount_code' => 'nullable|string|max:50',
+            'referral_code' => 'nullable|string|max:32',
             'steps' => 'nullable|array',
             'file_paths' => 'nullable|array',
             'platform' => 'required|string',

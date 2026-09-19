@@ -22,6 +22,8 @@ class Order extends Model
         'technician_price',
         'extra_price',
         'discount_price',
+        'referral_code_id',
+        'referral_discount_percent',
         'set_off_at',
         'arrived_at',
         'started_at',
@@ -91,6 +93,7 @@ class Order extends Model
         'service_schedule_long_date' => 'date',
         'service_schedule_short_date' => 'date',
         'emergency_help_at' => 'datetime',
+        'referral_discount_percent' => 'integer',
     ];
 
     protected function casts(): array
@@ -158,6 +161,11 @@ class Order extends Model
     {
         return $this->hasOne(DiscountUse::class);
     }
+
+    public function referralCode(): BelongsTo
+    {
+        return $this->belongsTo(ReferralCode::class);
+    }
     public function user_transaction(): HasOne
     {
         return $this->hasOne(UserTransaction::class);
@@ -190,7 +198,8 @@ class Order extends Model
             $discountFromUse = $this->calculateDiscountFromUse();
 
             // استفاده از بیشترین تخفیف
-            $discount = max($discountFromUse, $this->discount_price ?? 0);
+            $discount = max($discountFromUse, $this->discount_price ?? 0)
+                + $this->referralDiscountAmount($price);
 
             // کسر تخفیف
             if ($discount) {
@@ -214,6 +223,17 @@ class Order extends Model
     /**
      * محاسبه تخفیف از discount_uses
      */
+    public function referralDiscountAmount(?float $totalPrice = null): float
+    {
+        if (!$this->referral_discount_percent) {
+            return 0;
+        }
+
+        $totalPrice ??= ($this->technician_price ?? $this->pakar_price ?? 0) + ($this->extra_price ?? 0);
+
+        return ($totalPrice * $this->referral_discount_percent) / 100;
+    }
+
     protected function calculateDiscountFromUse(): float
     {
         if (!$this->relationLoaded('discountUse')) {

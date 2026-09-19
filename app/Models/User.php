@@ -179,6 +179,11 @@ class User extends Authenticatable
         return $this->hasMany(UserAddress::class);
     }
 
+    public function referralCodes()
+    {
+        return $this->hasMany(ReferralCode::class);
+    }
+
     /**
      * Get user transactions
      */

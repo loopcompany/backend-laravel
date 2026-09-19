@@ -56,6 +56,7 @@ use App\Http\Controllers\OrganizationContractController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\FirebaseDeviceTokenController;
+use App\Http\Controllers\ReferralCodeController;
 use App\Http\Controllers\ShahkarController;
 use App\Http\Middleware\SetLocaleFromApi;
 use Illuminate\Http\Request;
@@ -82,6 +83,11 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
     // Shahkar inquiry (mobile <-> national code match) - standalone, usable from any registration/verification flow
     Route::post('/shahkar/inquiry', [ShahkarController::class, 'inquiry'])->name('api.shahkar.inquiry');
+
+    // Referral code inquiry/consumption for the authenticated mobile user
+    Route::post('/referral-codes/check', [ReferralCodeController::class, 'check'])
+        ->middleware('auth:sanctum')
+        ->name('api.referral-codes.check');
 
     // Authentication routes (no middleware required)
     Route::prefix('auth')->group(function () {

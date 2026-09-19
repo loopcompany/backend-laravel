@@ -112,7 +112,7 @@ class OrderController extends Controller
 
         if (!$result['success']) {
             $statusCode = match ($result['error_code'] ?? '') {
-                'INVALID_DISCOUNT_CODE' => 409,
+                'INVALID_DISCOUNT_CODE', 'INVALID_REFERRAL_CODE' => 409,
                 default => 400
             };
 
@@ -876,6 +876,7 @@ class OrderController extends Controller
                 }
 
                 $discountAmount = 0;
+                $referralDiscountAmount = 0;
 
                 if ($order->discountUse && $order->discountUse->discount_code && $pay_type == 'order') {
                     $discountCode = $order->discountUse->discount_code;
@@ -887,6 +888,10 @@ class OrderController extends Controller
                     }
                 }
 
+                if ($pay_type == 'order') {
+                    $referralDiscountAmount = $order->referralDiscountAmount($totalBeforeDiscount);
+                }
+
                 // به‌روزرسانی وضعیت پرداخت سفارش
                 if ($pay_type == 'prepay') {
                     $order->prepayment_payment_status = 1;
@@ -895,7 +900,7 @@ class OrderController extends Controller
                     $order->payment_status = 1;
                 }
 
-                if ($discountAmount > 0 && $pay_type == 'order') {
+                if (($discountAmount > 0 || $referralDiscountAmount > 0) && $pay_type == 'order') {
                     $order->discount_price = $discountAmount;
                 }
 

@@ -9,6 +9,7 @@ use App\Helpers\Helper;
 use App\Models\DiscountCode;
 use App\Models\Technician;
 use App\Models\Order;
+use App\Models\ReferralCode;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\FacadesLog;
@@ -84,6 +85,21 @@ class OrderService
             $discountCode = $discountResult['discount_code'];
         }
 
+        $referralCode = null;
+        if (!empty($data['referral_code'])) {
+            $referralResult = $this->resolveReferralCode($data['referral_code'], $userId);
+
+            if (!$referralResult['valid']) {
+                return [
+                    'success' => false,
+                    'message' => $referralResult['message'],
+                    'error_code' => 'INVALID_REFERRAL_CODE'
+                ];
+            }
+
+            $referralCode = $referralResult['referral_code'];
+        }
+
         // تنظیم تعداد تکنسین‌ها
         $genderCounts = $this->normalizeGenderCounts(
             $data['female_count'] ?? 0,
@@ -107,6 +123,8 @@ class OrderService
             'female_count' => $genderCounts['female'],
             'male_count' => $genderCounts['male'],
             'unspecified_count' => $genderCounts['unspecified'],
+            'referral_code_id' => $referralCode?->id,
+            'referral_discount_percent' => $referralCode?->discount_percent ?? 0,
         ];
         // اضافه کردن اطلاعات service_schedule (برای سازمان‌ها)
         $serviceScheduleData = $this->extractServiceScheduleFromSteps($data['steps'] ?? []);
@@ -182,6 +200,49 @@ class OrderService
                 'order' => $order
             ]
         ];
+    }
+
+    private function resolveReferralCode(string $code, int $userId): array
+    {
+        $normalizedCode = ReferralCode::normalize($code);
+
+        return DB::transaction(function () use ($normalizedCode, $userId): array {
+            $referralCode = ReferralCode::query()
+                ->whereRaw('UPPER(code) = ?', [$normalizedCode])
+                ->lockForUpdate()
+                ->first();
+
+            if (!$referralCode) {
+                return [
+                    'valid' => false,
+                    'message' => 'کد معرف معتبر نیست.',
+                ];
+            }
+
+            $alreadyUsedByCurrentUser =
+                $referralCode->status === ReferralCode::STATUS_USED
+                && (int) $referralCode->used_by_user_id === $userId;
+
+            if (!in_array($referralCode->status, ReferralCode::usableStatuses(), true) && !$alreadyUsedByCurrentUser) {
+                return [
+                    'valid' => false,
+                    'message' => 'این کد معرف قبلاً استفاده شده است.',
+                ];
+            }
+
+            if (!$alreadyUsedByCurrentUser) {
+                $referralCode->update([
+                    'status' => ReferralCode::STATUS_USED,
+                    'used_by_user_id' => $userId,
+                    'used_at' => now(),
+                ]);
+            }
+
+            return [
+                'valid' => true,
+                'referral_code' => $referralCode,
+            ];
+        });
     }
 
     private function validateDiscountCode(string $code, int $categoryId, int $userId): array

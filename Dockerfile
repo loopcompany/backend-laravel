@@ -53,6 +53,10 @@ RUN apt-get update \
 WORKDIR /var/www/html
 
 COPY . .
+# The database volume mounts over /var/www/html/database at runtime. Keep a
+# copy of migrations outside that mount so new migrations remain available on
+# existing volumes during container startup.
+COPY database/migrations /opt/laravel-migrations
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 COPY docker/supervisord.conf /etc/supervisor/conf.d/laravel.conf

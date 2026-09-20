@@ -27,7 +27,9 @@ FROM php:8.3-cli-bookworm
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
-    LOG_CHANNEL=stderr \
+    LOG_CHANNEL=stderr_json \
+    LOG_LEVEL=info \
+    LOG_REQUESTS=true \
     DB_CONNECTION=sqlite \
     DB_DATABASE=/var/www/html/database/database.sqlite \
     SESSION_DRIVER=database \

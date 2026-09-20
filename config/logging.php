@@ -1,7 +1,9 @@
 <?php
 
 use Monolog\Handler\NullHandler;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
@@ -35,6 +37,9 @@ return [
         'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
         'trace' => env('LOG_DEPRECATIONS_TRACE', false),
     ],
+
+    'request_id_header' => env('LOG_REQUEST_ID_HEADER', 'X-Request-ID'),
+    'log_requests' => env('LOG_REQUESTS', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -71,6 +76,66 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
+        ],
+
+        'stderr_json' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => StreamHandler::class,
+            'handler_with' => ['stream' => 'php://stderr'],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => ['appendNewline' => true],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'app' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => ['filename' => storage_path('logs/app.json.log'), 'maxFiles' => (int) env('LOG_DAILY_DAYS', 14)],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => ['appendNewline' => true],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'security' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => ['filename' => storage_path('logs/security.json.log'), 'maxFiles' => (int) env('LOG_DAILY_DAYS', 14)],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => ['appendNewline' => true],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'payments' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => ['filename' => storage_path('logs/payments.json.log'), 'maxFiles' => (int) env('LOG_DAILY_DAYS', 14)],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => ['appendNewline' => true],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'firebase' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => ['filename' => storage_path('logs/firebase.json.log'), 'maxFiles' => (int) env('LOG_DAILY_DAYS', 14)],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => ['appendNewline' => true],
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'engagement' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'info'),
+            'handler' => RotatingFileHandler::class,
+            'handler_with' => ['filename' => storage_path('logs/engagement.json.log'), 'maxFiles' => (int) env('LOG_DAILY_DAYS', 14)],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => ['appendNewline' => true],
+            'processors' => [PsrLogMessageProcessor::class],
         ],
 
         'slack' => [

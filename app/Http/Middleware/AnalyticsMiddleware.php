@@ -3,9 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Models\Analytics;
+use App\Models\EngagementEvent;
+use App\Support\ProjectLogger;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class AnalyticsMiddleware
@@ -19,18 +20,33 @@ class AnalyticsMiddleware
     {
         $response = $next($request);
 
-        // فقط برای درخواست‌های GET ثبت کنیم
+        // فقط برای صفحات عمومی/پنل کاربر ثبت کنیم؛ پنل ادمین و API جدا هستند.
         if ($request->isMethod('GET') && !$request->ajax()) {
-            // عدم ثبت برای admin panel و API
-            if (!$request->is('admin/*') && !$request->is('api/*')) {
+            // پنل ادمین از engagement عمومی جداست؛ دانلودهای API هم باید ثبت شوند.
+            if (!$request->is('admin/*')) {
                 try {
-                    Analytics::recordVisit(
-                        $request->userAgent(),
-                        $request->headers->get('referer')
-                    );
+                    $contentDisposition = (string) $response->headers->get('Content-Disposition');
+                    $isDownload = str_contains(strtolower($contentDisposition), 'attachment');
+
+                    if ($isDownload) {
+                        EngagementEvent::recordFromRequest(EngagementEvent::DOWNLOAD, $request, [
+                            'content_type' => $response->headers->get('Content-Type'),
+                            'filename' => $contentDisposition,
+                        ]);
+                    } elseif (!$request->is('api/*') && str_contains(strtolower((string) $response->headers->get('Content-Type')), 'text/html')) {
+                        Analytics::recordVisit(
+                            $request->userAgent(),
+                            $request->headers->get('referer')
+                        );
+
+                        EngagementEvent::recordFromRequest(EngagementEvent::PAGE_VIEW, $request);
+                    }
                 } catch (\Exception $e) {
                     // در صورت خطا، analytics را نادیده می‌گیریم
-                    Log::warning('Analytics recording failed: ' . $e->getMessage());
+                    ProjectLogger::write(ProjectLogger::ENGAGEMENT, 'warning', 'analytics.recording.failed', [
+                        'exception' => $e::class,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
         }

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\LoginActivity;
+use App\Support\ProjectLogger;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -20,7 +21,7 @@ class LoginActivityRepository
             return LoginActivity::create($data);
         } catch (\Exception $e) {
             // Log error but don't throw - logging should never break authentication
-            \Log::error('Failed to create login activity', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'login.activity.create.failed', [
                 'data' => $data,
                 'error' => $e->getMessage()
             ]);
@@ -94,7 +95,7 @@ class LoginActivityRepository
             $date = now()->subDays($daysToKeep);
             return LoginActivity::where('created_at', '<', $date)->delete();
         } catch (\Exception $e) {
-            \Log::error('Failed to delete old login activities', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'login.activities.delete_old.failed', [
                 'error' => $e->getMessage()
             ]);
             return 0;

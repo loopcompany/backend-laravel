@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\WalletRepository;
-use Illuminate\Support\Facades\Log;
+use App\Support\ProjectLogger;
 use Illuminate\Support\Facades\DB;
 
 class WalletService
@@ -38,7 +38,7 @@ class WalletService
                 'linking_url' => $linkingUrl,
             ]);
 
-            Log::info('درخواست شارژ کیف پول ثبت شد', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'info', 'wallet.charge.initiated', [
                 'user_id' => $userId,
                 'amount' => $amount,
                 'transaction_id' => $transaction->id
@@ -53,7 +53,7 @@ class WalletService
             ];
 
         } catch (\Exception $e) {
-            Log::error('خطا در شروع فرآیند شارژ کیف پول', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'error', 'wallet.charge.initiate.failed', [
                 'user_id' => $userId,
                 'amount' => $amount,
                 'error' => $e->getMessage()
@@ -80,7 +80,7 @@ class WalletService
 
             if (!$pendingTransaction || $pendingTransaction->user_id != $userId) {
                 DB::rollBack();
-                Log::warning('تراکنش pending یافت نشد برای تکمیل', [
+                ProjectLogger::write(ProjectLogger::PAYMENTS, 'warning', 'wallet.charge.pending_transaction_missing', [
                     'user_id' => $userId,
                     'amount' => $amount,
                     'reference_id' => $referenceId
@@ -122,7 +122,7 @@ class WalletService
 
             DB::commit();
 
-            Log::info('شارژ کیف پول موفق', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'info', 'wallet.charge.completed', [
                 'user_id' => $userId,
                 'amount' => $amount,
                 'reference_id' => $referenceId,
@@ -142,7 +142,7 @@ class WalletService
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('خطا در تکمیل شارژ کیف پول', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'error', 'wallet.charge.complete.failed', [
                 'user_id' => $userId,
                 'amount' => $amount,
                 'error' => $e->getMessage()
@@ -173,7 +173,7 @@ class WalletService
                     $referenceId
                 );
 
-                Log::warning('شارژ کیف پول ناموفق', [
+                ProjectLogger::write(ProjectLogger::PAYMENTS, 'warning', 'wallet.charge.failed', [
                     'user_id' => $userId,
                     'amount' => $amount,
                     'reference_id' => $referenceId,
@@ -191,7 +191,7 @@ class WalletService
                     'linking_url' => $linkingUrl,
                 ]);
 
-                Log::warning('شارژ کیف پول ناموفق (تراکنش جدید)', [
+                ProjectLogger::write(ProjectLogger::PAYMENTS, 'warning', 'wallet.charge.failed.new_transaction', [
                     'user_id' => $userId,
                     'amount' => $amount,
                     'reference_id' => $referenceId,
@@ -206,7 +206,7 @@ class WalletService
             ];
 
         } catch (\Exception $e) {
-            Log::error('خطا در ثبت تراکنش ناموفق', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'error', 'wallet.charge.failure_record.failed', [
                 'user_id' => $userId,
                 'amount' => $amount,
                 'error' => $e->getMessage()
@@ -244,7 +244,7 @@ class WalletService
             ];
 
         } catch (\Exception $e) {
-            Log::error('خطا در دریافت موجودی کیف پول', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'error', 'wallet.balance.retrieve.failed', [
                 'user_id' => $userId,
                 'error' => $e->getMessage()
             ]);
@@ -280,7 +280,7 @@ class WalletService
             ];
 
         } catch (\Exception $e) {
-            Log::error('خطا در دریافت تاریخچه تراکنش‌ها', [
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'error', 'wallet.transactions.retrieve.failed', [
                 'user_id' => $userId,
                 'error' => $e->getMessage()
             ]);

@@ -8,13 +8,15 @@ use App\Http\Requests\TechnicianPhoneVerificationRequest;
 use App\Http\Requests\TechnicianLoginRequest;
 use App\Http\Requests\TechnicianForgotPasswordRequest;
 use App\Services\TechnicianRegistrationService;
+use App\Services\LoginActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WebTechnicianAuthController extends Controller
 {
     public function __construct(
-        protected TechnicianRegistrationService $service
+        protected TechnicianRegistrationService $service,
+        protected LoginActivityService $loginActivityService
     ) {}
 
     // ========== Registration Views & Actions ==========
@@ -112,6 +114,7 @@ class WebTechnicianAuthController extends Controller
         
         if ($technician) {
             Auth::guard('technician')->login($technician, $request->filled('remember'));
+            $this->loginActivityService->logLogin('technician', (int) $technician->id, $request);
         }
         
         return redirect()
@@ -121,7 +124,11 @@ class WebTechnicianAuthController extends Controller
 
     public function logout(Request $request)
     {
+        $technician = Auth::guard('technician')->user();
         Auth::guard('technician')->logout();
+        if ($technician) {
+            $this->loginActivityService->logLogout('technician', (int) $technician->id, $request);
+        }
         
         $request->session()->invalidate();
         $request->session()->regenerateToken();

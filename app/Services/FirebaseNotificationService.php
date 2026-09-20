@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Models\FirebaseDeviceToken;
+use App\Support\ProjectLogger;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class FirebaseNotificationService
@@ -56,6 +56,9 @@ class FirebaseNotificationService
         $tokens = array_values(array_unique(array_filter(is_array($tokens) ? $tokens : iterator_to_array($tokens))));
 
         if ($tokens === []) {
+            ProjectLogger::write(ProjectLogger::FIREBASE, 'notice', 'notification.skipped.no_devices', [
+                'notifiable_type' => isset($notifiable) ? $notifiable::class : null,
+            ]);
             return ['sent' => 0, 'failed' => 0, 'removed' => 0];
         }
 
@@ -80,12 +83,18 @@ class FirebaseNotificationService
                 $removed += FirebaseDeviceToken::where('token_hash', hash('sha256', $token))->delete();
             }
 
-            Log::warning('Firebase notification delivery failed.', [
+            ProjectLogger::write(ProjectLogger::FIREBASE, 'warning', 'notification.delivery.failed', [
                 'status' => $response->status(),
                 'token_hash' => hash('sha256', $token),
                 'response' => $response->json(),
             ]);
         }
+
+        ProjectLogger::write(ProjectLogger::FIREBASE, $failed > 0 ? 'warning' : 'info', 'notification.delivery.completed', [
+            'sent' => $sent,
+            'failed' => $failed,
+            'removed' => $removed,
+        ]);
 
         return compact('sent', 'failed', 'removed');
     }

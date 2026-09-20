@@ -15,6 +15,7 @@ use App\Services\RegistrationService;
 use App\Services\ForgotPasswordService;
 use App\Services\PhoneVerificationService;
 use App\Services\SmsService;
+use App\Services\LoginActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,7 +26,8 @@ class WebAuthController extends Controller
         protected RegistrationService $registrationService,
         protected ForgotPasswordService $forgotPasswordService,
         protected PhoneVerificationService $verificationService,
-        protected SmsService $smsService
+        protected SmsService $smsService,
+        protected LoginActivityService $loginActivityService
     ) {}
 
     /**
@@ -51,6 +53,9 @@ class WebAuthController extends Controller
                 // برای وب سایت از session استفاده می‌کنیم نه API token
                 $user = \App\Models\User::where('phone', $dto->phone)->first();
                 Auth::login($user);
+                if ($user) {
+                    $this->loginActivityService->logLogin('user', (int) $user->id, $request);
+                }
                 
                 return redirect()->intended(route('web.dashboard'))->with('success', $result['message']);
             }
@@ -106,7 +111,11 @@ class WebAuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
         Auth::logout();
+        if ($user) {
+            $this->loginActivityService->logLogout('user', (int) $user->id, $request);
+        }
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -142,6 +151,7 @@ class WebAuthController extends Controller
                 // کاربر را وارد سیستم کن
                 $user = $result['user'];
                 Auth::login($user);
+                $this->loginActivityService->logLogin('user', (int) $user->id, $request);
                 
                 return redirect()->route('web.dashboard')
                     ->with('success', 'شماره موبایل تایید شد. ثبت‌نام شما با موفقیت تکمیل شد!');
@@ -238,6 +248,7 @@ class WebAuthController extends Controller
                 // کاربر را وارد سیستم کن
                 $user = $result['user'];
                 Auth::login($user);
+                $this->loginActivityService->logLogin('user', (int) $user->id, $request);
                 
                 return redirect()->route('web.dashboard')
                     ->with('success', 'کد تایید شد. شما با موفقیت وارد شدید.');

@@ -6,7 +6,7 @@ use App\Models\Technician;
 use App\Models\User;
 use App\Repositories\LoginActivityRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Support\ProjectLogger;
 
 class LoginActivityService
 {
@@ -48,7 +48,7 @@ class LoginActivityService
             $result = $this->repository->create($data);
 
             if ($result) {
-                Log::info('Login activity logged', [
+                ProjectLogger::write(ProjectLogger::SECURITY, 'info', 'login.activity.logged', [
                     'user_type' => $userType,
                     'user_id' => $userId,
                     'ip' => $request->ip()
@@ -60,11 +60,11 @@ class LoginActivityService
 
         } catch (\Exception $e) {
             // CRITICAL: Never throw - just log the error
-            Log::error('Failed to log login activity', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'login.activity.failed', [
                 'user_type' => $userType,
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'exception' => $e::class,
             ]);
             return false;
         }
@@ -104,7 +104,7 @@ class LoginActivityService
                 $tech->save();
             }
             if ($result) {
-                Log::info('Logout activity logged', [
+                ProjectLogger::write(ProjectLogger::SECURITY, 'info', 'logout.activity.logged', [
                     'user_type' => $userType,
                     'user_id' => $userId,
                     'action' => $action,
@@ -117,12 +117,12 @@ class LoginActivityService
 
         } catch (\Exception $e) {
             // CRITICAL: Never throw - just log the error
-            Log::error('Failed to log logout activity', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'logout.activity.failed', [
                 'user_type' => $userType,
                 'user_id' => $userId,
                 'action' => $action,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'exception' => $e::class,
             ]);
             return false;
         }
@@ -155,7 +155,7 @@ class LoginActivityService
             ];
 
         } catch (\Exception $e) {
-            Log::error('Failed to retrieve user activities', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'login.activities.retrieve.failed', [
                 'user_type' => $userType,
                 'user_id' => $userId,
                 'error' => $e->getMessage()
@@ -187,7 +187,7 @@ class LoginActivityService
             ];
 
         } catch (\Exception $e) {
-            Log::error('Failed to retrieve all activities', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'login.activities.retrieve_all.failed', [
                 'error' => $e->getMessage()
             ]);
 
@@ -241,7 +241,7 @@ class LoginActivityService
             ];
 
         } catch (\Exception $e) {
-            Log::error('Failed to cleanup old activities', [
+            ProjectLogger::write(ProjectLogger::SECURITY, 'error', 'login.activities.cleanup.failed', [
                 'error' => $e->getMessage()
             ]);
 

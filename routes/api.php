@@ -57,6 +57,7 @@ use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\FirebaseDeviceTokenController;
 use App\Http\Controllers\ReferralCodeController;
+use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\ShahkarController;
 use App\Http\Middleware\SetLocaleFromApi;
 use Illuminate\Http\Request;
@@ -89,6 +90,11 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     Route::post('/referral-codes/check', [ReferralCodeController::class, 'check'])
         ->middleware('auth:sanctum')
         ->name('api.referral-codes.check');
+
+    // Admin-created promo code inquiry. It is checked here and consumed on order submission.
+    Route::post('/promo-codes/check', [PromoCodeController::class, 'check'])
+        ->middleware('auth:sanctum')
+        ->name('api.promo-codes.check');
 
     // Authentication routes (no middleware required)
     Route::prefix('auth')->group(function () {

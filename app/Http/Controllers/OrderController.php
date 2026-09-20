@@ -112,7 +112,7 @@ class OrderController extends Controller
 
         if (!$result['success']) {
             $statusCode = match ($result['error_code'] ?? '') {
-                'INVALID_DISCOUNT_CODE', 'INVALID_REFERRAL_CODE' => 409,
+                'INVALID_DISCOUNT_CODE', 'INVALID_REFERRAL_CODE', 'INVALID_PROMO_CODE' => 409,
                 default => 400
             };
 
@@ -876,6 +876,7 @@ class OrderController extends Controller
                 }
 
                 $discountAmount = 0;
+                $promoDiscountAmount = 0;
                 $referralDiscountAmount = 0;
 
                 if ($order->discountUse && $order->discountUse->discount_code && $pay_type == 'order') {
@@ -889,6 +890,8 @@ class OrderController extends Controller
                 }
 
                 if ($pay_type == 'order') {
+                    $promoDiscountAmount = $order->promoDiscountAmount($totalBeforeDiscount);
+                    $discountAmount += $promoDiscountAmount;
                     $referralDiscountAmount = $order->referralDiscountAmount($totalBeforeDiscount);
                 }
 
@@ -902,6 +905,11 @@ class OrderController extends Controller
 
                 if (($discountAmount > 0 || $referralDiscountAmount > 0) && $pay_type == 'order') {
                     $order->discount_price = $discountAmount;
+                }
+
+                if ($order->promoCodeUsage && $promoDiscountAmount > 0) {
+                    $order->promoCodeUsage->discount_amount = $promoDiscountAmount;
+                    $order->promoCodeUsage->save();
                 }
 
                 $order->save();

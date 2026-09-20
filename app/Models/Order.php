@@ -24,6 +24,8 @@ class Order extends Model
         'discount_price',
         'referral_code_id',
         'referral_discount_percent',
+        'promo_code_id',
+        'promo_discount_percent',
         'set_off_at',
         'arrived_at',
         'started_at',
@@ -94,6 +96,7 @@ class Order extends Model
         'service_schedule_short_date' => 'date',
         'emergency_help_at' => 'datetime',
         'referral_discount_percent' => 'integer',
+        'promo_discount_percent' => 'integer',
     ];
 
     protected function casts(): array
@@ -166,6 +169,16 @@ class Order extends Model
     {
         return $this->belongsTo(ReferralCode::class);
     }
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
+    }
+
+    public function promoCodeUsage(): HasOne
+    {
+        return $this->hasOne(PromoCodeUsage::class);
+    }
     public function user_transaction(): HasOne
     {
         return $this->hasOne(UserTransaction::class);
@@ -198,7 +211,13 @@ class Order extends Model
             $discountFromUse = $this->calculateDiscountFromUse();
 
             // استفاده از بیشترین تخفیف
+            $storedPromoDiscount = $this->promoCodeUsage?->discount_amount;
+            $promoDiscount = $storedPromoDiscount === null
+                ? $this->promoDiscountAmount($price)
+                : 0;
+
             $discount = max($discountFromUse, $this->discount_price ?? 0)
+                + $promoDiscount
                 + $this->referralDiscountAmount($price);
 
             // کسر تخفیف
@@ -232,6 +251,24 @@ class Order extends Model
         $totalPrice ??= ($this->technician_price ?? $this->pakar_price ?? 0) + ($this->extra_price ?? 0);
 
         return ($totalPrice * $this->referral_discount_percent) / 100;
+    }
+
+    public function promoDiscountAmount(?float $totalPrice = null): float
+    {
+        if (!$this->promo_discount_percent) {
+            return 0;
+        }
+
+        // After payment, keep using the exact amount that was recorded at payment time.
+        // This prevents recalculating the promo discount on top of discount_price.
+        $storedAmount = $this->promoCodeUsage?->discount_amount;
+        if ($storedAmount !== null) {
+            return (float) $storedAmount;
+        }
+
+        $totalPrice ??= ($this->technician_price ?? $this->pakar_price ?? 0) + ($this->extra_price ?? 0);
+
+        return ($totalPrice * $this->promo_discount_percent) / 100;
     }
 
     protected function calculateDiscountFromUse(): float

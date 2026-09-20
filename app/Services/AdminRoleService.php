@@ -105,6 +105,12 @@ class AdminRoleService
                 'edit-clubs' => 'ویرایش باشگاه‌ها',
                 'delete-clubs' => 'حذف باشگاه‌ها',
 
+                // مجوزهای مدیریت کدهای تخفیف جدید
+                'view-promo-codes' => 'مشاهده کدهای تخفیف جدید',
+                'create-promo-codes' => 'ایجاد کدهای تخفیف جدید',
+                'edit-promo-codes' => 'ویرایش کدهای تخفیف جدید',
+                'delete-promo-codes' => 'حذف کدهای تخفیف جدید',
+
                 // مجوزهای مدیریت خدمات اضافی (قطعات و هزینه‌ها)
                 'view-extra-services' => 'مشاهده قطعات و هزینه‌ها',
                 'create-extra-services' => 'ایجاد قطعه و هزینه',

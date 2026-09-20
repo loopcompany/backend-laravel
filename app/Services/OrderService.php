@@ -10,6 +10,8 @@ use App\Models\DiscountCode;
 use App\Models\Technician;
 use App\Models\Order;
 use App\Models\ReferralCode;
+use App\Models\PromoCode;
+use App\Models\PromoCodeUsage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\FacadesLog;
@@ -53,6 +55,11 @@ class OrderService
     }
 
     public function submitOrder(array $data, int $userId): array
+    {
+        return DB::transaction(fn () => $this->submitOrderInTransaction($data, $userId));
+    }
+
+    private function submitOrderInTransaction(array $data, int $userId): array
     {
         // لاگ کامل داده‌های ورودی از اپ
         Log::info('=== ORDER SUBMISSION - Raw Input Data ===', [
@@ -100,6 +107,21 @@ class OrderService
             $referralCode = $referralResult['referral_code'];
         }
 
+        $promoCode = null;
+        if (!empty($data['promo_code'])) {
+            $promoResult = $this->resolvePromoCode($data['promo_code'], $userId);
+
+            if (!$promoResult['valid']) {
+                return [
+                    'success' => false,
+                    'message' => $promoResult['message'],
+                    'error_code' => 'INVALID_PROMO_CODE',
+                ];
+            }
+
+            $promoCode = $promoResult['promo_code'];
+        }
+
         // تنظیم تعداد تکنسین‌ها
         $genderCounts = $this->normalizeGenderCounts(
             $data['female_count'] ?? 0,
@@ -125,6 +147,8 @@ class OrderService
             'unspecified_count' => $genderCounts['unspecified'],
             'referral_code_id' => $referralCode?->id,
             'referral_discount_percent' => $referralCode?->discount_percent ?? 0,
+            'promo_code_id' => $promoCode?->id,
+            'promo_discount_percent' => $promoCode?->discount_percent ?? 0,
         ];
         // اضافه کردن اطلاعات service_schedule (برای سازمان‌ها)
         $serviceScheduleData = $this->extractServiceScheduleFromSteps($data['steps'] ?? []);
@@ -189,6 +213,10 @@ class OrderService
             $this->applyDiscountCode($order->id, $discountCode);
         }
 
+        if ($promoCode) {
+            $this->applyPromoCode($order->id, $promoCode, $userId);
+        }
+
         // ارسال پیامک تأیید سفارش
         $this->sendOrderConfirmationSms($order, $data['user']);
 
@@ -243,6 +271,48 @@ class OrderService
                 'referral_code' => $referralCode,
             ];
         });
+    }
+
+    private function resolvePromoCode(string $code, int $userId): array
+    {
+        $normalizedCode = PromoCode::normalize($code);
+        $promoCode = PromoCode::query()
+            ->whereRaw('UPPER(code) = ?', [$normalizedCode])
+            ->lockForUpdate()
+            ->first();
+
+        if (!$promoCode) {
+            return [
+                'valid' => false,
+                'message' => 'کد تخفیف معتبر نیست.',
+            ];
+        }
+
+        if (!$promoCode->is_active) {
+            return [
+                'valid' => false,
+                'message' => 'این کد تخفیف غیرفعال است.',
+            ];
+        }
+
+        if ($promoCode->expires_at && $promoCode->expires_at->isPast()) {
+            return [
+                'valid' => false,
+                'message' => 'مهلت استفاده از این کد تخفیف تمام شده است.',
+            ];
+        }
+
+        if ($promoCode->usages()->where('user_id', $userId)->exists()) {
+            return [
+                'valid' => false,
+                'message' => 'این کاربر قبلاً از این کد تخفیف استفاده کرده است.',
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'promo_code' => $promoCode,
+        ];
     }
 
     private function validateDiscountCode(string $code, int $categoryId, int $userId): array
@@ -334,6 +404,66 @@ class OrderService
 
         $discountCode->count -= 1;
         $discountCode->save();
+    }
+
+    private function applyPromoCode(int $orderId, PromoCode $promoCode, int $userId): void
+    {
+        PromoCodeUsage::create([
+            'promo_code_id' => $promoCode->id,
+            'user_id' => $userId,
+            'order_id' => $orderId,
+            'used_at' => now(),
+        ]);
+    }
+
+    public function checkPromoCode(string $code, int $userId): array
+    {
+        $normalizedCode = PromoCode::normalize($code);
+        $promoCode = PromoCode::query()
+            ->whereRaw('UPPER(code) = ?', [$normalizedCode])
+            ->first();
+
+        if (!$promoCode) {
+            return [
+                'success' => false,
+                'message' => 'کد تخفیف معتبر نیست.',
+                'error_code' => 'PROMO_CODE_NOT_FOUND',
+            ];
+        }
+
+        if (!$promoCode->is_active) {
+            return [
+                'success' => false,
+                'message' => 'این کد تخفیف غیرفعال است.',
+                'error_code' => 'PROMO_CODE_INACTIVE',
+            ];
+        }
+
+        if ($promoCode->expires_at && $promoCode->expires_at->isPast()) {
+            return [
+                'success' => false,
+                'message' => 'مهلت استفاده از این کد تخفیف تمام شده است.',
+                'error_code' => 'PROMO_CODE_EXPIRED',
+            ];
+        }
+
+        if ($promoCode->usages()->where('user_id', $userId)->exists()) {
+            return [
+                'success' => false,
+                'message' => 'این کاربر قبلاً از این کد تخفیف استفاده کرده است.',
+                'error_code' => 'PROMO_CODE_ALREADY_USED',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'کد تخفیف معتبر است.',
+            'data' => [
+                'code' => $promoCode->code,
+                'discount_percent' => (int) $promoCode->discount_percent,
+                'expires_at' => $promoCode->expires_at?->toISOString(),
+            ],
+        ];
     }
 
     private function sendOrderConfirmationSms(object $order, object $user): void

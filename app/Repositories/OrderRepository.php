@@ -429,7 +429,13 @@ class OrderRepository
         $discountFromUse = $this->calculateDiscountFromUse($order);
 
         // اگر تخفیف از discount_use بیشتر از discount_price بود، از آن استفاده می‌کنیم
+        $storedPromoDiscount = $order->promoCodeUsage?->discount_amount;
+        $promoDiscount = $storedPromoDiscount === null
+            ? $order->promoDiscountAmount($basePrice + $extraPrice)
+            : 0;
+
         $discount = max($discountFromUse, $order->discount_price ?? 0)
+            + $promoDiscount
             + $order->referralDiscountAmount($basePrice + $extraPrice);
 
         return max(0, $basePrice + $extraPrice - $discount);

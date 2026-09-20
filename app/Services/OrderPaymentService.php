@@ -53,6 +53,7 @@ class OrderPaymentService
             }
             $pay_type = 'order';
             $discountAmount = 0;
+            $promoDiscountAmount = 0;
             $referralDiscountAmount = 0;
 
             if ((($order?->status == 4 && $order?->technician_cancel_reason != 'اعلام حضور / لغو از سوی تکنسین') || ($order?->status == 3 && $order?->arrived_at))) {
@@ -73,8 +74,10 @@ class OrderPaymentService
                     $totalBeforeDiscount -= ($order->loop_cost_estimate * $order->prepayment / 100);
                 }
                 $discountAmount = $this->orderRepo->calculateDiscountFromUse($order);
+                $promoDiscountAmount = $order->promoDiscountAmount($totalBeforeDiscount);
                 $referralDiscountAmount = $order->referralDiscountAmount($totalBeforeDiscount);
 
+                $discountAmount += $promoDiscountAmount;
                 $totalPrice = max(0, $totalBeforeDiscount - $discountAmount - $referralDiscountAmount);
 
                 if ($totalPrice < $min_price?->price) {
@@ -123,6 +126,10 @@ class OrderPaymentService
             if ($discountAmount > 0) {
                 $order->discount_price = $discountAmount;
                 $order->save();
+            }
+
+            if ($order->promoCodeUsage && $promoDiscountAmount > 0) {
+                $order->promoCodeUsage->update(['discount_amount' => $promoDiscountAmount]);
             }
 
             DB::commit();

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Region extends Model
 {
@@ -17,6 +18,7 @@ class Region extends Model
         'title',
         'latitude',
         'longitude',
+        'boundary',
         'is_show',
     ];
 
@@ -32,6 +34,22 @@ class Region extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
+    }
+
+    /**
+     * The service areas this district has been selected for.
+     */
+    public function mapRadii(): BelongsToMany
+    {
+        return $this->belongsToMany(MapRadius::class, 'map_radius_region')->withTimestamps();
+    }
+
+    /**
+     * The border polygon as a decoded GeoJSON geometry, or null when unmapped.
+     */
+    public function geometry(): ?array
+    {
+        return $this->boundary ? json_decode($this->boundary, true) : null;
     }
     public function orders()
     {

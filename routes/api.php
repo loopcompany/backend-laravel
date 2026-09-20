@@ -74,6 +74,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         Route::get('/search', [LocationController::class, 'search'])->name('api.locations.search');
         Route::get('/details', [LocationController::class, 'getLocationDetails'])->name('api.locations.details');
         Route::get('/radii', [LocationController::class, 'getMapRadii'])->name('api.locations.radii');
+        Route::get('/coverage', [LocationController::class, 'checkCoverage'])->name('api.locations.coverage');
     });
 
     // Contact routes (public - no auth required)

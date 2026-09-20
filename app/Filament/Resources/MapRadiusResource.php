@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\MapRadiusResource\Pages;
 use App\Filament\Resources\MapRadiusResource\RelationManagers;
 use App\Models\MapRadius;
-use App\Forms\Components\MapPicker;
+use App\Forms\Components\DistrictPicker;
 use App\Traits\HasFilamentPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -22,11 +22,11 @@ class MapRadiusResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-map';
 
-    protected static ?string $modelLabel = 'شعاع نقشه';
+    protected static ?string $modelLabel = 'محدوده سرویس';
 
-    protected static ?string $pluralModelLabel = 'شعاع نقشه';
+    protected static ?string $pluralModelLabel = 'محدوده سرویس';
 
-    protected static ?string $navigationLabel = 'شعاع نقشه';
+    protected static ?string $navigationLabel = 'محدوده سرویس';
 
     public static function canCreate(): bool
     {
@@ -55,24 +55,14 @@ class MapRadiusResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('radius')
-                    ->label('شعاع (متر)')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0)
-                    ->step(1)
-                    ->suffix('متر')
-                    ->lazy(),
-                MapPicker::make('map')
-                    ->label('موقعیت مکانی')
+                DistrictPicker::make('regions')
+                    ->label('مناطق تحت پوشش')
+                    ->helperText('مناطقی که سرویس در آن‌ها ارائه می‌شود را روی نقشه انتخاب کنید.')
                     ->columnSpanFull()
+                    ->rule('array')
+                    // Filled by EditMapRadius::mutateFormDataBeforeFill() and written
+                    // back by its afterSave(); the selection lives on a pivot table.
                     ->dehydrated(false),
-                Forms\Components\Hidden::make('latitude')
-                    ->required()
-                    ->default(35.6892),
-                Forms\Components\Hidden::make('longitude')
-                    ->required()
-                    ->default(51.3890),
             ]);
     }
 
@@ -80,16 +70,16 @@ class MapRadiusResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('radius')
-                    ->label('شعاع')
-                    ->suffix(' متر')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('latitude')
-                    ->label('عرض جغرافیایی')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('longitude')
-                    ->label('طول جغرافیایی')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('regions_count')
+                    ->label('تعداد مناطق')
+                    ->counts('regions')
+                    ->badge(),
+                Tables\Columns\TextColumn::make('regions.title')
+                    ->label('مناطق تحت پوشش')
+                    ->badge()
+                    ->limitList(5)
+                    ->expandableLimitedList()
+                    ->placeholder('انتخاب نشده'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('آخرین بروزرسانی')
                     ->dateTime('Y/m/d H:i')

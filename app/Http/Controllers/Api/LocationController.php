@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Province;
 use App\Models\City;
 use App\Models\Region;
+use App\Services\DistrictLocator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -320,20 +321,92 @@ class LocationController extends Controller
     }
 
 
-    public function getMapRadii(): JsonResponse
+    /**
+     * محدوده سرویس: مناطقی که سرویس در آن‌ها ارائه می‌شود
+     *
+     * The service area is now a set of districts rather than a circle. The
+     * radius/latitude/longitude keys are still returned, unchanged, so app
+     * builds released before this change keep working.
+     */
+    public function getMapRadii(Request $request): JsonResponse
     {
         try {
-            $radii = \App\Models\MapRadius::first();
+            $area = \App\Models\MapRadius::with('regions')->first();
+
+            $withGeometry = $request->boolean('with_geometry');
+
+            $regions = $area
+                ? $area->regions->map(fn ($region) => array_filter([
+                    'id' => $region->id,
+                    'city_id' => $region->city_id,
+                    'code' => $region->code,
+                    'title' => $region->title,
+                    'latitude' => $region->latitude,
+                    'longitude' => $region->longitude,
+                    'geometry' => $withGeometry ? $region->geometry() : null,
+                ], fn ($v) => $v !== null))->values()
+                : collect();
 
             return response()->json([
                 'success' => true,
-                'message' => 'لیست شعاع‌های نقشه با موفقیت دریافت شد.',
-                'data' => $radii
+                'message' => 'محدوده سرویس با موفقیت دریافت شد.',
+                'data' => [
+                    // legacy keys - kept for already-published app builds
+                    'id' => $area?->id,
+                    'radius' => $area?->radius,
+                    'latitude' => $area?->latitude,
+                    'longitude' => $area?->longitude,
+
+                    'mode' => 'districts',
+                    'regions' => $regions,
+                    'region_ids' => $regions->pluck('id')->values(),
+                ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'خطا در دریافت لیست شعاع‌های نقشه',
+                'message' => 'خطا در دریافت محدوده سرویس',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * بررسی اینکه یک مختصات داخل محدوده سرویس هست یا نه
+     */
+    public function checkCoverage(Request $request, DistrictLocator $locator): JsonResponse
+    {
+        $validated = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        try {
+            $latitude = (float) $validated['latitude'];
+            $longitude = (float) $validated['longitude'];
+
+            $district = $locator->locate($latitude, $longitude);
+            $covered = $district !== null
+                && in_array($district['id'], $locator->serviceAreaRegionIds(), true);
+
+            return response()->json([
+                'success' => true,
+                'message' => $covered
+                    ? 'این موقعیت در محدوده سرویس قرار دارد.'
+                    : 'این موقعیت خارج از محدوده سرویس است.',
+                'data' => [
+                    'covered' => $covered,
+                    'region' => $district ? [
+                        'id' => $district['id'],
+                        'code' => $district['code'],
+                        'title' => $district['title'],
+                    ] : null,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'خطا در بررسی محدوده سرویس',
                 'error' => $e->getMessage()
             ], 500);
         }

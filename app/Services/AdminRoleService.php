@@ -31,8 +31,8 @@ class AdminRoleService
                 'edit-categories' => 'ویرایش دسته بندی',
                 'delete-categories' => 'حذف دسته بندی',
 
-                'view-map' => 'مشاهده شعاع نقشه',
-                'edit-map' => 'ویرایش شعاع نقشه',
+                'view-map' => 'مشاهده محدوده سرویس (مناطق)',
+                'edit-map' => 'ویرایش محدوده سرویس (مناطق)',
                 // مجوزهای جزئی برای مقالات
                 'view-blogs' => 'مشاهده مقالات',
                 'create-blogs' => 'ایجاد مقاله',

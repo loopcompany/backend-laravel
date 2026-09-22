@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\MapRadius;
 use App\Models\Province;
 use App\Models\Region;
+use App\Models\ServiceZone;
 use Illuminate\Database\Seeder;
 
 /**
@@ -68,6 +69,8 @@ class TehranDistrictSeeder extends Seeder
 
         $this->command?->info("Tehran districts: {$created} created, {$updated} updated (city id {$city->id}).");
 
+        $this->seedZones($city);
+
         // The admin panel edits a single pre-existing service-area row and has no
         // create action, so make sure one exists.
         if (! MapRadius::query()->exists()) {
@@ -78,6 +81,41 @@ class TehranDistrictSeeder extends Seeder
             ]);
             $this->command?->info('Created the empty service-area record.');
         }
+    }
+
+    /**
+     * Districts only partly in the service area are split into zones, built by
+     * database/data/build-tehran-district-zones.py. Matched on code, so re-runs
+     * update the polygons without breaking the admin's selection.
+     */
+    private function seedZones(City $city): void
+    {
+        $path = database_path('data/tehran-district-zones.geojson');
+
+        if (! is_file($path)) {
+            return;
+        }
+
+        $geojson = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+
+        foreach ($geojson['features'] as $feature) {
+            $props = $feature['properties'];
+            $region = Region::where('city_id', $city->id)
+                ->where('code', str_pad((string) $props['district'], 2, '0', STR_PAD_LEFT))
+                ->first();
+
+            if (! $region) {
+                continue;
+            }
+
+            ServiceZone::updateOrCreate(['code' => $props['code']], [
+                'region_id' => $region->id,
+                'title' => $props['title'],
+                'boundary' => json_encode($feature['geometry'], JSON_UNESCAPED_UNICODE),
+            ]);
+        }
+
+        $this->command?->info('Service zones: ' . count($geojson['features']) . ' loaded.');
     }
 
     private function toPersianDigits(int $number): string

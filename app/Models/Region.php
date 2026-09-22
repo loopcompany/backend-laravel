@@ -45,6 +45,15 @@ class Region extends Model
     }
 
     /**
+     * The parts this district is split into when only some of it is in the
+     * service area. Empty for a district that is selected whole.
+     */
+    public function zones(): HasMany
+    {
+        return $this->hasMany(ServiceZone::class);
+    }
+
+    /**
      * The border polygon as a decoded GeoJSON geometry, or null when unmapped.
      */
     public function geometry(): ?array

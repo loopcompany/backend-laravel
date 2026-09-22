@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MapRadius;
 use App\Models\Region;
+use App\Models\ServiceZone;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Cache;
 class DistrictLocator
 {
     private const CACHE_KEY = 'districts.with_boundary';
+    private const ZONES_CACHE_KEY = 'districts.zones';
     private const CACHE_TTL = 3600;
 
     /**
@@ -26,6 +28,10 @@ class DistrictLocator
      * polygon set back out of the cache store, which dwarfs the actual maths.
      */
     private ?Collection $districts = null;
+
+    private ?Collection $zones = null;
+
+    private ?MapRadius $serviceArea = null;
 
     /**
      * All regions that have a border polygon, as lightweight arrays.
@@ -51,9 +57,30 @@ class DistrictLocator
         });
     }
 
+    /**
+     * Zones of the districts that are split, keyed by region id.
+     */
+    public function zones(): Collection
+    {
+        return $this->zones ??= Cache::remember(self::ZONES_CACHE_KEY, self::CACHE_TTL, function () {
+            return ServiceZone::query()
+                ->get(['id', 'region_id', 'code', 'title', 'boundary'])
+                ->map(fn (ServiceZone $z) => [
+                    'id' => $z->id,
+                    'region_id' => $z->region_id,
+                    'code' => $z->code,
+                    'title' => $z->title,
+                    'geometry' => $geometry = json_decode($z->boundary, true),
+                    'bbox' => $this->boundingBox($geometry),
+                ])
+                ->groupBy('region_id');
+        });
+    }
+
     public static function flushCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        Cache::forget(self::ZONES_CACHE_KEY);
     }
 
     /**
@@ -61,17 +88,31 @@ class DistrictLocator
      */
     public function locate(float $latitude, float $longitude): ?array
     {
-        foreach ($this->districts() as $district) {
+        return $this->firstContaining($this->districts(), $latitude, $longitude);
+    }
+
+    /**
+     * The zone of a split district containing the point, or null if the
+     * district is not split (or the point is not in it).
+     */
+    public function locateZone(array $district, float $latitude, float $longitude): ?array
+    {
+        return $this->firstContaining($this->zones()->get($district['id'], collect()), $latitude, $longitude);
+    }
+
+    private function firstContaining(iterable $shapes, float $latitude, float $longitude): ?array
+    {
+        foreach ($shapes as $shape) {
             // Cheap rejection first: only ~1 of 22 bounding boxes can match.
-            [$minLng, $minLat, $maxLng, $maxLat] = $district['bbox'];
+            [$minLng, $minLat, $maxLng, $maxLat] = $shape['bbox'];
 
             if ($longitude < $minLng || $longitude > $maxLng
                 || $latitude < $minLat || $latitude > $maxLat) {
                 continue;
             }
 
-            if ($this->geometryContains($district['geometry'], $latitude, $longitude)) {
-                return $district;
+            if ($this->geometryContains($shape['geometry'], $latitude, $longitude)) {
+                return $shape;
             }
         }
 
@@ -85,20 +126,63 @@ class DistrictLocator
      */
     public function serviceAreaRegionIds(): array
     {
-        $area = MapRadius::with('regions:id')->first();
-
-        return $area ? $area->regions->pluck('id')->all() : [];
+        return $this->serviceArea()?->regions->pluck('id')->all() ?? [];
     }
 
     /**
-     * Is the point inside one of the districts the admin selected?
+     * Zone ids (parts of split districts) that are in the service area.
+     *
+     * @return array<int>
      */
-    public function isCovered(float $latitude, float $longitude): bool
+    public function serviceAreaZoneIds(): array
+    {
+        return $this->serviceArea()?->zones->pluck('id')->all() ?? [];
+    }
+
+    private function serviceArea(): ?MapRadius
+    {
+        return $this->serviceArea ??= MapRadius::with(['regions:id', 'zones:id'])->oldest('id')->first();
+    }
+
+    /**
+     * Where the point is and whether it is served.
+     *
+     * A district that is split into zones is served zone by zone; any other
+     * district is served when it is selected whole.
+     *
+     * @return array{covered: bool, region: ?array, zone: ?array}
+     */
+    public function coverage(float $latitude, float $longitude): array
     {
         $district = $this->locate($latitude, $longitude);
 
-        return $district !== null
-            && in_array($district['id'], $this->serviceAreaRegionIds(), true);
+        if ($district === null) {
+            return ['covered' => false, 'region' => null, 'zone' => null];
+        }
+
+        if ($this->zones()->has($district['id'])) {
+            $zone = $this->locateZone($district, $latitude, $longitude);
+
+            return [
+                'covered' => $zone !== null && in_array($zone['id'], $this->serviceAreaZoneIds(), true),
+                'region' => $district,
+                'zone' => $zone,
+            ];
+        }
+
+        return [
+            'covered' => in_array($district['id'], $this->serviceAreaRegionIds(), true),
+            'region' => $district,
+            'zone' => null,
+        ];
+    }
+
+    /**
+     * Is the point inside the area the admin selected?
+     */
+    public function isCovered(float $latitude, float $longitude): bool
+    {
+        return $this->coverage($latitude, $longitude)['covered'];
     }
 
     /**

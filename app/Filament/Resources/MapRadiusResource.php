@@ -26,7 +26,20 @@ class MapRadiusResource extends Resource
 
     protected static ?string $pluralModelLabel = 'محدوده سرویس';
 
-    protected static ?string $navigationLabel = 'محدوده سرویس';
+    protected static ?string $navigationLabel = 'محدوده سرویس (مناطق)';
+
+    protected static ?string $navigationGroup = 'مدیریت مکان';
+
+    protected static ?int $navigationSort = 4;
+
+    /**
+     * There is only ever one service area, so the sidebar opens its map directly
+     * instead of a one-row list the admin has to click through.
+     */
+    public static function getNavigationUrl(): string
+    {
+        return static::getUrl('edit', ['record' => MapRadius::current()]);
+    }
 
     public static function canCreate(): bool
     {
@@ -57,7 +70,7 @@ class MapRadiusResource extends Resource
             ->schema([
                 DistrictPicker::make('regions')
                     ->label('مناطق تحت پوشش')
-                    ->helperText('مناطقی که سرویس در آن‌ها ارائه می‌شود را روی نقشه انتخاب کنید.')
+                    ->helperText('مناطقی که سرویس در آن‌ها ارائه می‌شود را روی نقشه انتخاب کنید. مناطق ۲۱ و ۲۲ به دو بخش شرق و غرب تقسیم شده‌اند و هر بخش جداگانه انتخاب می‌شود.')
                     ->columnSpanFull()
                     ->rule('array')
                     // Filled by EditMapRadius::mutateFormDataBeforeFill() and written

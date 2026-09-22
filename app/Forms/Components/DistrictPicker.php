@@ -9,8 +9,10 @@ use Filament\Forms\Components\Field;
  * Map field for picking the districts (مناطق) that make up the service area.
  *
  * The map draws every region that has a border polygon; clicking one toggles it.
- * State is the selected region ids, which the resource saves onto the
- * map_radius_region pivot.
+ * A district that is split into zones (ServiceZone) is drawn as its zones, each
+ * toggled on its own. State is a list of keys, "r:{region id}" for a whole
+ * district and "z:{zone id}" for a zone, which EditMapRadius writes onto the
+ * map_radius_region and map_radius_service_zone pivots.
  */
 class DistrictPicker extends Field
 {
@@ -25,6 +27,34 @@ class DistrictPicker extends Field
         return $this;
     }
 
+    public static function regionKey(int $id): string
+    {
+        return "r:{$id}";
+    }
+
+    public static function zoneKey(int $id): string
+    {
+        return "z:{$id}";
+    }
+
+    /**
+     * Split state keys back into region ids and zone ids.
+     *
+     * @return array{regions: array<int>, zones: array<int>}
+     */
+    public static function parseKeys(array $keys): array
+    {
+        $ids = ['regions' => [], 'zones' => []];
+
+        foreach (array_unique($keys) as $key) {
+            if (preg_match('/^([rz]):(\d+)$/', (string) $key, $m)) {
+                $ids[$m[1] === 'r' ? 'regions' : 'zones'][] = (int) $m[2];
+            }
+        }
+
+        return $ids;
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,17 +62,16 @@ class DistrictPicker extends Field
         $this->default([]);
 
         $this->afterStateHydrated(function (DistrictPicker $component, $state) {
-            // Normalise whatever the relation handed us into a list of ints.
-            $component->state(collect($state ?? [])->map(fn ($v) => (int) $v)->values()->all());
+            $component->state(collect($state ?? [])->map(fn ($v) => (string) $v)->values()->all());
         });
 
         $this->dehydrateStateUsing(
-            fn ($state) => collect($state ?? [])->map(fn ($v) => (int) $v)->unique()->values()->all()
+            fn ($state) => collect($state ?? [])->map(fn ($v) => (string) $v)->unique()->values()->all()
         );
     }
 
     /**
-     * The districts to draw, as plain arrays for the view.
+     * The areas to draw, as plain arrays for the view.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -52,14 +81,21 @@ class DistrictPicker extends Field
             ->whereNotNull('boundary')
             ->where('is_show', 1)
             ->when($this->cityId, fn ($q) => $q->where('city_id', $this->cityId))
+            ->with('zones')
             ->orderByRaw('CAST(code AS UNSIGNED)')
             ->get(['id', 'code', 'title', 'latitude', 'longitude', 'boundary'])
-            ->map(fn (Region $r) => [
-                'id' => $r->id,
-                'code' => $r->code,
-                'title' => $r->title,
-                'geometry' => json_decode($r->boundary, true),
-            ])
+            ->flatMap(fn (Region $r) => $r->zones->isEmpty()
+                ? [[
+                    'key' => self::regionKey($r->id),
+                    'title' => $r->title,
+                    'geometry' => json_decode($r->boundary, true),
+                ]]
+                : $r->zones->sortBy('code')->map(fn ($z) => [
+                    'key' => self::zoneKey($z->id),
+                    'title' => $z->title,
+                    'geometry' => $z->geometry(),
+                ])->values()->all())
+            ->values()
             ->all();
     }
 }

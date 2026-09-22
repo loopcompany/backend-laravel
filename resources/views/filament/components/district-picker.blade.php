@@ -65,17 +65,17 @@
                     فهرست مناطق
                 </div>
                 <div class="max-h-[470px] overflow-y-auto p-1">
-                    <template x-for="d in districts" :key="d.id">
+                    <template x-for="d in districts" :key="d.key">
                         <label
                             class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-white/5"
-                            x-on:mouseenter="highlight(d.id, true)"
-                            x-on:mouseleave="highlight(d.id, false)"
+                            x-on:mouseenter="highlight(d.key, true)"
+                            x-on:mouseleave="highlight(d.key, false)"
                         >
                             <input
                                 type="checkbox"
                                 class="fi-checkbox-input rounded border-gray-300 text-primary-600 focus:ring-primary-600 dark:border-white/20 dark:bg-white/5"
-                                :checked="selected.includes(d.id)"
-                                x-on:change="toggle(d.id)"
+                                :checked="selected.includes(d.key)"
+                                x-on:change="toggle(d.key)"
                             />
                             <span class="text-gray-700 dark:text-gray-200" x-text="d.title"></span>
                         </label>
@@ -87,7 +87,7 @@
         @if (empty($districts))
             <p class="mt-3 text-sm text-danger-600 dark:text-danger-400">
                 هیچ منطقه‌ای با مرز ثبت‌شده در پایگاه داده وجود ندارد.
-                ابتدا دستور <code>php artisan db:seed --class=TehranDistrictSeeder</code> را اجرا کنید.
+                ابتدا دستور <code>php artisan migrate</code> (یا <code>php artisan db:seed --class=TehranDistrictSeeder</code>) را اجرا کنید.
             </p>
         @endif
     </div>
@@ -129,14 +129,15 @@
 
                     this.districts.forEach((d) => {
                         const layer = L.geoJSON(d.geometry, {
-                            style: this.styleFor(d.id, false),
+                            style: this.styleFor(d.key, false),
                         });
 
-                        layer.on('click', () => this.toggle(d.id));
-                        layer.on('mouseover', () => this.highlight(d.id, true));
-                        layer.on('mouseout', () => this.highlight(d.id, false));
+                        layer.bindTooltip(d.title, { sticky: true, direction: 'top' });
+                        layer.on('click', () => this.toggle(d.key));
+                        layer.on('mouseover', () => this.highlight(d.key, true));
+                        layer.on('mouseout', () => this.highlight(d.key, false));
 
-                        this.layers[d.id] = layer;
+                        this.layers[d.key] = layer;
                         layer.addTo(group);
                     });
 
@@ -156,8 +157,8 @@
                     this.$watch('state', () => this.restyleAll());
                 },
 
-                styleFor(id, hovered) {
-                    const on = this.selected.includes(id);
+                styleFor(key, hovered) {
+                    const on = this.selected.includes(key);
 
                     return {
                         color: on ? '#047857' : '#6b7280',
@@ -168,26 +169,26 @@
                 },
 
                 restyleAll() {
-                    Object.entries(this.layers).forEach(([id, layer]) => {
-                        layer.setStyle(this.styleFor(Number(id), false));
+                    Object.entries(this.layers).forEach(([key, layer]) => {
+                        layer.setStyle(this.styleFor(key, false));
                     });
                 },
 
-                highlight(id, on) {
-                    this.layers[id]?.setStyle(this.styleFor(id, on));
+                highlight(key, on) {
+                    this.layers[key]?.setStyle(this.styleFor(key, on));
                 },
 
-                toggle(id) {
-                    const next = this.selected.includes(id)
-                        ? this.selected.filter((x) => x !== id)
-                        : [...this.selected, id];
+                toggle(key) {
+                    const next = this.selected.includes(key)
+                        ? this.selected.filter((x) => x !== key)
+                        : [...this.selected, key];
 
                     // Replace the array rather than mutating it, so Livewire sees the change.
                     this.state = next;
                 },
 
                 selectAll() {
-                    this.state = this.districts.map((d) => d.id);
+                    this.state = this.districts.map((d) => d.key);
                 },
 
                 clearAll() {

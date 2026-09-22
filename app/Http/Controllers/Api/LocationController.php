@@ -327,11 +327,15 @@ class LocationController extends Controller
      * The service area is now a set of districts rather than a circle. The
      * radius/latitude/longitude keys are still returned, unchanged, so app
      * builds released before this change keep working.
+     *
+     * `regions` are districts served whole. A district split into zones is
+     * never listed there; its served parts are in `zones`. To test a point,
+     * prefer /coverage over checking these lists on the device.
      */
     public function getMapRadii(Request $request): JsonResponse
     {
         try {
-            $area = \App\Models\MapRadius::with('regions')->first();
+            $area = \App\Models\MapRadius::with(['regions', 'zones'])->oldest('id')->first();
 
             $withGeometry = $request->boolean('with_geometry');
 
@@ -344,6 +348,17 @@ class LocationController extends Controller
                     'latitude' => $region->latitude,
                     'longitude' => $region->longitude,
                     'geometry' => $withGeometry ? $region->geometry() : null,
+                ], fn ($v) => $v !== null))->values()
+                : collect();
+
+            // Parts of districts that are only partly served (e.g. west of 21/22).
+            $zones = $area
+                ? $area->zones->map(fn ($zone) => array_filter([
+                    'id' => $zone->id,
+                    'region_id' => $zone->region_id,
+                    'code' => $zone->code,
+                    'title' => $zone->title,
+                    'geometry' => $withGeometry ? $zone->geometry() : null,
                 ], fn ($v) => $v !== null))->values()
                 : collect();
 
@@ -360,6 +375,8 @@ class LocationController extends Controller
                     'mode' => 'districts',
                     'regions' => $regions,
                     'region_ids' => $regions->pluck('id')->values(),
+                    'zones' => $zones,
+                    'zone_ids' => $zones->pluck('id')->values(),
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -385,9 +402,8 @@ class LocationController extends Controller
             $latitude = (float) $validated['latitude'];
             $longitude = (float) $validated['longitude'];
 
-            $district = $locator->locate($latitude, $longitude);
-            $covered = $district !== null
-                && in_array($district['id'], $locator->serviceAreaRegionIds(), true);
+            ['covered' => $covered, 'region' => $district, 'zone' => $zone]
+                = $locator->coverage($latitude, $longitude);
 
             return response()->json([
                 'success' => true,
@@ -400,6 +416,12 @@ class LocationController extends Controller
                         'id' => $district['id'],
                         'code' => $district['code'],
                         'title' => $district['title'],
+                    ] : null,
+                    // set when the district is split and only part of it is served
+                    'zone' => $zone ? [
+                        'id' => $zone['id'],
+                        'code' => $zone['code'],
+                        'title' => $zone['title'],
                     ] : null,
                 ]
             ], 200);

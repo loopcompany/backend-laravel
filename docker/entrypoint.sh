@@ -19,6 +19,13 @@ fi
 mkdir -p database/migrations
 cp -f /opt/laravel-migrations/*.php database/migrations/
 
+# The Compose database volume covers the whole database directory, so the
+# district migration's seeder and GeoJSON inputs must also be synced into it.
+mkdir -p database/seeders database/data
+cp -f /opt/laravel-seeders/TehranDistrictSeeder.php database/seeders/
+cp -f /opt/laravel-data/tehran-districts.geojson database/data/
+cp -f /opt/laravel-data/tehran-district-zones.geojson database/data/
+
 if [ -z "${APP_KEY:-}" ] && ! grep -Eq '^APP_KEY=base64:.+' .env; then
     php artisan key:generate --force --no-interaction
 fi

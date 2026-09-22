@@ -59,6 +59,11 @@ COPY . .
 # copy of migrations outside that mount so new migrations remain available on
 # existing volumes during container startup.
 COPY database/migrations /opt/laravel-migrations
+# The same volume also hides seeders and GeoJSON files required by the Tehran
+# district migration. Keep the deploy-time inputs outside the mounted volume.
+COPY database/seeders/TehranDistrictSeeder.php /opt/laravel-seeders/TehranDistrictSeeder.php
+COPY database/data/tehran-districts.geojson /opt/laravel-data/tehran-districts.geojson
+COPY database/data/tehran-district-zones.geojson /opt/laravel-data/tehran-district-zones.geojson
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 COPY docker/supervisord.conf /etc/supervisor/conf.d/laravel.conf

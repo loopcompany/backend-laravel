@@ -500,7 +500,7 @@
     >
       <div class="academy-banner-fade"></div>
     </div>
-    
+
   </div>
 </section>
 
@@ -508,9 +508,9 @@
 
 <!-- ================= APPS ================= -->
 @php
-  $existingMockupImage = asset('assets/new-style/mockup.png');
-  $existingMockupImage2 = asset('assets/new-style/mockup2.png');
-  $existingMockupImage3 = asset('assets/new-style/mockup3.png');
+  $existingMockupImage = asset('assets/new-style/mockup1-1.png');
+  $existingMockupImage2 = asset('assets/new-style/mockup22-2.png');
+  $existingMockupImage3 = asset('assets/new-style/mockup3-3.png');
   $applications = [
     [
       'gold' => 'LOOP',

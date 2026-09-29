@@ -16,15 +16,7 @@
                     </select>
                 </label>
 
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">از تاریخ</span>
-                    <input wire:model="from" type="date" class="fi-input mt-2 block w-full rounded-lg border-gray-300 dark:border-white/10 dark:bg-white/5">
-                </label>
-
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">تا تاریخ</span>
-                    <input wire:model="until" type="date" class="fi-input mt-2 block w-full rounded-lg border-gray-300 dark:border-white/10 dark:bg-white/5">
-                </label>
+                <div class="md:col-span-2">{{ $this->form }}</div>
 
                 <div class="flex items-end">
                     <button type="submit" wire:loading.attr="disabled" class="fi-btn fi-btn-color-primary w-full justify-center">
@@ -35,8 +27,8 @@
             </form>
 
             @error('report') <p class="mt-2 text-sm text-danger-600">{{ $message }}</p> @enderror
-            @error('from') <p class="mt-2 text-sm text-danger-600">{{ $message }}</p> @enderror
-            @error('until') <p class="mt-2 text-sm text-danger-600">{{ $message }}</p> @enderror
+            @error('dateRange.from') <p class="mt-2 text-sm text-danger-600">{{ $message }}</p> @enderror
+            @error('dateRange.until') <p class="mt-2 text-sm text-danger-600">{{ $message }}</p> @enderror
         </div>
 
         <div class="grid gap-4 md:grid-cols-3">

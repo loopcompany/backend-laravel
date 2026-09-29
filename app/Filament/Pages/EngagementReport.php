@@ -7,23 +7,41 @@ use App\Models\EngagementEvent;
 use App\Models\LoginActivity;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Pages\Page;
 
-class EngagementReport extends Page
+class EngagementReport extends Page implements HasForms
 {
+    use InteractsWithForms;
+
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
     protected static ?string $navigationGroup = 'گزارشات و آمار';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationLabel = 'تعامل و بازدید کاربران';
     protected static string $view = 'filament.pages.engagement-report';
 
-    public string $from;
-    public string $until;
+    public ?array $dateRange = [];
 
     public function mount(): void
     {
-        $this->from = now()->subDays(30)->toDateString();
-        $this->until = now()->toDateString();
+        $this->form->fill([
+            'from' => now()->subDays(30)->toDateString(),
+            'until' => now()->toDateString(),
+        ]);
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                DatePicker::make('from')->label('از تاریخ')->jalali()->required(),
+                DatePicker::make('until')->label('تا تاریخ')->jalali()->required(),
+            ])
+            ->columns(2)
+            ->statePath('dateRange');
     }
 
     public static function canAccess(): bool
@@ -44,8 +62,8 @@ class EngagementReport extends Page
     public function refreshReport(): void
     {
         $this->validate([
-            'from' => ['required', 'date'],
-            'until' => ['required', 'date', 'after_or_equal:from'],
+            'dateRange.from' => ['required', 'date'],
+            'dateRange.until' => ['required', 'date', 'after_or_equal:dateRange.from'],
         ]);
     }
 
@@ -146,8 +164,8 @@ class EngagementReport extends Page
     private function range(): array
     {
         return [
-            Carbon::parse($this->from)->startOfDay(),
-            Carbon::parse($this->until)->endOfDay(),
+            Carbon::parse($this->dateRange['from'])->startOfDay(),
+            Carbon::parse($this->dateRange['until'])->endOfDay(),
         ];
     }
 }

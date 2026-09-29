@@ -3,11 +3,17 @@
 namespace App\Filament\Pages;
 
 use App\Services\BusinessExportService;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Illuminate\Validation\Rule;
 
-class BusinessExports extends Page
+class BusinessExports extends Page implements HasForms
 {
+    use InteractsWithForms;
+
     protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
     protected static ?string $navigationGroup = 'گزارش‌های بیزنسی';
     protected static ?int $navigationSort = 1;
@@ -15,8 +21,23 @@ class BusinessExports extends Page
     protected static string $view = 'filament.pages.business-exports';
 
     public string $report = 'orders';
-    public ?string $from = null;
-    public ?string $until = null;
+    public ?array $dateRange = [];
+
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                DatePicker::make('from')->label('از تاریخ')->jalali(),
+                DatePicker::make('until')->label('تا تاریخ')->jalali(),
+            ])
+            ->columns(2)
+            ->statePath('dateRange');
+    }
 
     public static function canAccess(): bool
     {
@@ -42,10 +63,12 @@ class BusinessExports extends Page
     {
         $this->validate([
             'report' => ['required', Rule::in(array_keys(BusinessExportService::reports()))],
-            'from' => ['nullable', 'date'],
-            'until' => ['nullable', 'date', 'after_or_equal:from'],
+            'dateRange.from' => ['nullable', 'date'],
+            'dateRange.until' => ['nullable', 'date', 'after_or_equal:dateRange.from'],
         ]);
 
-        return app(BusinessExportService::class)->download($this->report, $this->from, $this->until);
+        $dates = $this->form->getState();
+
+        return app(BusinessExportService::class)->download($this->report, $dates['from'] ?? null, $dates['until'] ?? null);
     }
 }

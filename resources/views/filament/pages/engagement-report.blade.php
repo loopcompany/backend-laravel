@@ -10,14 +10,7 @@
                 </div>
 
                 <form wire:submit="refreshReport" class="flex flex-wrap items-end gap-3">
-                    <label>
-                        <span class="block text-xs text-gray-500">از تاریخ</span>
-                        <input wire:model.defer="from" type="date" class="fi-input mt-1 rounded-lg border-gray-300 dark:border-white/10 dark:bg-white/5">
-                    </label>
-                    <label>
-                        <span class="block text-xs text-gray-500">تا تاریخ</span>
-                        <input wire:model.defer="until" type="date" class="fi-input mt-1 rounded-lg border-gray-300 dark:border-white/10 dark:bg-white/5">
-                    </label>
+                    <div>{{ $this->form }}</div>
                     <button type="submit" class="fi-btn fi-btn-color-primary">اعمال بازه</button>
                 </form>
             </div>

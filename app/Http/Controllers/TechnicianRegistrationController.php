@@ -151,7 +151,8 @@ class TechnicianRegistrationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $result['message'],
-                'error_code' => $result['error_code'] ?? 'LOGIN_ERROR'
+                'error_code' => $result['error_code'] ?? 'LOGIN_ERROR',
+                ...isset($result['restriction']) ? ['restriction' => $result['restriction']] : [],
             ], $statusCode);
         }
 
@@ -265,10 +266,8 @@ class TechnicianRegistrationController extends Controller
             // بررسی دسترسی تکنسین
             if (!$technician->has_access) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'دسترسی تکنسین مسدود شده است.',
+                    ...\App\Support\TechnicianRestriction::error($technician),
                     'valid' => false,
-                    'error_code' => 'ACCESS_DENIED'
                 ], 403);
             }
 

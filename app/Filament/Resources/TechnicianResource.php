@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TechnicianResource\Pages;
 use App\Filament\Resources\TechnicianResource\RelationManagers;
 use App\Models\Technician;
+use App\Support\TechnicianRestriction;
 use App\Models\Expertise;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,7 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Get;
 class TechnicianResource extends Resource
@@ -328,12 +329,14 @@ class TechnicianResource extends Resource
                                         ->label('علت بستن دسترسی')
                                         ->required(fn(Forms\Get $get): bool => $get('has_access') == false)
                                         ->visible(fn(Forms\Get $get): bool => $get('has_access') == false)
-                                        ->options([
-                                            'امتیازات و نظرات منفی زیادی نسبت به قبل دارید.' => 'امتیازات و نظرات منفی زیادی نسبت به قبل دارید.',
-                                            'موارد منفی انضباطی زیادی دارید.' => 'موارد منفی انضباطی زیادی دارید.',
-                                            'مهارت کمتری دارید و می بایست تحت آموزش لوپ باشد.' => 'مهارت کمتری دارید و می بایست تحت آموزش لوپ باشد.'
-                                        ])
+                                        ->options(TechnicianRestriction::reasonOptions())
                                         ->columnSpanFull(),
+                                    Forms\Components\Placeholder::make('suspension_time')
+                                        ->label('تاریخ و ساعت تعلیق')
+                                        ->content(fn (?Technician $record): string => $record?->suspended_at
+                                            ? \Morilog\Jalali\Jalalian::fromCarbon($record->suspended_at)->format('Y/m/d H:i')
+                                            : '—')
+                                        ->visible(fn (?Technician $record): bool => $record !== null && !$record->has_access),
                                 ])
                                     ->columns(2)
                                     ->collapsible(),
@@ -397,6 +400,10 @@ class TechnicianResource extends Resource
                 Tables\Columns\IconColumn::make('has_access')
                     ->boolean()
                     ->label('دسترسی'),
+
+                Tables\Columns\TextColumn::make('suspended_at')
+                    ->jalaliDateTime()
+                    ->label('تاریخ و ساعت تعلیق'),
 
                 Tables\Columns\TextColumn::make('expertises_count')
                     ->counts('expertises')
@@ -478,6 +485,54 @@ class TechnicianResource extends Resource
                             ->send();
                     }),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('suspend')
+                    ->label('تعلیق')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('warning')
+                    ->visible(fn (Technician $record): bool => $record->has_access && static::canEdit($record))
+                    ->form([
+                        Forms\Components\Select::make('reason')
+                            ->label('علت تعلیق')
+                            ->options(TechnicianRestriction::reasonOptions())
+                            ->required(),
+                    ])
+                    ->action(function (Technician $record, array $data): void {
+                        $record->update([
+                            'has_access' => false,
+                            'limit_access_reason' => $data['reason'],
+                        ]);
+                        Notification::make()->success()->title('دسترسی تکنسین تعلیق شد')->send();
+                    }),
+                Tables\Actions\Action::make('restore_access')
+                    ->label('رفع تعلیق')
+                    ->icon('heroicon-o-lock-open')
+                    ->color('success')
+                    ->visible(fn (Technician $record): bool => !$record->has_access && static::canEdit($record))
+                    ->requiresConfirmation()
+                    ->action(function (Technician $record): void {
+                        $record->update(['has_access' => true]);
+                        Notification::make()->success()->title('دسترسی تکنسین برقرار شد')->send();
+                    }),
+                Tables\Actions\Action::make('reset_login_password')
+                    ->label('رمز ورود جدید')
+                    ->icon('heroicon-o-key')
+                    ->visible(fn (Technician $record): bool => static::canEdit($record))
+                    ->form([
+                        Forms\Components\TextInput::make('password')
+                            ->label('رمز ورود جدید')
+                            ->password()
+                            ->revealable()
+                            ->helperText('رمز فعلی قابل نمایش نیست. رمز جدید را اینجا تعیین و در صورت نیاز نمایش دهید.')
+                            ->required()
+                            ->minLength(8),
+                    ])
+                    ->action(function (Technician $record, array $data): void {
+                        $record->update(['password' => Hash::make($data['password'])]);
+                        $record->tokens()->delete();
+                        Notification::make()->success()->title('رمز ورود تغییر کرد')->send();
+                    }),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn (Technician $record): bool => static::canDelete($record)),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -528,9 +583,6 @@ class TechnicianResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        return parent::getEloquentQuery();
     }
 }

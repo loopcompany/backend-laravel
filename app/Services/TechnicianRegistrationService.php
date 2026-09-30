@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
+use App\Support\TechnicianRestriction;
 
 class TechnicianRegistrationService
 {
@@ -320,11 +321,7 @@ class TechnicianRegistrationService
 
         // بررسی وضعیت دسترسی
         if (!$technician->has_access) {
-            return [
-                'success' => false,
-                'message' => $technician->limit_access_reason,
-                'error_code' => 'ACCOUNT_DISABLED'
-            ];
+            return TechnicianRestriction::error($technician);
         }
         if ($technician->approval_status !== 'approved') {
             return [

@@ -9,6 +9,32 @@ use Illuminate\Support\Facades\Log;
 
 class TechnicianObserver
 {
+    public function creating(Technician $technician): void
+    {
+        if ($technician->has_access === false) {
+            $technician->suspended_at = now();
+        }
+    }
+
+    public function deleted(Technician $technician): void
+    {
+        $technician->tokens()->delete();
+    }
+
+    public function updating(Technician $technician): void
+    {
+        if (!$technician->isDirty('has_access')) {
+            return;
+        }
+
+        if ($technician->has_access) {
+            $technician->suspended_at = null;
+            $technician->limit_access_reason = null;
+        } else {
+            $technician->suspended_at = now();
+        }
+    }
+
     public function updated(Technician $technician): void
     {
         if (!$technician->wasChanged('approval_status')) {

@@ -88,12 +88,12 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
     // Referral code inquiry/consumption for the authenticated mobile user
     Route::post('/referral-codes/check', [ReferralCodeController::class, 'check'])
-        ->middleware('auth:sanctum')
+        ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])
         ->name('api.referral-codes.check');
 
     // Admin-created promo code inquiry. It is checked here and consumed on order submission.
     Route::post('/promo-codes/check', [PromoCodeController::class, 'check'])
-        ->middleware('auth:sanctum')
+        ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])
         ->name('api.promo-codes.check');
 
     // Authentication routes (no middleware required)
@@ -145,7 +145,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         Route::post('/reset-password', [OrganizationRegistrationController::class, 'resetPassword'])->name('api.organization.reset-password');
 
         // Protected routes for organizations
-        Route::middleware('auth:sanctum')->group(function () {
+        Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
             Route::post('/validate-token', [OrganizationRegistrationController::class, 'validateToken'])->name('api.organization.validate-token');
             Route::post('/logout', [OrganizationRegistrationController::class, 'logout'])->name('api.organization.logout');
             Route::post('/logout-all', [OrganizationRegistrationController::class, 'logoutFromAllDevices'])->name('api.organization.logout-all');
@@ -162,7 +162,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     });
 
     // Contracts routes (public template contract for organizations)
-    Route::prefix('contracts')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('contracts')->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
         Route::get('/latest', [ContractController::class, 'getLatest'])->name('api.contracts.latest');
         Route::get('/submit-contract-request', [ContractController::class, 'submitRequest'])->name('api.contracts.submitRequest');
         Route::post('/submit-information-for-request', [ContractController::class, 'submitInformationForRequest'])->name('api.contracts.submitInformationForRequest');
@@ -185,7 +185,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     });
 
     // Category routes (public access with optional authentication for filtering)
-    Route::prefix('categories')->middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('categories')->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
         Route::get('/', [CategoryController::class, 'index'])->name('api.categories.index');
         Route::get('/tree', [CategoryController::class, 'tree'])->name('api.categories.tree');
         Route::get('/leaves', [CategoryController::class, 'leaves'])->name('api.categories.leaves');
@@ -198,7 +198,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     });
 
     // Step routes (requires authentication to detect user type)
-    Route::prefix('steps')->middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('steps')->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
         Route::post('/fetch', [StepController::class, 'fetch_steps'])->name('api.steps.fetch');
         Route::post('/fetch-conditional', [StepController::class, 'fetch_conditional_steps'])->name('api.steps.fetch-conditional');
     });
@@ -207,7 +207,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     Route::get('/reviews/technician/{technicianId}', [ReviewController::class, 'getTechnicianReviews'])->name('api.reviews.technician');
 
     // Protected routes
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
         // Firebase Cloud Messaging device registration
         Route::post('/notifications/device-token', [FirebaseDeviceTokenController::class, 'store'])
             ->name('api.notifications.device-token.store');

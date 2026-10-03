@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TechnicianResource\Pages;
 use App\Filament\Resources\TechnicianResource\RelationManagers;
 use App\Models\Technician;
+use App\Rules\TechnicianBirthYear;
 use App\Support\TechnicianRestriction;
 use App\Models\Expertise;
 use Filament\Forms;
@@ -61,7 +62,7 @@ class TechnicianResource extends Resource
             ->schema([
                 Forms\Components\Placeholder::make('موجودی کیف پول')
                     ->content(
-                        fn($record) => 'موجودی کیف پول تکنسین' . number_format($record?->wallet) . ' تومان می باشد '
+                        fn($record) => 'موجودی کیف پول تکنسین: ' . number_format((float) $record?->wallet) . ' تومان'
                     )
                     ->extraAttributes([
                         'style' => 'background-color: #dbf8d7ff; border: 1px solid #dbf8d7ff; padding: 15px; border-radius: 5px; color:green; width:100%', // رنگ پس‌زمینه و حاشیه قرمز کمرنگ
@@ -104,7 +105,12 @@ class TechnicianResource extends Resource
 
                                     Forms\Components\TextInput::make('birth_date')
                                         ->label('تاریخ تولد')
-                                        ->placeholder('1370/01/01'),
+                                        ->placeholder('1370/01/01')
+                                        // در ویرایش فقط وقتی تاریخ تولد عوض شود بررسی می‌شود تا رکوردهای قبلی قفل نشوند
+                                        ->rules(fn (?Technician $record, ?string $state) => $record === null || $record->birth_date !== $state
+                                            ? [new TechnicianBirthYear()]
+                                            : [])
+                                        ->helperText(fn () => 'فقط متولدین سال ' . TechnicianBirthYear::maxAllowedJalaliYear() . ' و قبل از آن'),
 
                                     Forms\Components\TextInput::make('father_name')
                                         ->required()
@@ -129,11 +135,7 @@ class TechnicianResource extends Resource
 
                                     Forms\Components\Select::make('military_status')
                                         ->required()
-                                        ->options([
-                                            'معاف' => 'معاف',
-                                            'در حال خدمت' => 'در حال خدمت',
-                                            'پایان خدمت' => 'پایان خدمت',
-                                        ])
+                                        ->options(array_combine(Technician::MILITARY_STATUSES, Technician::MILITARY_STATUSES))
                                         ->label('وضعیت نظام وظیفه'),
 
                                     Forms\Components\TextInput::make('education_status')

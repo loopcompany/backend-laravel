@@ -55,6 +55,10 @@ class CreateUser extends CreateRecord
         $userRepository = app(UserRepository::class);
 
         if ($this->record->account_type !== 'individual' && isset($data['organization'])) {
+            $isSuspended = (bool) ($data['organization']['is_suspended'] ?? false);
+            unset($data['organization']['is_suspended']);
+            $data['organization']['suspended_at'] = $isSuspended ? now() : null;
+
             $this->record->organization()->updateOrCreate(
                 ['user_id' => $this->record->id],
                 $data['organization']

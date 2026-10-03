@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Security\AccountSessionService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class TechnicianLoginRequest extends FormRequest
@@ -16,6 +17,8 @@ class TechnicianLoginRequest extends FormRequest
         return [
             'referral_code' => 'required|string|max:50',
             'password' => 'required|string|min:6',
+            // اطلاعات دستگاه — اختیاری، چون نسخه‌های قدیمی اپ آن‌ها را نمی‌فرستند
+            ...AccountSessionService::deviceRules(),
         ];
     }
 

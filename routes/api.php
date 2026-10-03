@@ -59,6 +59,14 @@ use App\Http\Controllers\FirebaseDeviceTokenController;
 use App\Http\Controllers\ReferralCodeController;
 use App\Http\Controllers\PromoCodeController;
 use App\Http\Controllers\ShahkarController;
+use App\Http\Controllers\TechnicianSecurityController;
+use App\Http\Controllers\OrganizationAccountController;
+use App\Http\Controllers\AppVersionController;
+use App\Http\Controllers\Account\AccountSecurityController;
+use App\Http\Controllers\Account\DeletionRequestController as AccountDeletionRequestController;
+use App\Http\Controllers\Account\MobileController as AccountMobileController;
+use App\Http\Controllers\Account\TwoFactorController as AccountTwoFactorController;
+use App\Http\Controllers\Account\TwoFactorLoginController;
 use App\Http\Middleware\SetLocaleFromApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -105,6 +113,10 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
         // Login
         Route::post('/login', [LoginController::class, 'login'])->name('api.auth.login');
+        // مرحله‌ی دوم ورود وقتی تأیید دومرحله‌ای فعال است (کاربر عادی و سازمانی)
+        Route::post('/two-factor/verify', [TwoFactorLoginController::class, 'verify'])
+            ->middleware('throttle:10,1')
+            ->name('api.auth.two-factor.verify');
 
         // Forgot Password
         Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetCode'])->name('api.auth.forgot-password');
@@ -129,6 +141,14 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     // دانلود فاکتور بدون نیاز به احراز هویت (عمومی)
     Route::get('/orders/{orderId}/invoice', [InvoiceController::class, 'downloadInvoice'])->name('api.orders.invoice.public');
 
+    // بروزرسانی اپلیکیشن (عمومی و بی‌صدا)
+    Route::get('/app/version', [AppVersionController::class, 'show'])->name('api.app.version');
+
+    // فایل مدرک سازمان با لینک امضاشده‌ی موقت (بدون توکن)
+    Route::get('/organization/documents/{document}/file', [OrganizationAccountController::class, 'documentFile'])
+        ->middleware('signed:relative')
+        ->name('api.organization.documents.file');
+
     // Organization registration routes (no middleware required)
     Route::prefix('organization')->group(function () {
         // Registration
@@ -145,7 +165,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         Route::post('/reset-password', [OrganizationRegistrationController::class, 'resetPassword'])->name('api.organization.reset-password');
 
         // Protected routes for organizations
-        Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
+        Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class, 'track.token'])->group(function () {
             Route::post('/validate-token', [OrganizationRegistrationController::class, 'validateToken'])->name('api.organization.validate-token');
             Route::post('/logout', [OrganizationRegistrationController::class, 'logout'])->name('api.organization.logout');
             Route::post('/logout-all', [OrganizationRegistrationController::class, 'logoutFromAllDevices'])->name('api.organization.logout-all');
@@ -154,6 +174,14 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::get('/profile', [OrganizationController::class, 'show'])->name('api.organization.profile.show');
             Route::post('/update-profile', [OrganizationController::class, 'update'])->name('api.organization.profile.update');
             Route::get('/profile/status', [OrganizationController::class, 'getStatus'])->name('api.organization.profile.status');
+
+            // مدارک سازمان و کاربران مجاز سازمان
+            Route::get('/documents', [OrganizationAccountController::class, 'documents'])->name('api.organization.documents');
+            Route::post('/documents', [OrganizationAccountController::class, 'storeDocument'])->name('api.organization.documents.store');
+            Route::delete('/documents/{id}', [OrganizationAccountController::class, 'destroyDocument'])->whereNumber('id')->name('api.organization.documents.destroy');
+            Route::get('/users', [OrganizationAccountController::class, 'users'])->name('api.organization.users');
+            Route::post('/users', [OrganizationAccountController::class, 'storeUser'])->name('api.organization.users.store');
+            Route::delete('/users/{id}', [OrganizationAccountController::class, 'destroyUser'])->whereNumber('id')->name('api.organization.users.destroy');
 
             // Organization contracts management
             Route::get('/contracts', [OrganizationContractController::class, 'index'])->name('api.organization.contracts.index');
@@ -207,7 +235,44 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
     Route::get('/reviews/technician/{technicianId}', [ReviewController::class, 'getTechnicianReviews'])->name('api.reviews.technician');
 
     // Protected routes
-    Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class])->group(function () {
+    // track.token: «IP آخرین اتصال» هر نشست برای بخش‌های دستگاه‌ها/نشست‌های امنیت حساب
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTechnicianHasAccess::class, 'track.token'])->group(function () {
+        // امنیت حساب کاربر عادی و سازمانی/شرکتی (سند «فیلد امنیت حساب»)
+        Route::prefix('account')->middleware(\App\Http\Middleware\EnsureUserAccount::class)->group(function () {
+            Route::get('/security', [AccountSecurityController::class, 'summary'])->name('api.account.security');
+
+            Route::prefix('security/two-factor')->group(function () {
+                Route::post('/send-code', [AccountTwoFactorController::class, 'sendCode'])->name('api.account.two-factor.send-code');
+                Route::post('/enable', [AccountTwoFactorController::class, 'enable'])->name('api.account.two-factor.enable');
+                Route::post('/disable', [AccountTwoFactorController::class, 'disable'])->name('api.account.two-factor.disable');
+                Route::post('/recovery-codes', [AccountTwoFactorController::class, 'recoveryCodes'])->name('api.account.two-factor.recovery-codes');
+            });
+
+            Route::post('/devices/register', [AccountSecurityController::class, 'registerDevice'])->name('api.account.devices.register');
+            Route::post('/devices/logout-others', [AccountSecurityController::class, 'logoutOthers'])->name('api.account.devices.logout-others');
+            Route::get('/devices', [AccountSecurityController::class, 'devices'])->name('api.account.devices');
+            Route::delete('/devices/{deviceKey}', [AccountSecurityController::class, 'logoutDevice'])->name('api.account.devices.destroy');
+
+            Route::get('/sessions', [AccountSecurityController::class, 'sessions'])->name('api.account.sessions');
+            Route::delete('/sessions/{id}', [AccountSecurityController::class, 'endSession'])->whereNumber('id')->name('api.account.sessions.destroy');
+
+            Route::get('/activities', [AccountSecurityController::class, 'activities'])->name('api.account.activities');
+
+            Route::get('/security-alerts', [AccountSecurityController::class, 'alerts'])->name('api.account.security-alerts');
+            Route::post('/security-alerts/read-all', [AccountSecurityController::class, 'readAllAlerts'])->name('api.account.security-alerts.read-all');
+            Route::get('/security-alerts/settings', [AccountSecurityController::class, 'alertSettings'])->name('api.account.security-alerts.settings');
+            Route::put('/security-alerts/settings', [AccountSecurityController::class, 'updateAlertSettings'])->name('api.account.security-alerts.settings.update');
+            Route::post('/security-alerts/{id}/read', [AccountSecurityController::class, 'readAlert'])->whereNumber('id')->name('api.account.security-alerts.read');
+
+            Route::post('/mobile/send-code', [AccountMobileController::class, 'sendCode'])->name('api.account.mobile.send-code');
+            Route::post('/mobile/verify', [AccountMobileController::class, 'verify'])->name('api.account.mobile.verify');
+
+            Route::get('/deletion-request', [AccountDeletionRequestController::class, 'show'])->name('api.account.deletion-request');
+            Route::post('/deletion-request/send-code', [AccountDeletionRequestController::class, 'sendCode'])->name('api.account.deletion-request.send-code');
+            Route::post('/deletion-request', [AccountDeletionRequestController::class, 'store'])->name('api.account.deletion-request.store');
+            Route::post('/deletion-request/cancel', [AccountDeletionRequestController::class, 'cancel'])->name('api.account.deletion-request.cancel');
+        });
+
         // Firebase Cloud Messaging device registration
         Route::post('/notifications/device-token', [FirebaseDeviceTokenController::class, 'store'])
             ->name('api.notifications.device-token.store');
@@ -268,6 +333,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::get('/', [OrderController::class, 'getUserOrders'])->name('api.orders.index');
             Route::get('/summary', [OrderController::class, 'getUserOrdersSummary'])->name('api.orders.summary');
             Route::post('/detail', [OrderController::class, 'getOrderDetail'])->name('api.orders.detail');
+            Route::get('/{orderId}', [OrderController::class, 'showOrder'])->whereNumber('orderId')->name('api.orders.show');
             Route::post('/upload', [OrderController::class, 'orderUpload'])->name('api.orders.upload');
             Route::post('/uploadMultiple', [OrderController::class, 'uploadMultiple'])->name('api.orders.uploadMultiple');
             Route::post('/check-discount', [OrderController::class, 'checkDiscount'])->name('api.orders.check-discount');
@@ -293,6 +359,16 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::post('/validate-token', [TechnicianRegistrationController::class, 'validateToken'])->name('api.technician.validate-token');
             Route::post('/logout', [TechnicianRegistrationController::class, 'logout'])->name('api.technician.logout');
             Route::post('/logout-all', [TechnicianRegistrationController::class, 'logoutFromAllDevices'])->name('api.technician.logout-all');
+
+            // Account security — devices & sessions
+            Route::prefix('security')->group(function () {
+                Route::get('/devices', [TechnicianSecurityController::class, 'devices'])->name('api.technician.security.devices');
+                Route::delete('/devices/{deviceKey}', [TechnicianSecurityController::class, 'logoutDevice'])->name('api.technician.security.devices.destroy');
+                Route::post('/logout-others', [TechnicianSecurityController::class, 'logoutOthers'])->name('api.technician.security.logout-others');
+                Route::get('/sessions', [TechnicianSecurityController::class, 'sessions'])->name('api.technician.security.sessions');
+                Route::delete('/sessions/{id}', [TechnicianSecurityController::class, 'endSession'])->whereNumber('id')->name('api.technician.security.sessions.destroy');
+                Route::put('/current-device', [TechnicianSecurityController::class, 'updateCurrentDevice'])->name('api.technician.security.current-device');
+            });
 
             // Profile management
             Route::put('/profile/personal-info', [TechnicianProfileController::class, 'updatePersonalInfo'])->name('api.technician.profile.personal-info');

@@ -147,9 +147,9 @@
                                             <label for="military_status" class="form-label">وضعیت نظام وظیفه *</label>
                                             <select class="form-select" id="military_status" name="military_status" dir="rtl" required>
                                                 <option value="">&#x202B;انتخاب کنید&#x202C;</option>
-                                                <option value="معاف" {{ old('military_status') == 'معاف' ? 'selected' : '' }}>&#x202B;معاف&#x202C;</option>
-                                                <option value="در حال خدمت" {{ old('military_status') == 'در حال خدمت' ? 'selected' : '' }}>&#x202B;در حال خدمت&#x202C;</option>
-                                                <option value="پایان خدمت" {{ old('military_status') == 'پایان خدمت' ? 'selected' : '' }}>&#x202B;پایان خدمت&#x202C;</option>
+                                                @foreach (\App\Models\Technician::MILITARY_STATUSES as $militaryStatus)
+                                                    <option value="{{ $militaryStatus }}" {{ old('military_status') == $militaryStatus ? 'selected' : '' }}>&#x202B;{{ $militaryStatus }}&#x202C;</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                         

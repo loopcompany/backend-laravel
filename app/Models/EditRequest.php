@@ -37,6 +37,10 @@ class EditRequest extends Model
         'agent_phone',
         'history',
         'business_name',
+
+        'melicode',
+        'registration_number',
+        'economic_code',
     ];
 
     protected $casts = [

@@ -276,6 +276,16 @@ class OrderController extends Controller
         return response()->json($result['data'], 200);
     }
 
+    /**
+     * GET /api/orders/{orderId} — همان خروجی POST /orders/detail.
+     */
+    public function showOrder(Request $request, int $orderId): JsonResponse
+    {
+        $request->merge(['orderId' => $orderId]);
+
+        return $this->getOrderDetail($request);
+    }
+
     public function startOrder(StartOrderRequest $request): JsonResponse
     {
         $user = $request->user();
@@ -697,6 +707,8 @@ class OrderController extends Controller
                 'user_id' => $user->id,
                 'price' => $amount,
                 'type' => 2, // پرداخت سفارش از طریق درگاه
+                'payment_method' => 'in_app',
+                'payment_channel' => 'app',
                 'status' => 0, // در انتظار
                 'description' => $pay_type === 'prepay'
                     ? 'پیش پرداخت سفارش شماره ' . $orderId . ' از طریق درگاه'
@@ -902,6 +914,7 @@ class OrderController extends Controller
                 } else {
                     $order->payment_status = 1;
                 }
+                $order->markPaidInApp();
 
                 if (($discountAmount > 0 || $referralDiscountAmount > 0) && $pay_type == 'order') {
                     $order->discount_price = $discountAmount;

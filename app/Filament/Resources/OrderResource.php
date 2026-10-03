@@ -463,6 +463,13 @@ class OrderResource extends Resource
                         'danger' => '0',
                     ]),
 
+                Tables\Columns\TextColumn::make('payment_method')
+                    ->label('روش پرداخت')
+                    ->formatStateUsing(fn ($state, Order $record): string => (Order::PAYMENT_METHODS[$state] ?? $state)
+                        . ($record->payment_channel ? ' (' . (Order::PAYMENT_CHANNELS[$record->payment_channel] ?? $record->payment_channel) . ')' : ''))
+                    ->badge()
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('pakar_price')
                     ->label('مبلغ پایه')
                     ->formatStateUsing(fn($state) => number_format($state) . ' تومان')
@@ -542,6 +549,64 @@ class OrderResource extends Resource
                     ->url(fn(Order $record): string => route('web.reciept', ['id' => $record->id]))
                     ->openUrlInNewTab(),
                 
+                Tables\Actions\Action::make('record_offline_payment')
+                    ->label('ثبت پرداخت خارج از برنامه')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn (Order $record): bool => (int) $record->payment_status !== 1 && static::canEdit($record))
+                    ->modalDescription('پرداخت نقدی، کارت‌به‌کارت، شبا یا درون‌بانکی که در سایت یا حضوری انجام شده است. در اپ کاربر با همین روش و کانال نمایش داده می‌شود.')
+                    ->form([
+                        Forms\Components\Select::make('payment_method')
+                            ->label('روش پرداخت')
+                            ->options(\Illuminate\Support\Arr::only(Order::PAYMENT_METHODS, ['cash', 'card_to_card', 'sheba', 'bank_transfer']))
+                            ->required(),
+                        Forms\Components\Select::make('payment_channel')
+                            ->label('کانال پرداخت')
+                            ->options(\Illuminate\Support\Arr::only(Order::PAYMENT_CHANNELS, ['in_person', 'site']))
+                            ->default('in_person')
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->label('مبلغ دریافت‌شده (تومان)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->required(),
+                        Forms\Components\TextInput::make('remaining_amount')
+                            ->label('مانده (تومان)')
+                            ->helperText('اگر کل مبلغ دریافت شده، خالی یا صفر بگذارید.')
+                            ->numeric()
+                            ->minValue(0),
+                        Forms\Components\TextInput::make('reference')
+                            ->label('شماره پیگیری / توضیح')
+                            ->maxLength(191),
+                    ])
+                    ->action(function (Order $record, array $data): void {
+                        $remaining = (int) ($data['remaining_amount'] ?? 0);
+
+                        \Illuminate\Support\Facades\DB::transaction(function () use ($record, $data, $remaining) {
+                            $record->forceFill([
+                                'payment_method' => $remaining > 0 ? 'remaining' : $data['payment_method'],
+                                'payment_channel' => $data['payment_channel'],
+                                'remaining_amount' => $remaining > 0 ? $remaining : null,
+                                'payment_status' => $remaining > 0 ? $record->payment_status : 1,
+                            ])->save();
+
+                            \App\Models\UserTransaction::create([
+                                'user_id' => $record->user_id,
+                                'order_id' => $record->id,
+                                'price' => $data['amount'],
+                                'type' => \App\Models\UserTransaction::TYPE_OFFLINE_PAYMENT,
+                                'status' => 100,
+                                'payment_method' => $data['payment_method'],
+                                'payment_channel' => $data['payment_channel'],
+                                'referenceId' => $data['reference'] ?? null,
+                                'description' => 'پرداخت ' . Order::PAYMENT_METHODS[$data['payment_method']] . ' سفارش شماره ' . $record->id
+                                    . ' — ثبت توسط ' . (auth('admin')->user()?->name ?? 'ادمین'),
+                            ]);
+                        });
+
+                        \Filament\Notifications\Notification::make()->title('پرداخت ثبت شد.')->success()->send();
+                    }),
+
                 Tables\Actions\Action::make('assign_technician')
                     ->label('اختصاص تکنسین')
                     ->icon('heroicon-o-user-plus')
@@ -733,6 +798,17 @@ class OrderResource extends Resource
                             ->badge()
                             ->formatStateUsing(fn(string $state): string => $state === '1' ? 'پرداخت شده' : 'پرداخت نشده')
                             ->color(fn(string $state): string => $state === '1' ? 'success' : 'danger'),
+                        Infolists\Components\TextEntry::make('payment_method')
+                            ->label('روش پرداخت')
+                            ->formatStateUsing(fn ($state) => Order::PAYMENT_METHODS[$state] ?? $state),
+                        Infolists\Components\TextEntry::make('payment_channel')
+                            ->label('کانال پرداخت')
+                            ->formatStateUsing(fn ($state) => Order::PAYMENT_CHANNELS[$state] ?? $state)
+                            ->placeholder('-'),
+                        Infolists\Components\TextEntry::make('remaining_amount')
+                            ->label('مانده')
+                            ->formatStateUsing(fn ($state) => $state ? number_format($state) . ' تومان' : '-')
+                            ->placeholder('-'),
                     ])
                     ->columns(2),
 

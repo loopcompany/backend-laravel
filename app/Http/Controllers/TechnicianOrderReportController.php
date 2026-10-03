@@ -113,8 +113,23 @@ class TechnicianOrderReportController extends Controller
      * مشاهده گزارش بر اساس شناسه سفارش
      * GET /api/order-reports/by-order/{orderId}
      */
-    public function showByOrder(string $orderId)
+    public function showByOrder(Request $request, string $orderId)
     {
+        // فقط صاحب سفارش یا تکنسینِ همان سفارش می‌تواند گزارش را ببیند
+        $actor = $request->user();
+        $ownerColumn = $actor instanceof \App\Models\Technician ? 'technician_id' : 'user_id';
+        $ownsOrder = \App\Models\Order::whereKey((int) $orderId)
+            ->where($ownerColumn, $actor->id)
+            ->exists();
+
+        if (!$ownsOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'گزارشی برای این سفارش یافت نشد.',
+                'error_code' => 'REPORT_NOT_FOUND'
+            ], 404);
+        }
+
         $result = $this->reportService->getReportByOrder((int) $orderId);
 
         if (!$result['success']) {

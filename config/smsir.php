@@ -57,6 +57,10 @@ return [
     // Organization Templates
     'organization_welcome_template_id' => env('SMSIR_ORGANIZATION_WELCOME_TEMPLATE_ID', 537149),
 
+    // همکاری با لوپ: تأیید ثبت درخواست همکاری (پارامتر قالب: TRACKINGCODE)
+    // قالب باید در پنل sms.ir با متن سند «صفحه همکاری در سایت» ساخته و شناسه‌اش این‌جا تنظیم شود.
+    'cooperation_request_template_id' => env('SMSIR_COOPERATION_REQUEST_TEMPLATE_ID'),
+
     // Technician approval templates. Set these to the template IDs created in SMS.ir.
     // Approved template variables: NAME. Rejected template variables: NAME, REASON.
     'technician_approved_template_id' => env('SMSIR_TECHNICIAN_APPROVED_TEMPLATE_ID'),

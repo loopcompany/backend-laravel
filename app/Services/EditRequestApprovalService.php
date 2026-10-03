@@ -85,6 +85,8 @@ class EditRequestApprovalService
                 'region' => $regionCode,
                 'region_id' => $region->getKey(),
                 'postal_code' => $editRequest->postal_code,
+                // شناسه ملی سازمان؛ درخواست‌های قدیمی (قبل از این فیلد) مقدار فعلی را تغییر نمی‌دهند
+                'melicode' => filled($editRequest->melicode) ? $editRequest->melicode : $user->melicode,
             ])->save();
 
             /*
@@ -99,6 +101,8 @@ class EditRequestApprovalService
                 'history' => $editRequest->history,
                 'organization_phone' => $editRequest->organization_phone,
                 'organization_address' => $editRequest->organization_address,
+                'registration_number' => $editRequest->registration_number,
+                'economic_code' => $editRequest->economic_code,
             ])->save();
 
             /*

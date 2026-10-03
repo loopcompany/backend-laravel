@@ -132,11 +132,11 @@ class AdminRoleService
                 'edit-education-requests' => 'ویرایش درخواست‌های آموزشی',
                 'delete-education-requests' => 'حذف درخواست‌های آموزشی',
 
-                // مجوزهای گزارش خرابی
-                'create-fault-reports' => 'ایجاد گزارش‌های خرابی',
-                'view-fault-reports' => 'مشاهده گزارش‌های خرابی',
-                'edit-fault-reports' => 'ویرایش گزارش‌های خرابی',
-                'delete-fault-reports' => 'حذف گزارش‌های خرابی',
+                // مجوزهای عیوب سرویس / محصول
+                'create-fault-reports' => 'ایجاد عیوب سرویس / محصول',
+                'view-fault-reports' => 'مشاهده عیوب سرویس / محصول',
+                'edit-fault-reports' => 'ویرایش عیوب سرویس / محصول',
+                'delete-fault-reports' => 'حذف عیوب سرویس / محصول',
 
                 // مجوزهای برنامه‌های تشویقی
                 'view-incentive-plans' => 'مشاهده برنامه‌های تشویقی',
@@ -270,6 +270,24 @@ class AdminRoleService
 
                 'view-min-price' => 'مشاهده حداقل مبلغ اتحادیه',
                 'edit-min-price' => 'ویرایش حداقل مبلغ اتحادیه',
+
+                // درخواست‌های حذف حساب کاربری (صف تأیید حساب‌های سازمانی/شرکتی)
+                'view-account-deletion-requests' => 'مشاهده درخواست‌های حذف حساب',
+                'edit-account-deletion-requests' => 'تأیید/رد درخواست‌های حذف حساب',
+
+                // نسخه‌ی اپلیکیشن‌ها (بروزرسانی اجباری/اختیاری)
+                'view-app-versions' => 'مشاهده نسخه‌ی اپلیکیشن‌ها',
+                'edit-app-versions' => 'ویرایش نسخه‌ی اپلیکیشن‌ها',
+
+                // همکاری با لوپ: درخواست‌ها، گزینش و مصاحبه
+                'view-cooperation-requests' => 'مشاهده درخواست‌های همکاری',
+                'edit-cooperation-requests' => 'بررسی و گزینش درخواست‌های همکاری',
+                'delete-cooperation-requests' => 'حذف درخواست‌های همکاری',
+
+                // پرونده‌ی استخدامی (بخش محرمانه فقط با مجوز جدا)
+                'view-employment-files' => 'مشاهده پرونده‌های استخدامی',
+                'edit-employment-files' => 'ویرایش پرونده‌های استخدامی',
+                'view-employment-confidential' => 'مشاهده و ویرایش اطلاعات محرمانه پرونده استخدامی (مالی/بانکی)',
             ];
 
             $created = [];

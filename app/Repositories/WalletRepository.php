@@ -171,7 +171,10 @@ class WalletRepository
             'referenceId' => 'ORDER_' . $orderId . '_' . time(),
             'type' => 3, // پرداخت
             'status' => 100, // موفق
-            'description' => $pay_type == 'pay_type' ? 'پیش پرداخت سفارش شماره' . $orderId : 'پرداخت سفارش شماره ' . $orderId,
+            'description' => $pay_type == 'prepay' ? 'پیش پرداخت سفارش شماره ' . $orderId : 'پرداخت سفارش شماره ' . $orderId,
+            'order_id' => $orderId,
+            'payment_method' => 'in_app',
+            'payment_channel' => 'app',
         ]);
 
         return [

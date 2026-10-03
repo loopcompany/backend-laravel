@@ -24,11 +24,11 @@ class FaultReportResource extends Resource
 
     protected static ?string $navigationGroup = 'گزارشات';
 
-    protected static ?string $navigationLabel = 'گزارش‌های خرابی';
+    protected static ?string $navigationLabel = 'عیوب سرویس / محصول';
 
-    protected static ?string $modelLabel = 'گزارش خرابی';
+    protected static ?string $modelLabel = 'گزارش عیب سرویس / محصول';
 
-    protected static ?string $pluralModelLabel = 'گزارش‌های خرابی';
+    protected static ?string $pluralModelLabel = 'عیوب سرویس / محصول';
 
     protected static function getViewPermission(): string
     {
@@ -142,10 +142,10 @@ class FaultReportResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('شرح خرابی')
+                Forms\Components\Section::make('شرح عیب')
                     ->schema([
                         Forms\Components\Textarea::make('description')
-                            ->label('توضیحات خرابی')
+                            ->label('توضیحات')
                             ->required()
                             ->rows(4)
                             ->columnSpanFull(),
@@ -220,6 +220,13 @@ class FaultReportResource extends Resource
                 Tables\Columns\TextColumn::make('delivered_at')
                     ->label('تاریخ تحویل')
                     ->default('-'),
+
+                Tables\Columns\TextColumn::make('description')
+                    ->label('توضیحات')
+                    ->limit(40)
+                    ->wrap()
+                    ->tooltip(fn($record) => $record->description)
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('order.user_address.address')
                     ->label('آدرس')

@@ -87,7 +87,7 @@ class ViewFaultReport extends ViewRecord
                     ])
                     ->columns(3),
 
-                Components\Section::make('شرح خرابی')
+                Components\Section::make('شرح عیب')
                     ->schema([
                         Components\TextEntry::make('description')
                             ->label('توضیحات')

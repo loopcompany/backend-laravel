@@ -46,11 +46,26 @@ Route::post('/loop-learn-submit', [LoopLearnRegistrationController::class, 'stor
 Route::get('/delete-account-request', [MainController::class, 'deleteAccountRequest'])->name('web.delete-account-request');
 Route::post('/delete-account-request', [MainController::class, 'submitDeleteAccountRequest'])->name('submit.delete-account-request');
 Route::get('/faqs', [MainController::class, 'faqs'])->name('web.faqs');
+
+// همکاری با لوپ: معرفی، فرم درخواست همکاری و استعلام کد پیگیری
+Route::get('/careers', [\App\Http\Controllers\Web\CareersController::class, 'index'])->name('web.careers');
+Route::post('/careers', [\App\Http\Controllers\Web\CareersController::class, 'store'])
+    ->middleware('throttle:5,60')
+    ->name('web.careers.store');
+Route::post('/careers/track', [\App\Http\Controllers\Web\CareersController::class, 'track'])
+    ->middleware('throttle:10,1')
+    ->name('web.careers.track');
 Route::get('/blogs', [MainController::class, 'blogs'])->name('web.blogs');
 Route::get('/blog/{id}/{slug?}', [MainController::class, 'blogDetail'])->name('blog.detail');
 
 // Categories Routes
 Route::get('/categories/{id?}', [MainController::class, 'categoryShow'])->name('web.category.show');
+
+// فایل‌های پیوست درخواست همکاری (دیسک خصوصی)
+Route::get('/admin/cooperation-requests/{cooperationRequest}/files/{type}', [\App\Http\Controllers\Admin\CareerFilesController::class, 'show'])
+    ->middleware('auth:admin')
+    ->whereIn('type', ['resume', 'certificates', 'portfolio'])
+    ->name('admin.cooperation-requests.file');
 
 Route::prefix('admin/cards')->middleware(['auth:admin'])->group(function () {
     Route::get('/create', [DigitalBusinessCardEditorController::class, 'create'])

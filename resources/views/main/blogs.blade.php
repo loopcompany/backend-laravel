@@ -9,7 +9,7 @@
             height="1536"
         >
         <img
-            src="{{ asset('assets/new-style/blog.png') }}"
+            src="{{ asset('assets/new-style/blog-hero.jpg') }}"
             alt="مقالات و آموزش لوپ"
             width="1536"
             height="1024"

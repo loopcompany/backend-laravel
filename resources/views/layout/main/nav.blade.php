@@ -75,17 +75,20 @@
                      <nav class="techno_menu">
                          <!-- منوی عادی -->
                          <ul class="nav_scroll nav-normal">
+                             <li class="nav-apps"><a href="{{ route('web.home') }}#apps">دانلود اپلیکیشن‌های هوشمند</a></li>
                              <li><a href="{{ route('web.home') }}">خانه</a></li>
                              <li><a href="{{ route('web.about') }}">درباره ما</a></li>
                              <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
                              <li><a href="{{ route('web.faqs') }}">سوالات متداول</a></li>
                              <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
+                             <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
                              <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
                              <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل تکنسین</a></li>
                          </ul>
 
                          <!-- منوی استیکی -->
                          <ul class="nav_scroll nav-sticky">
+                             <li class="nav-apps"><a href="{{ route('web.home') }}#apps">دانلود اپلیکیشن‌های هوشمند</a></li>
                              <li><a href="{{ config('app.user_panel_grouping_url') }}" target="_blank">پنل
                                      سازمانی/شرکتی</a></li>
                              <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
@@ -102,6 +105,7 @@
                              <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
                              <li><a href="{{ route('web.about') }}">درباره ما</a></li>
                              <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
+                             <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
                              <li class="phone"><a href="{{ $headerPhone?->link }}">{{ $headerPhone?->name }}</a>
                              </li>
                          </ul>
@@ -117,12 +121,14 @@
          <div class="mobile-menu">
              <nav class="techno_menu">
                  <ul class="nav_scroll">
+                     <li class="nav-apps"><a href="{{ route('web.home') }}#apps">دانلود اپلیکیشن‌های هوشمند</a></li>
                      <li><a href="{{ route('web.home') }}">خانه</a></li>
                      <li><a href="{{ route('web.about') }}">درباره ما</a></li>
 
                      <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
                      <li><a href="{{ route('web.faqs') }}">سوالات متداول</a></li>
                      <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
+                     <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
                      <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
                      <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل متخصص</a></li>
                  </ul>
@@ -131,6 +137,18 @@
      </div>
 
      <style>
+         /* لینک دانلود اپلیکیشن‌ها به رنگ طلایی لوگوی لوپ */
+         .techno_menu .nav-apps > a,
+         .mobile-menu .nav-apps > a,
+         .mean-container .nav-apps > a {
+             color: #d9a940 !important;
+             font-weight: 700;
+         }
+
+         .techno_menu .nav-apps > a:hover {
+             color: #ecc873 !important;
+         }
+
          .nav-sticky {
              display: none;
          }

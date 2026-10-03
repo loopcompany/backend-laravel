@@ -121,7 +121,17 @@ class ReferralCodeResource extends Resource
                         ->default(0)
                         ->required()
                         ->suffix('%')
-                        ->helperText('این درصد از مبلغ نهایی سفارش کسر می‌شود.'),
+                        ->helperText('تخفیفی که خریدار با این کد می‌گیرد؛ از مبلغ سفارش کسر می‌شود.'),
+
+                    Forms\Components\TextInput::make('commission_percent')
+                        ->label('درصد پورسانت صاحب کد')
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(100)
+                        ->default(0)
+                        ->required()
+                        ->suffix('%')
+                        ->helperText('پورسانت صاحب کد (مثلاً مأمور خرید شرکتی) از مبلغ خدمات هر سفارش، پس از کسر تخفیف همین کد.'),
                 ])
                 ->columns(2),
         ]);
@@ -154,9 +164,19 @@ class ReferralCodeResource extends Resource
                     ->label('کد کاربری')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('discount_percent')
-                    ->label('تخفیف')
+                    ->label('تخفیف خریدار')
                     ->suffix('%')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('commission_percent')
+                    ->label('پورسانت صاحب کد')
+                    ->suffix('%')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('earned_commission')
+                    ->label('پورسانت سفارش‌های انجام‌شده')
+                    ->state(fn (ReferralCode $record): string => number_format(
+                        $record->orders()->where('status', 2)->get()->sum(fn ($order) => $order->referralCommissionAmount())
+                    ) . ' تومان')
+                    ->toggleable(),
                 Tables\Columns\SelectColumn::make('status')
                     ->label('وضعیت')
                     ->options(ReferralCode::statuses()),

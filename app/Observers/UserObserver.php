@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\User;
 use App\Helpers\UserCodeHelper;
+use App\Services\Security\AccountSecurityLogger;
 
 class UserObserver
 {
@@ -48,7 +49,13 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        //
+        // «تغییر رمز عبور» در فعالیت‌ها و هشدارهای امنیتی؛ همه‌ی مسیرها (پروفایل، بازیابی رمز و ...) را پوشش می‌دهد.
+        // اولین تنظیم رمز (رمز قبلی خالی) و پاک شدن رمز هنگام حذف حساب، تغییر رمز حساب نمی‌شوند.
+        if ($user->wasChanged('password') && $user->getOriginal('password') !== null && $user->password !== null) {
+            $logger = app(AccountSecurityLogger::class);
+            $logger->activity($user, 'password_changed', request());
+            $logger->alert($user, 'password_changed', request());
+        }
     }
 
     /**

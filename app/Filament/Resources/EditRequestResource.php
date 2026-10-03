@@ -102,6 +102,27 @@ class EditRequestResource extends Resource
                 ->description('بعد از تأیید، این مقادیر در جدول organizations جایگزین می‌شوند.')
                 ->schema([
                     static::comparisonField(
+                        field: 'melicode',
+                        label: 'شناسه ملی سازمان/شرکت',
+                        currentValue: fn (EditRequest $record) =>
+                            $record->user?->melicode
+                    ),
+
+                    static::comparisonField(
+                        field: 'registration_number',
+                        label: 'شماره ثبت',
+                        currentValue: fn (EditRequest $record) =>
+                            $record->organization?->registration_number
+                    ),
+
+                    static::comparisonField(
+                        field: 'economic_code',
+                        label: 'شماره اقتصادی',
+                        currentValue: fn (EditRequest $record) =>
+                            $record->organization?->economic_code
+                    ),
+
+                    static::comparisonField(
                         field: 'organization_name',
                         label: 'نام حقوقی شرکت',
                         currentValue: fn (EditRequest $record) =>

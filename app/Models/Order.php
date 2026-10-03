@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,22 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class Order extends Model
 {
+    public const PAYMENT_METHODS = [
+        'cash' => 'نقدی',
+        'card_to_card' => 'کارت به کارت',
+        'sheba' => 'شبا',
+        'bank_transfer' => 'پرداخت درون‌بانکی',
+        'in_app' => 'پرداخت درون برنامه لوپ',
+        'unpaid' => 'پرداخت نشده',
+        'remaining' => 'مانده',
+    ];
+
+    public const PAYMENT_CHANNELS = [
+        'app' => 'اپلیکیشن',
+        'site' => 'سایت',
+        'in_person' => 'حضوری',
+    ];
+
     protected $fillable = [
         'user_id',
         'user_address_id',
@@ -17,6 +34,9 @@ class Order extends Model
         'technician_id',
         'status',
         'payment_status',
+        'payment_method',
+        'payment_channel',
+        'remaining_amount',
         'must_notify',
         'pakar_price',
         'technician_price',
@@ -24,6 +44,7 @@ class Order extends Model
         'discount_price',
         'referral_code_id',
         'referral_discount_percent',
+        'referral_commission_percent',
         'promo_code_id',
         'promo_discount_percent',
         'set_off_at',
@@ -251,6 +272,80 @@ class Order extends Model
         $totalPrice ??= ($this->technician_price ?? $this->pakar_price ?? 0) + ($this->extra_price ?? 0);
 
         return ($totalPrice * $this->referral_discount_percent) / 100;
+    }
+
+    /**
+     * روش پرداخت؛ برای سفارش‌های قبل از این فیلد از روی وضعیت پرداخت محاسبه می‌شود
+     * (پرداخت‌های قبلی همه از درگاه یا کیف پول بوده‌اند).
+     */
+    protected function paymentMethod(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            if ($value) {
+                return $value;
+            }
+
+            return (int) $this->payment_status === 1 || (int) $this->prepayment_payment_status === 1
+                ? 'in_app'
+                : 'unpaid';
+        });
+    }
+
+    protected function paymentChannel(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            if ($value) {
+                return $value;
+            }
+
+            if ((int) $this->payment_status !== 1 && (int) $this->prepayment_payment_status !== 1) {
+                return null;
+            }
+
+            return in_array($this->platform, ['web', 'site'], true) ? 'site' : 'app';
+        });
+    }
+
+    /** مانده‌ی قابل پرداخت؛ فقط وقتی بخشی از مبلغ (مثلاً پیش‌پرداخت) پرداخت شده است. */
+    protected function remainingAmount(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            if ($value !== null) {
+                return (int) $value > 0 ? (int) $value : null;
+            }
+
+            if ((int) $this->prepayment_payment_status === 1 && (int) $this->payment_status !== 1) {
+                $remaining = (int) round($this->payment_price());
+
+                return $remaining > 0 ? $remaining : null;
+            }
+
+            return null;
+        });
+    }
+
+    /** ثبت پرداخت موفق درون برنامه (درگاه یا کیف پول). */
+    public function markPaidInApp(): void
+    {
+        $this->payment_method = 'in_app';
+        $this->payment_channel = in_array($this->platform, ['web', 'site'], true) ? 'site' : 'app';
+        // پس از پیش‌پرداخت، مانده از روی قیمت نهایی محاسبه می‌شود
+        $this->remaining_amount = null;
+    }
+
+    /**
+     * پورسانت صاحب کد معرف: درصد ثبت‌شده روی سفارش، از مبلغ خدمات پس از کسر تخفیف همان کد.
+     */
+    public function referralCommissionAmount(): float
+    {
+        if (!$this->referral_commission_percent) {
+            return 0;
+        }
+
+        $base = ($this->technician_price ?? $this->pakar_price ?? 0) + ($this->extra_price ?? 0);
+        $base -= $this->referralDiscountAmount($base);
+
+        return round(max(0, $base) * $this->referral_commission_percent / 100);
     }
 
     public function promoDiscountAmount(?float $totalPrice = null): float

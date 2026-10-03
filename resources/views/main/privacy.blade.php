@@ -3,12 +3,12 @@
     <picture class="privacy-hero">
         <source
             media="(max-width: 767px)"
-            srcset="{{ asset('assets/new-style/mobile/privacy.png') }}"
+            srcset="{{ asset('assets/new-style/mobile/privacy-hero.jpg') }}"
             width="1024"
             height="1536"
         >
         <img
-            src="{{ asset('assets/new-style/privacy.png') }}"
+            src="{{ asset('assets/new-style/privacy-hero.jpg') }}"
             alt="سیاست حریم خصوصی لوپ"
             width="1535"
             height="1024"

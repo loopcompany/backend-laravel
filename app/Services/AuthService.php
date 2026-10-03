@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\DTOs\LoginDTO;
+use App\Models\User;
 use App\Repositories\UserRepository;
+use App\Services\Security\AccountSecurityLogger;
+use App\Services\Security\TwoFactorService;
 use Exception;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +15,9 @@ use Laravel\Sanctum\PersonalAccessToken;
 class AuthService
 {
     public function __construct(
-        protected UserRepository $userRepository
+        protected UserRepository $userRepository,
+        protected AccountSecurityLogger $securityLogger,
+        protected TwoFactorService $twoFactor,
     ) {}
 
     /**
@@ -40,7 +45,9 @@ class AuthService
             }
 
             // Check password
-            if (!Hash::check($dto->password, $user->password)) {
+            if (!Hash::check($dto->password, (string) $user->password)) {
+                $this->securityLogger->failedLogin($user, request(), 'invalid_password');
+
                 return [
                     'success' => false,
                     'message' => 'شماره موبایل یا رمز عبور اشتباه است.',
@@ -64,31 +71,24 @@ class AuthService
                 ];
             }
 
-            // Create token
-            $token = $user->createToken('auth-token')->plainTextToken;
+            // تأیید دومرحله‌ای: به‌جای توکن، مرحله‌ی دوم شروع می‌شود (POST /auth/two-factor/verify)
+            if ($this->twoFactor->isEnabled($user)) {
+                return [
+                    'success' => true,
+                    'requires_two_factor' => true,
+                    'message' => 'کد تأیید دومرحله‌ای را وارد کنید.',
+                ] + $this->twoFactor->startChallenge($user, 'user');
+            }
 
-            Log::info('User logged in successfully', [
-                'user_id' => $user->id,
-                'phone' => $dto->phone
-            ]);
+            return $this->completeLogin($user);
 
+        } catch (\App\Exceptions\AccountSecurityException $e) {
+            // مثلاً محدودیت ارسال پیامک مرحله‌ی دوم
             return [
-                'success' => true,
-                'message' => 'ورود با موفقیت انجام شد.',
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'last_name' => $user->last_name,
-                        'phone' => $user->phone,
-                        'email' => $user->email,
-                        'phone_verified_at' => $user->phone_verified_at?->toISOString(),
-                    ],
-                    'token' => $token,
-                    'token_type' => 'Bearer',
-                ],
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => $e->errorCode,
             ];
-
         } catch (Exception $e) {
             Log::error('Login failed', [
                 'phone' => $dto->phone,
@@ -102,6 +102,37 @@ class AuthService
                 'error' => $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * صدور توکن و پاسخ ورود کاربر (بعد از رمز عبور، یا بعد از مرحله‌ی دوم ورود).
+     */
+    public function completeLogin(User $user): array
+    {
+        $token = $user->createToken('auth-token');
+
+        $this->securityLogger->activity($user, 'login_success', request(), token: $token->accessToken);
+
+        Log::info('User logged in successfully', [
+            'user_id' => $user->id,
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'ورود با موفقیت انجام شد.',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'last_name' => $user->last_name,
+                    'phone' => $user->phone,
+                    'email' => $user->email,
+                    'phone_verified_at' => $user->phone_verified_at?->toISOString(),
+                ],
+                'token' => $token->plainTextToken,
+                'token_type' => 'Bearer',
+            ],
+        ];
     }
 
     /**

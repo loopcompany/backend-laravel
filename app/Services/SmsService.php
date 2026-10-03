@@ -517,6 +517,25 @@ class SmsService
      * متن: سازمان محترم #NAME# ثبت نام شما با کد سازمانی #CODE# با موفقیت انجام شد.
      * از این پس با این کد سازمانی می توانید به اپلیکیشن لوپ وارد شوید.
      */
+    /**
+     * پیامک تأیید ثبت درخواست همکاری با کد پیگیری (PCS-xxxxxx).
+     */
+    public function sendCooperationRequestReceived(string $phone, string $trackingCode): bool
+    {
+        $templateId = config('smsir.cooperation_request_template_id');
+
+        if (!$templateId) {
+            Log::warning('Template ID پیامک درخواست همکاری تنظیم نشده است (SMSIR_COOPERATION_REQUEST_TEMPLATE_ID)', [
+                'tracking_code' => $trackingCode,
+            ]);
+            return false;
+        }
+
+        return $this->sendSmsWithTemplate($phone, (int) $templateId, [
+            ['name' => 'TRACKINGCODE', 'value' => $trackingCode],
+        ]);
+    }
+
     public function sendOrganizationWelcome(string $phone, string $organizationName, string $organizationCode): bool
     {
         $templateId = config('smsir.organization_welcome_template_id');

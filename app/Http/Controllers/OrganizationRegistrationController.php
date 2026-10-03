@@ -203,6 +203,17 @@ class OrganizationRegistrationController extends Controller
                 ], 401);
             }
 
+            if (!empty($result['requires_two_factor'])) {
+                return response()->json([
+                    'status' => 'success',
+                    'success' => true,
+                    'message' => $result['message'],
+                    'requires_two_factor' => true,
+                    'two_factor_token' => $result['two_factor_token'],
+                    'method' => $result['method'],
+                ], 200);
+            }
+
             // Log login activity (non-blocking)
             try {
                 $loginActivityService->logLogin('organization', $result['data']['user']['id'], $request);

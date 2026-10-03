@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Security\AccountSessionService;
 use App\Repositories\TechnicianRepository;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\Hash;
@@ -288,7 +289,7 @@ class TechnicianRegistrationService
         return $this->repo->findByReferralCode($referralCode) != null;
     }
 
-    public function login(string $referralCode, string $password): array
+    public function login(string $referralCode, string $password, array $device = []): array
     {
         // پیدا کردن تکنسین بر اساس کد پرسنلی
         $technician = $this->repo->findByReferralCode($referralCode);
@@ -331,8 +332,17 @@ class TechnicianRegistrationService
             ];
         }
 
-        // تولید توکن Sanctum
-        $token = $technician->createToken('technician-app')->plainTextToken;
+        // تولید توکن Sanctum + ثبت اطلاعات دستگاه روی همان توکن
+        $newToken = $technician->createToken('technician-app');
+        $accessToken = $newToken->accessToken;
+
+        // forceFill لازم است، چون ستون‌های دستگاه در $fillable مدل PersonalAccessToken نیستند
+        $accessToken->forceFill(array_filter($device, fn ($v) => $v !== null && $v !== ''))->save();
+
+        // ورود دوباره روی همان دستگاه، نشست قبلی همان دستگاه را جایگزین می‌کند
+        app(AccountSessionService::class)->replaceOtherTokensOfDevice($technician, $accessToken);
+
+        $token = $newToken->plainTextToken;
 
         return [
             'success' => true,

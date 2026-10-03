@@ -140,7 +140,8 @@
                         <h4 class="widget-title pb-4">فرصت‌های شغلی</h4>
                         <div class="menu-quick-link-container mr-4">
                             <ul id="menu-quick-link" class="menu">
-                                <li><a href="{{ config('app.technician_register_url') }}">ثبت نام تکنسین‌لوپ</a></li>
+                                <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
+                    <li><a href="{{ config('app.technician_register_url') }}">ثبت نام تکنسین‌لوپ</a></li>
                                 <li><a href="{{ route('loop.learn') }}">ثبت نام در کلاس های آموزش رایگان رایانه</a>
                                 </li>
                             </ul>

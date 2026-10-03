@@ -16,18 +16,25 @@ class ReferralCode extends Model
         'code',
         'status',
         'discount_percent',
+        'commission_percent',
         'used_by_user_id',
         'used_at',
     ];
 
     protected $casts = [
         'discount_percent' => 'integer',
+        'commission_percent' => 'integer',
         'used_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 
     public function usedByUser(): BelongsTo

@@ -260,7 +260,7 @@
 <section id="process">
   <div class="container">
     <div class="process-head">
-      <h2>قرآیند پاسخگویی ما</h2>
+      <h2>فرآیند پاسخگویی ما</h2>
       <div class="gold-rule rule-center"></div>
     </div>
 

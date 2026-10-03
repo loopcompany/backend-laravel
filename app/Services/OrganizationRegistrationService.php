@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\Organization;
 use App\Repositories\UserRepository;
 use App\Repositories\OrganizationRepository;
+use App\Exceptions\AccountSecurityException;
+use App\Services\Security\AccountSecurityLogger;
+use App\Services\Security\TwoFactorService;
 use Exception;
 use Hash;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +23,9 @@ class OrganizationRegistrationService
     public function __construct(
         protected UserRepository $userRepository,
         protected OrganizationRepository $organizationRepository,
-        protected SmsService $smsService
+        protected SmsService $smsService,
+        protected AccountSecurityLogger $securityLogger,
+        protected TwoFactorService $twoFactor
     ) {
     }
 
@@ -356,7 +361,9 @@ class OrganizationRegistrationService
             }
 
             // بررسی رمز عبور 
-            if (!Hash::check($password, $user->password)) {
+            if (!Hash::check($password, (string) $user->password)) {
+                $this->securityLogger->failedLogin($user, request(), 'invalid_password');
+
                 return [
                     'success' => false,
                     'message' => 'رمز عبور اشتباه است.',
@@ -364,33 +371,21 @@ class OrganizationRegistrationService
                 ];
             }
 
-            // تولید توکن
-            $token = $user->createToken('organization-token')->plainTextToken;
+            // تأیید دومرحله‌ای: به‌جای توکن، مرحله‌ی دوم شروع می‌شود (POST /auth/two-factor/verify)
+            if ($this->twoFactor->isEnabled($user)) {
+                return [
+                    'success' => true,
+                    'requires_two_factor' => true,
+                    'message' => 'کد تأیید دومرحله‌ای را وارد کنید.',
+                ] + $this->twoFactor->startChallenge($user, 'organization');
+            }
 
-            Log::info('Organization logged in successfully', [
-                'user_id' => $user->id,
-                'organization_id' => $organization->id,
-                'organization_code' => $organizationCode,
-            ]);
-
+            return $this->completeLogin($user, $organization);
+        } catch (AccountSecurityException $e) {
             return [
-                'success' => true,
-                'message' => 'ورود با موفقیت انجام شد.',
-                'data' => [
-                    'token' => $token,
-                    'user' => [
-                        'id' => $user->id,
-                        'phone' => $user->phone,
-                        'email' => $user->email,
-                        'account_type' => $user->account_type,
-                    ],
-                    'organization' => [
-                        'id' => $organization->id,
-                        'organization_name' => $organization->organization_name,
-                        'organization_code' => $organization->organization_code,
-                        'manager_full_name' => $organization->manager_full_name,
-                    ],
-                ],
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error' => $e->errorCode,
             ];
         } catch (Exception $e) {
             Log::error('Organization login failed: ' . $e->getMessage(), [
@@ -403,5 +398,41 @@ class OrganizationRegistrationService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * صدور توکن و پاسخ ورود سازمان (بعد از رمز عبور، یا بعد از مرحله‌ی دوم ورود).
+     */
+    public function completeLogin(User $user, ?Organization $organization = null): array
+    {
+        $organization ??= $user->organization;
+        $token = $user->createToken('organization-token');
+
+        $this->securityLogger->activity($user, 'login_success', request(), token: $token->accessToken);
+
+        Log::info('Organization logged in successfully', [
+            'user_id' => $user->id,
+            'organization_id' => $organization?->id,
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'ورود با موفقیت انجام شد.',
+            'data' => [
+                'token' => $token->plainTextToken,
+                'user' => [
+                    'id' => $user->id,
+                    'phone' => $user->phone,
+                    'email' => $user->email,
+                    'account_type' => $user->account_type,
+                ],
+                'organization' => [
+                    'id' => $organization?->id,
+                    'organization_name' => $organization?->organization_name,
+                    'organization_code' => $organization?->organization_code,
+                    'manager_full_name' => $organization?->manager_full_name,
+                ],
+            ],
+        ];
     }
 }

@@ -28,13 +28,18 @@ class Organization extends Model
         'agent_name',
         'agent_phone',
         'history',
-        'business_name'
+        'business_name',
+        'registration_number',
+        'economic_code',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     protected $casts = [
         'user_id' => 'integer',
         'profile_approved_at' => 'datetime',
         'contract_approved_at' => 'datetime',
+        'suspended_at' => 'datetime',
     ];
 
     /**
@@ -53,6 +58,16 @@ class Organization extends Model
         return $this->hasMany(OrganizationContract::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(OrganizationDocument::class);
+    }
+
+    public function authorizedUsers(): HasMany
+    {
+        return $this->hasMany(OrganizationUser::class);
+    }
+
     /**
      * دریافت آخرین قرارداد
      */
@@ -61,14 +76,55 @@ class Organization extends Model
         return $this->hasOne(OrganizationContract::class)->latestOfMany('uploaded_at');
     }
 
+    public const VERIFICATION_STATUSES = [
+        'pending' => 'در حال بررسی توسط پنل مدیریت',
+        'approved' => 'تأیید شده',
+        'suspended' => 'معلق',
+        'deleted' => 'حذف شده',
+        'rejected' => 'رد شده',
+    ];
+
+    /**
+     * وضعیت احراز حساب برای اپ: pending | approved | suspended | deleted | rejected
+     * حذف (اجرای درخواست حذف حساب) و تعلیق بر وضعیت تأیید پروفایل اولویت دارند.
+     */
+    public function verificationStatus(): string
+    {
+        $isDeleted = AccountDeletionRequest::where('user_id', $this->user_id)
+            ->where('status', AccountDeletionRequest::STATUS_DONE)
+            ->exists();
+
+        if ($isDeleted) {
+            return 'deleted';
+        }
+
+        if ($this->suspended_at !== null) {
+            return 'suspended';
+        }
+
+        return in_array($this->profile_status, ['pending', 'approved', 'rejected'], true)
+            ? $this->profile_status
+            : 'pending';
+    }
+
+    public function verificationReason(): ?string
+    {
+        return match ($this->verificationStatus()) {
+            'suspended' => $this->suspension_reason,
+            'rejected' => $this->profile_rejection_reason,
+            default => null,
+        };
+    }
+
     /**
      * چک کردن دسترسی کامل سازمان
      * سازمان زمانی دسترسی کامل دارد که هم پروفایل و هم قرارداد تایید شده باشد
      */
     public function hasCompleteAccess(): bool
     {
-        return $this->profile_status === 'approved' && 
-               $this->contract_status === 'approved';
+        return $this->profile_status === 'approved' &&
+               $this->contract_status === 'approved' &&
+               $this->suspended_at === null;
     }
 
     /**

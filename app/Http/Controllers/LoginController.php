@@ -30,6 +30,16 @@ class LoginController extends Controller
             // Authenticate user
             $result = $this->authService->login($dto);
 
+            if ($result['success'] && !empty($result['requires_two_factor'])) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'requires_two_factor' => true,
+                    'two_factor_token' => $result['two_factor_token'],
+                    'method' => $result['method'],
+                ], 200);
+            }
+
             if ($result['success']) {
                 // Log login activity (non-blocking)
                 try {
@@ -51,6 +61,7 @@ class LoginController extends Controller
                 'success' => false,
                 'message' => $result['message'],
                 'requires_verification' => $result['requires_verification'] ?? false,
+                ...isset($result['error_code']) ? ['error_code' => $result['error_code']] : [],
             ], $statusCode);
 
         } catch (\Exception $e) {

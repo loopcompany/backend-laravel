@@ -56,6 +56,11 @@ class OrganizationUpdateRequest extends FormRequest
             ],
             'profile_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
 
+            // شناسه ملی سازمان/شرکت، شماره ثبت و شماره اقتصادی (وارد درخواست ویرایش می‌شوند)
+            'melicode' => ['sometimes', 'nullable', 'regex:/^[0-9]{10,11}$/'],
+            'registration_number' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'economic_code' => ['sometimes', 'nullable', 'regex:/^[0-9]{0,20}$/'],
+
             // فیلدهای جدول users
             'organization_email' => 'sometimes|nullable|email|max:255',
             'manager_mobile' => [
@@ -85,6 +90,10 @@ class OrganizationUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'melicode.regex' => 'شناسه ملی سازمان باید ۱۰ یا ۱۱ رقم باشد.',
+            'registration_number.max' => 'شماره ثبت حداکثر ۳۰ کاراکتر است.',
+            'economic_code.regex' => 'شماره اقتصادی فقط می‌تواند شامل عدد باشد.',
+
             // پیام‌های جدول organizations
             'organization_name.required' => 'The organization name is required.',
             'organization_name.string' => 'The organization name must be a string.',

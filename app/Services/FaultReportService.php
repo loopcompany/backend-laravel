@@ -26,7 +26,7 @@ class FaultReportService
 
             return [
                 'success' => true,
-                'message' => 'گزارش خرابی با موفقیت ثبت شد.',
+                'message' => 'گزارش عیب سرویس / محصول با موفقیت ثبت شد.',
                 'data' => [
                     'fault_report' => [
                         'id' => $faultReport->id,
@@ -58,7 +58,7 @@ class FaultReportService
 
             return [
                 'success' => false,
-                'message' => 'خطا در ثبت گزارش خرابی. لطفاً دوباره تلاش کنید.',
+                'message' => 'خطا در ثبت گزارش عیب. لطفاً دوباره تلاش کنید.',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ];
         }
@@ -108,7 +108,7 @@ class FaultReportService
 
             return [
                 'success' => false,
-                'message' => 'خطا در دریافت گزارش‌های خرابی.',
+                'message' => 'خطا در دریافت گزارش‌های عیوب سرویس / محصول.',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ];
         }
@@ -125,7 +125,7 @@ class FaultReportService
             if (!$faultReport) {
                 return [
                     'success' => false,
-                    'message' => 'گزارش خرابی یافت نشد.',
+                    'message' => 'گزارش عیب یافت نشد.',
                     'error_code' => 'FAULT_REPORT_NOT_FOUND'
                 ];
             }
@@ -172,7 +172,7 @@ class FaultReportService
 
             return [
                 'success' => false,
-                'message' => 'خطا در دریافت جزئیات گزارش خرابی.',
+                'message' => 'خطا در دریافت جزئیات گزارش عیب.',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ];
         }

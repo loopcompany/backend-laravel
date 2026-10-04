@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Order;
+use App\Support\CustomerFacingTechnician;
 use App\Repositories\ChatRepository;
 use Illuminate\Support\Facades\Log;
 
@@ -20,9 +22,20 @@ class ChatService
             $chats = $this->chatRepo->getUserChats($userId);
 
             // اضافه کردن تعداد پیام‌های خوانده نشده به هر چت
-            $chats = $chats->map(function ($chat) use ($userId) {
+            // شماره تکنسین فقط وقتی کاربر با او سفارش جاری دارد فرستاده می‌شود
+            $activeTechnicianIds = Order::where('user_id', $userId)
+                ->whereIn('status', CustomerFacingTechnician::ACTIVE_ORDER_STATUSES)
+                ->whereNotNull('technician_id')
+                ->pluck('technician_id')
+                ->all();
+
+            $chats = $chats->map(function ($chat) use ($userId, $activeTechnicianIds) {
                 $unreadCount = $this->chatRepo->getUnreadCountByTechnician($userId, $chat->technician_id);
                 $chat->unread_count = $unreadCount;
+                CustomerFacingTechnician::prepare(
+                    $chat->technician,
+                    in_array($chat->technician_id, $activeTechnicianIds)
+                );
                 return $chat;
             });
 

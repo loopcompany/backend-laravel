@@ -238,6 +238,16 @@ class DeliveryReportController extends Controller
             ], 404);
         }
 
+        if ($report->relationLoaded('technician')) {
+            \App\Support\CustomerFacingTechnician::prepare(
+                $report->technician,
+                \App\Support\CustomerFacingTechnician::isActiveOrderStatus($order->status)
+            );
+        }
+        if ($report->relationLoaded('order') && $report->order) {
+            $report->order->unsetRelation('technician');
+        }
+
         return response()->json([
             'success' => true,
             'data' => [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Security\AccountSessionService;
 use App\Http\Requests\TechnicianRegistrationRequest;
 use App\Http\Requests\TechnicianPhoneVerificationRequest;
 use App\Http\Requests\TechnicianLoginRequest;
@@ -137,7 +138,15 @@ class TechnicianRegistrationController extends Controller
 
     public function login(TechnicianLoginRequest $request, TechnicianRegistrationService $service, LoginActivityService $loginActivityService)
     {
-        $result = $service->login($request->referral_code, $request->password);
+        $result = $service->login(
+            $request->referral_code,
+            $request->password,
+            $request->only(AccountSessionService::DEVICE_FIELDS) + [
+                'ip_address' => $request->ip(),
+                'last_ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]
+        );
 
         if (!$result['success']) {
             $statusCode = match ($result['error_code'] ?? '') {

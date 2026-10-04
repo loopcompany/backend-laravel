@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Technician;
+use App\Rules\TechnicianBirthYear;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TechnicianRegistrationRequest extends FormRequest
 {
@@ -22,12 +25,12 @@ class TechnicianRegistrationRequest extends FormRequest
                 'string',
                 'regex:/^09[0-9]{9}$/',
             ],
-            'birth_date' => 'nullable',
+            'birth_date' => ['nullable', 'string', new TechnicianBirthYear()],
             'father_name' => 'required|string|max:191',
             'issued_from' => 'required|string|max:191',
             'serial_number' => 'required|string|max:50',
             'marital_status' => 'required|in:مجرد,متأهل',
-            'military_status' => 'required|in:مشمول خدمت,درانتظار اعزام,فاقد سابقه خدمت,اتمام خدمت,معافیت,در حال تحصیل',
+            'military_status' => ['required', Rule::in(Technician::MILITARY_STATUSES)],
             'education_status' => 'required|string|max:191',
             'education_field' => 'required|string|max:191',
             'telephone' => 'required|string|max:20',

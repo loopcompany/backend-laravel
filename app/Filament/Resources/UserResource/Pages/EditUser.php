@@ -19,23 +19,12 @@ class EditUser extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        // بارگذاری اطلاعات سازمان برای نمایش در فرم
+        // بارگذاری همه‌ی اطلاعات سازمان برای نمایش در فرم؛ فیلدی که این‌جا پر نشود
+        // هنگام ذخیره با مقدار خالی بازنویسی می‌شود (قبلاً نام تجاری، نماینده و سابقه پاک می‌شدند).
         if ($this->record->organization) {
-            $data['organization'] = [
-                'organization_name' => $this->record->organization->organization_name,
-                'organization_code' => $this->record->organization->organization_code,
-                'organization_phone' => $this->record->organization->organization_phone,
-                'organization_address' => $this->record->organization->organization_address,
-                'manager_full_name' => $this->record->organization->manager_full_name,
-                'manager_national_code' => $this->record->organization->manager_national_code,
-                'profile_image' => $this->record->organization->profile_image,
-                'profile_status' => $this->record->organization->profile_status,
-                'profile_approved_at' => $this->record->organization->profile_approved_at,
-                'profile_rejection_reason' => $this->record->organization->profile_rejection_reason,
-                'contract_status' => $this->record->organization->contract_status,
-                'contract_approved_at' => $this->record->organization->contract_approved_at,
-                'contract_rejection_reason' => $this->record->organization->contract_rejection_reason,
-            ];
+            $organization = $this->record->organization;
+            $data['organization'] = $organization->only($organization->getFillable());
+            $data['organization']['is_suspended'] = $organization->suspended_at !== null;
         }
 
         return $data;
@@ -57,9 +46,19 @@ class EditUser extends EditRecord
         $data = $this->form->getState();
         
         if ($this->record->account_type !== 'individual' && isset($data['organization'])) {
+            $organizationData = $data['organization'];
+            $isSuspended = (bool) ($organizationData['is_suspended'] ?? false);
+            unset($organizationData['is_suspended']);
+
+            $current = $this->record->organization;
+            $organizationData['suspended_at'] = $isSuspended ? ($current?->suspended_at ?? now()) : null;
+            if (!$isSuspended) {
+                $organizationData['suspension_reason'] = null;
+            }
+
             $this->record->organization()->updateOrCreate(
                 ['user_id' => $this->record->id],
-                $data['organization']
+                $organizationData
             );
         } elseif ($this->record->account_type === 'individual' && $this->record->organization) {
             // اگر نوع حساب دیگه سازمانی نیست، اطلاعات سازمان رو حذف کن

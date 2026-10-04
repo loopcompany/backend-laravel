@@ -40,8 +40,9 @@ class ReviewRepository
      */
     public function getTechnicianReviews(int $technicianId, int $perPage = 20): LengthAwarePaginator
     {
+        // این لیست عمومی است؛ فقط نام نظردهنده و مشخصات کلی سفارش برمی‌گردد
         return TechnicianReview::where('technician_id', $technicianId)
-            ->with(['user', 'order'])
+            ->with(['user:id,name,last_name,profile_photo_path', 'order:id,category_id,created_at,finished_at'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }

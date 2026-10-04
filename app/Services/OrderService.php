@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\CustomerFacingTechnician;
 use App\Repositories\OrderRepository;
 use App\Repositories\ChatRepository;
 use App\Repositories\TechnicianTransactionRepository;
@@ -147,6 +148,7 @@ class OrderService
             'unspecified_count' => $genderCounts['unspecified'],
             'referral_code_id' => $referralCode?->id,
             'referral_discount_percent' => $referralCode?->discount_percent ?? 0,
+            'referral_commission_percent' => $referralCode?->commission_percent ?? 0,
             'promo_code_id' => $promoCode?->id,
             'promo_discount_percent' => $promoCode?->discount_percent ?? 0,
         ];
@@ -521,6 +523,7 @@ class OrderService
 
             // Transform orders to include technician average rating and completed orders count
             $transformedOrders = $orders->map(function ($order) {
+                CustomerFacingTechnician::forOrder($order);
                 $orderArray = $order->toArray();
 
                 // Add average_rating and completed_orders_count to technician if exists
@@ -588,6 +591,7 @@ class OrderService
 
             // Transform orders
             $transformedOrders = collect($items)->map(function ($order) {
+                CustomerFacingTechnician::forOrder($order);
                 $orderArray = $order->toArray();
 
                 // Add average_rating and completed_orders_count to technician if exists
@@ -722,6 +726,8 @@ class OrderService
                 ];
             }
             $order->discount_info = $discountInfo;
+
+            CustomerFacingTechnician::forOrder($order);
 
             return [
                 'success' => true,
@@ -1608,15 +1614,19 @@ class OrderService
                     + ($order->extra_price ?? 0)
                     - ($order->discount_price ?? 0);
                 $finalPrice = max(0, $finalPrice); // حداقل صفر
-                Log::info($order->category);
+                $categoryTitle = $order->category?->title;
+                $productName = trim((string) $order->technician_order_report?->product_name);
+
                 return [
                     'order_id' => $order->id,
                     'created_at' => $order->created_at?->format('Y-m-d H:i:s'),
                     'finished_at' => $order->finished_at?->format('Y-m-d H:i:s'),
                     'technician_referral_code' => $order->technician?->referral_code ?? null,
                     'final_paid_amount' => $finalPrice,
-                    'product_name' => $order->technician_order_report?->product_name ?? $order->category?->title,
-                    'category_id' => $order->category_id
+                    // اگر سفارش محصول مشخصی ندارد، عنوان دسته‌بندی خدمت جایگزین می‌شود
+                    'product_name' => $productName !== '' ? $productName : $categoryTitle,
+                    'category_id' => $order->category_id,
+                    'category_title' => $categoryTitle,
                 ];
             });
 

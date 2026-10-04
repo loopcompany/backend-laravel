@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\CustomerFacingTechnician;
 use App\Repositories\ReviewRepository;
 use App\Models\Order;
 use Illuminate\Support\Facades\Log;
@@ -136,6 +137,9 @@ class ReviewService
     {
         try {
             $reviews = $this->reviewRepo->getUserReviews($userId, $perPage);
+            $reviews->getCollection()->each(
+                fn ($review) => CustomerFacingTechnician::prepare($review->technician, false)
+            );
 
             return [
                 'success' => true,

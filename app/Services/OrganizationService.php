@@ -44,6 +44,12 @@ class OrganizationService
                 'data' => [
                     // اطلاعات از جدول organizations
                     'organization_name' => $organization->organization_name,
+                    // شناسه‌ی ملی سازمان/شرکت (همان کلید فرم ثبت‌نام)
+                    'melicode' => $user?->melicode,
+                    'registration_number' => $organization->registration_number,
+                    'economic_code' => $organization->economic_code,
+                    'verification_status' => $organization->verificationStatus(),
+                    'verification_reason' => $organization->verificationReason(),
                     'agent_name' => $organization->agent_name,
                     'agent_phone' => $organization->agent_phone,
                     'business_name' => $organization->business_name,
@@ -156,6 +162,9 @@ class OrganizationService
                 'region_id' => $currentRegionId,
                 'organization_address' => $organization->organization_address,
                 'postal_code' => $user->postal_code,
+                'melicode' => $user->melicode,
+                'registration_number' => $organization->registration_number,
+                'economic_code' => $organization->economic_code,
                 'status' => \App\Models\EditRequest::STATUS_PENDING,
             ];
 
@@ -170,6 +179,9 @@ class OrganizationService
                 'organization_phone' => 'organization_phone',
                 'organization_address' => 'organization_address',
                 'postal_code' => 'postal_code',
+                'melicode' => 'melicode',
+                'registration_number' => 'registration_number',
+                'economic_code' => 'economic_code',
             ];
 
             foreach ($fieldMap as $inputField => $editRequestField) {
@@ -333,6 +345,8 @@ class OrganizationService
                 'success' => true,
                 'data' => [
                     'profile_status' => $organization->profile_status,
+                    'verification_status' => $organization->verificationStatus(),
+                    'verification_reason' => $organization->verificationReason(),
                     'contract_status' => $organization->contract_status,
                     'has_complete_access' => $hasCompleteAccess,
                     'profile_approved_at' => $organization->profile_approved_at?->toIso8601String(),

@@ -253,9 +253,16 @@ class UserResource extends Resource
                             ->label('سابقه فعالیت نماینده سال/ماه')
                             ->maxLength(191),
                         Forms\Components\TextInput::make('organization.manager_national_code')
-                            ->label('شناسه ملی')
+                            ->label('کد ملی مدیر')
                             ->maxLength(10)
                             ->minLength(10),
+                        Forms\Components\TextInput::make('organization.registration_number')
+                            ->label('شماره ثبت شرکت')
+                            ->maxLength(30),
+                        Forms\Components\TextInput::make('organization.economic_code')
+                            ->label('شماره اقتصادی')
+                            ->numeric()
+                            ->maxLength(20),
                         Forms\Components\FileUpload::make('organization.profile_image')
                             ->label('تصویر پروفایل سازمان')
                             ->image()
@@ -315,6 +322,17 @@ class UserResource extends Resource
                                     ->label('دلیل رد قرارداد')
                                     ->rows(2)
                                     ->visible(fn(Forms\Get $get) => $get('organization.contract_status') === 'rejected')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Toggle::make('organization.is_suspended')
+                                    ->label('تعلیق حساب سازمان')
+                                    ->helperText('حساب معلق به خدمات سازمانی دسترسی ندارد و در اپ «معلق» نمایش داده می‌شود.')
+                                    ->live(),
+
+                                Forms\Components\Textarea::make('organization.suspension_reason')
+                                    ->label('دلیل تعلیق (به کاربر نمایش داده می‌شود)')
+                                    ->rows(2)
+                                    ->visible(fn(Forms\Get $get) => (bool) $get('organization.is_suspended'))
                                     ->columnSpanFull(),
                             ])
                             ->columns(2)

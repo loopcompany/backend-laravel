@@ -121,6 +121,9 @@ class OrderPaymentService
 
             // 6. به‌روزرسانی وضعیت پرداخت سفارش و ثبت مبلغ تخفیف
             $this->orderRepo->updatePaymentStatus($dto->orderId, 1, $pay_type);
+            $order->refresh();
+            $order->markPaidInApp();
+            $order->save();
 
             // ثبت مبلغ تخفیف در صورت وجود
             if ($discountAmount > 0) {

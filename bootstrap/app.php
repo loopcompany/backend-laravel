@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom middleware aliases
         $middleware->alias([
             'organization.approved' => \App\Http\Middleware\EnsureOrganizationApproved::class,
+            'track.token' => \App\Http\Middleware\TrackTokenActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

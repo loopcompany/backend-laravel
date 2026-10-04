@@ -15,13 +15,13 @@
     <picture>
       <source
         media="(max-width: 767px)"
-        srcset="{{ asset('assets/new-style/mobile/1.png') }}"
+        srcset="{{ asset('assets/new-style/mobile/hero-home.jpg') }}"
         width="1023"
         height="1537"
       >
       <img
         class="hero-image"
-        src="{{ asset('assets/new-style/1.jpg') }}"
+        src="{{ asset('assets/new-style/hero-home.jpg') }}"
         alt="LOOP — Every connection creates a new path"
         width="1776"
         height="888"

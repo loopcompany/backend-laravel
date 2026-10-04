@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFaultReportRequest extends FormRequest
 {
@@ -22,7 +23,12 @@ class StoreFaultReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'order_id' => 'required|integer|exists:orders,id',
+            // فقط سفارش‌های خود کاربر (شماره سفارش ممکن است دستی تایپ شود)
+            'order_id' => [
+                'required',
+                'integer',
+                Rule::exists('orders', 'id')->where('user_id', $this->user()?->id),
+            ],
             'product_name' => 'nullable|string|max:255',
             'ordered_at' => 'nullable|date',
             'delivered_at' => 'nullable|date|after_or_equal:ordered_at',

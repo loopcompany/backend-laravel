@@ -509,6 +509,7 @@ class OrderController extends Controller
                 'ORDER_NOT_FOUND' => 404,
                 'UNAUTHORIZED' => 403,
                 'ALREADY_DECIDED' => 400,
+                'PREPAYMENT_REQUIRED' => 422,
                 default => 400
             };
 

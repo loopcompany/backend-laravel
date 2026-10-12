@@ -45,6 +45,17 @@ class SubmitOrderRequest extends FormRequest
             'service_schedule.short_term.date' => 'nullable|date_format:Y-m-d',
             'service_schedule.short_term.time' => 'nullable|string|max:50',
             'service_schedule.short_term.file' => 'nullable|string',
+
+            // تامین تجهیزات / کالا (اپ سازمانی، سیستماتیک و جامع)
+            'procurement_items' => 'nullable|array|max:50',
+            'procurement_items.*.item_id' => 'nullable|string|max:100',
+            'procurement_items.*.title' => 'required_with:procurement_items|string|max:191',
+            'procurement_items.*.new_count' => 'nullable|integer|min:0|max:10000',
+            'procurement_items.*.used_count' => 'nullable|integer|min:0|max:10000',
+            'procurement_items.*.description' => 'nullable|string|max:1000',
+            'delivery_mode' => 'nullable|array',
+            'delivery_mode.*' => 'string|in:once_short,monthly_short,yearly_long,project',
+            'technician_gender' => 'nullable|string|in:male,female',
         ];
     }
 
@@ -94,6 +105,13 @@ class SubmitOrderRequest extends FormRequest
             'service_schedule.short_term.array' => 'اطلاعات کوتاه‌مدت باید به صورت آرایه ارسال شود.',
             'service_schedule.short_term.date.date_format' => 'فرمت تاریخ کوتاه‌مدت صحیح نیست (Y-m-d).',
             'service_schedule.short_term.time.max' => 'زمان نباید بیش از 50 کاراکتر باشد.',
+
+            'procurement_items.array' => 'اقلام تامین کالا باید به صورت آرایه ارسال شوند.',
+            'procurement_items.*.title.required_with' => 'عنوان هر قلم تامین کالا الزامی است.',
+            'procurement_items.*.new_count.integer' => 'تعداد کالای نو باید عدد صحیح باشد.',
+            'procurement_items.*.used_count.integer' => 'تعداد کالای کارکرده باید عدد صحیح باشد.',
+            'delivery_mode.*.in' => 'نحوه‌ی ارائه‌ی خدمات نامعتبر است.',
+            'technician_gender.in' => 'جنسیت تکنسین نامعتبر است.',
         ];
     }
 }

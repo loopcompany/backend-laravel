@@ -75,6 +75,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'wallet' => 'integer',
             'is_special' => 'boolean',
+            'is_referral_agent' => 'boolean',
         ];
     }
 

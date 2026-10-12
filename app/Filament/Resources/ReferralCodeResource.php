@@ -113,6 +113,11 @@ class ReferralCodeResource extends Resource
                         ->native(false)
                         ->helperText('وضعیت فقط توسط ادمین تغییر می‌کند.'),
 
+                    Forms\Components\Toggle::make('multi_use')
+                        ->label('چندبارمصرف (کد مأمور خرید)')
+                        ->helperText('کد چندبارمصرف با هر سفارش مصرف نمی‌شود؛ صاحب کد اگر «مأمور خرید» باشد از هر سفارش تسویه‌شده پورسانت می‌گیرد.')
+                        ->default(false),
+
                     Forms\Components\TextInput::make('discount_percent')
                         ->label('درصد تخفیف')
                         ->numeric()
@@ -163,6 +168,9 @@ class ReferralCodeResource extends Resource
                 Tables\Columns\TextColumn::make('user.code')
                     ->label('کد کاربری')
                     ->searchable(),
+                Tables\Columns\IconColumn::make('multi_use')
+                    ->label('چندبارمصرف')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('discount_percent')
                     ->label('تخفیف خریدار')
                     ->suffix('%')

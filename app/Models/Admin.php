@@ -9,9 +9,13 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Filament\Models\Contracts\HasAvatar;
+use App\Models\Concerns\DeletesReplacedPublicFiles;
 class Admin extends Authenticatable implements FilamentUser, HasAvatar
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, DeletesReplacedPublicFiles;
+
+    /** عکس پروفایل قبلی پس از تعویض/حذف در پنل پاک می‌شود. */
+    protected static array $publicFileAttributes = ['avatar'];
 
     /**
      * The guard name for this model.
@@ -109,6 +113,6 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
     
     public function getFilamentAvatarUrl(): ?string
     {
-        return asset('assets/images/logo.png');
+        return $this->avatar ? asset('storage/' . $this->avatar) : asset('assets/images/logo.png');
     }
 }

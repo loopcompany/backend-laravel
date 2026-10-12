@@ -28,6 +28,17 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // دیتابیس GeoIP محلی (mmdb) برای «موقعیت تقریبی» دستگاه‌ها؛ با `php artisan geoip:update` دانلود می‌شود
+    'geoip' => [
+        'database' => env('GEOIP_DATABASE_PATH', storage_path('app/geoip/dbip-city-lite.mmdb')),
+        'download_url' => env('GEOIP_DOWNLOAD_URL', 'https://download.db-ip.com/free/dbip-city-lite-{Y}-{m}.mmdb.gz'),
+    ],
+
+    // فهرست رسمی دستگاه‌های Google Play برای نام تجاری دستگاه (`php artisan devices:import-names`)
+    'device_names' => [
+        'csv_url' => env('DEVICE_NAMES_CSV_URL', 'https://storage.googleapis.com/play_public/supported_devices.csv'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

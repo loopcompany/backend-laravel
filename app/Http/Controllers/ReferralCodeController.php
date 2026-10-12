@@ -42,6 +42,38 @@ class ReferralCodeController extends Controller
                 ]);
             }
 
+            // کد مأمور خرید چندبارمصرف است: مصرف نمی‌شود، فقط باید فعال باشد و متعلق به خود کاربر نباشد
+            if ($managedCode->multi_use) {
+                if ($managedCode->status !== ReferralCode::STATUS_ACTIVE || (int) $managedCode->user_id === (int) $user->id) {
+                    return response()->json([
+                        'success' => false,
+                        'valid' => false,
+                        'message' => (int) $managedCode->user_id === (int) $user->id
+                            ? 'نمی‌توانید از کد معرف خودتان استفاده کنید.'
+                            : 'این کد معرف غیرفعال است.',
+                        'error_code' => (int) $managedCode->user_id === (int) $user->id ? 'REFERRAL_CODE_OWN' : 'REFERRAL_CODE_INACTIVE',
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'valid' => true,
+                    'message' => 'کد معرف با موفقیت ثبت شد.',
+                    'data' => [
+                        'code' => $managedCode->code,
+                        'status' => $managedCode->status,
+                        'status_label' => ReferralCode::statuses()[$managedCode->status] ?? $managedCode->status,
+                        'discount_percent' => (int) $managedCode->discount_percent,
+                        'source' => 'managed_referral_code',
+                        'referrer' => [
+                            'id' => $managedCode->user->id,
+                            'name' => $managedCode->user->name,
+                            'last_name' => $managedCode->user->last_name,
+                        ],
+                    ],
+                ]);
+            }
+
             $alreadyUsedByCurrentUser =
                 $managedCode->status === ReferralCode::STATUS_USED
                 && (int) $managedCode->used_by_user_id === (int) $user->id;

@@ -67,6 +67,9 @@ use App\Http\Controllers\Account\DeletionRequestController as AccountDeletionReq
 use App\Http\Controllers\Account\MobileController as AccountMobileController;
 use App\Http\Controllers\Account\TwoFactorController as AccountTwoFactorController;
 use App\Http\Controllers\Account\TwoFactorLoginController;
+use App\Http\Controllers\OrderProcurementController;
+use App\Http\Controllers\OrganizationEditRequestController;
+use App\Http\Controllers\ReferralAgentController;
 use App\Http\Middleware\SetLocaleFromApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -117,6 +120,9 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         Route::post('/two-factor/verify', [TwoFactorLoginController::class, 'verify'])
             ->middleware('throttle:10,1')
             ->name('api.auth.two-factor.verify');
+        Route::post('/two-factor/resend', [TwoFactorLoginController::class, 'resend'])
+            ->middleware('throttle:10,1')
+            ->name('api.auth.two-factor.resend');
 
         // Forgot Password
         Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetCode'])->name('api.auth.forgot-password');
@@ -149,6 +155,11 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         ->middleware('signed:relative')
         ->name('api.organization.documents.file');
 
+    // نامه‌ی «درخواست ویرایش» سازمان با لینک امضاشده‌ی موقت (بدون توکن)
+    Route::get('/organization/edit-requests/{editRequest}/letter', [OrganizationEditRequestController::class, 'letter'])
+        ->middleware('signed:relative')
+        ->name('api.organization.edit-requests.letter');
+
     // Organization registration routes (no middleware required)
     Route::prefix('organization')->group(function () {
         // Registration
@@ -158,6 +169,13 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
         // Login
         Route::post('/login', [OrganizationRegistrationController::class, 'login'])->name('api.organization.login');
+        // مرحله‌ی دوم ورود سازمانی (همان قرارداد /auth/two-factor/*)
+        Route::post('/two-factor/verify', [TwoFactorLoginController::class, 'verify'])
+            ->middleware('throttle:10,1')
+            ->name('api.organization.two-factor.verify');
+        Route::post('/two-factor/resend', [TwoFactorLoginController::class, 'resend'])
+            ->middleware('throttle:10,1')
+            ->name('api.organization.two-factor.resend');
 
         // Forgot Password
         Route::post('/forgot-password', [OrganizationRegistrationController::class, 'forgotPassword'])->name('api.organization.forgot-password');
@@ -174,6 +192,9 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::get('/profile', [OrganizationController::class, 'show'])->name('api.organization.profile.show');
             Route::post('/update-profile', [OrganizationController::class, 'update'])->name('api.organization.profile.update');
             Route::get('/profile/status', [OrganizationController::class, 'getStatus'])->name('api.organization.profile.status');
+
+            // «درخواست ویرایش» فیلدهای قفل با نامه‌ی مهر و امضادار
+            Route::post('/edit-requests', [OrganizationEditRequestController::class, 'store'])->name('api.organization.edit-requests.store');
 
             // مدارک سازمان و کاربران مجاز سازمان
             Route::get('/documents', [OrganizationAccountController::class, 'documents'])->name('api.organization.documents');
@@ -348,6 +369,15 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::post('/{orderId}/final-description', [OrderController::class, 'setUserFinalDescription'])->name('api.orders.final-description');
             Route::post('/{orderId}/in-place-description', [OrderController::class, 'setUserInPlaceDescription'])->name('api.orders.in-place-description');
             Route::get('/{orderId}/delivery-report', [DeliveryReportController::class, 'showForUser'])->name('api.orders.delivery-report');
+
+            // تامین کالا: تأیید / رد / استعلام مجدد / پرداخت مرحله‌ای
+            Route::post('/{orderId}/procurement/accept', [OrderProcurementController::class, 'accept'])->whereNumber('orderId')->name('api.orders.procurement.accept');
+            Route::post('/{orderId}/procurement/reject', [OrderProcurementController::class, 'reject'])->whereNumber('orderId')->name('api.orders.procurement.reject');
+            Route::post('/{orderId}/procurement/requote', [OrderProcurementController::class, 'requote'])->whereNumber('orderId')->name('api.orders.procurement.requote');
+            Route::post('/{orderId}/procurement/pay', [OrderProcurementController::class, 'pay'])->whereNumber('orderId')->name('api.orders.procurement.pay');
+
+            // مشخصات تحویل کالا / محصول از لوپ به کاربر
+            Route::put('/{orderId}/delivery', [OrderProcurementController::class, 'updateDelivery'])->whereNumber('orderId')->name('api.orders.delivery.update');
             Route::post('/{orderId}/delivery-report/verify', [DeliveryReportController::class, 'verifyByUser'])->name('api.orders.delivery-report.verify');
 
             // پرداخت سفارش از طریق درگاه
@@ -532,6 +562,14 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::post('/confirm', [TechnicianOrderReportController::class, 'confirm'])->name('api.order-reports.confirm');
         });
 
+        // کیف پول مأمور خرید (پورسانت کد معرف، برداشت به شبا، تهاتر)
+        Route::prefix('referral-agent')->middleware(\App\Http\Middleware\EnsureUserAccount::class)->group(function () {
+            Route::get('/summary', [ReferralAgentController::class, 'summary'])->name('api.referral-agent.summary');
+            Route::get('/commissions', [ReferralAgentController::class, 'commissions'])->name('api.referral-agent.commissions');
+            Route::get('/withdrawals', [ReferralAgentController::class, 'withdrawals'])->name('api.referral-agent.withdrawals');
+            Route::post('/withdrawals', [ReferralAgentController::class, 'storeWithdrawal'])->name('api.referral-agent.withdrawals.store');
+        });
+
         // Wallet Management
         Route::prefix('wallet')->group(function () {
             Route::post('/charge', [WalletController::class, 'increaseWallet'])->name('api.wallet.charge');
@@ -609,5 +647,10 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
     // Order payment callback (public - برای callback پرداخت سفارش از درگاه)
     Route::get('/order/payment/callback', [OrderController::class, 'paymentCallback'])->name('order.payment.callback');
+
+    // بازگشت از درگاه پرداخت مرحله‌ای تامین کالا (پیش‌پرداخت / باقی‌مانده)
+    Route::get('/order/procurement/payment/callback/{stage}', [OrderProcurementController::class, 'paymentCallback'])
+        ->whereIn('stage', ['prepayment', 'remaining'])
+        ->name('order.procurement.payment.callback');
 
 });

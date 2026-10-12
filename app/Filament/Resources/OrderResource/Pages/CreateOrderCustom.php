@@ -288,28 +288,17 @@ class CreateOrderCustom extends Page implements HasForms
                 ->schema([
 
                     Forms\Components\DatePicker::make('date')
-                        ->label('تاریخ سرویس')
+                        ->label('تاریخ اعزام محصول / تکنسین')
                         ->jalali()
                         ->required(),
 
-                    Forms\Components\TextInput::make('time')
-                        ->label('ساعت سرویس')
+                    Forms\Components\Select::make('time')
+                        ->label('ساعت اعزام محصول / تکنسین')
+                        ->options(\App\Models\Order::DISPATCH_TIME_SLOTS)
+                        ->native(false)
                         ->required(),
 
-                    Forms\Components\DateTimePicker::make('set_off_at')
-                        ->label('زمان حرکت تکنسین')
-                        ->jalali()
-                        ->nullable(),
-
-                    Forms\Components\DateTimePicker::make('arrived_at')
-                        ->label('زمان رسیدن تکنسین')
-                        ->jalali()
-                        ->nullable(),
-
-                    Forms\Components\DateTimePicker::make('send_to_loop')
-                        ->label('زمان اعزام محصول به لوپ')
-                        ->jalali()
-                        ->nullable(),
+                    // زمان حرکت / رسیدن تکنسین و اعزام محصول به لوپ را اپ و گزارش تکنسین خودکار ثبت می‌کنند
                 ])
                 ->columns(2),
 

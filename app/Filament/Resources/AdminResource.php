@@ -6,6 +6,7 @@ use App\Filament\Resources\AdminResource\Pages;
 use App\Filament\Resources\AdminResource\RelationManagers;
 use App\Models\Admin;
 use App\Traits\HasFilamentPermissions;
+use App\Support\ProfilePhotoField;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -85,11 +86,7 @@ class AdminResource extends Resource
                             ->label('شماره تلفن موبایل')
                             ->tel()
                             ->maxLength(20),
-                        Forms\Components\FileUpload::make('avatar')
-                            ->label('تصویر پروفایل')
-                            ->image()
-                            ->directory('admins')
-                            ->visibility('public'),
+                        ProfilePhotoField::make('avatar', 'admins'),
                     ])->columns(2),
                     
                 Forms\Components\Section::make('رمز عبور')

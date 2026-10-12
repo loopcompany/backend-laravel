@@ -53,7 +53,10 @@ class OrganizationController extends Controller
         );
 
         if ($result['status'] === 'error') {
-            return response()->json($result, 422);
+            $status = $result['http'] ?? 422;
+            unset($result['http']);
+
+            return response()->json($result, $status);
         }
 
         return response()->json($result);

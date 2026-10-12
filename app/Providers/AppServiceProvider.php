@@ -34,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(\App\Services\FirebaseNotificationService::class);
+        // خواننده‌ی دیتابیس GeoIP یک بار در هر درخواست باز می‌شود
+        $this->app->singleton(\App\Services\Security\GeoIpLocator::class);
 
         $this->app->bind(
             LoopLearnRegisterationRepositoryInterface::class,

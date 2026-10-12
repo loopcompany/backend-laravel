@@ -74,6 +74,7 @@ class AccountSecurityLogger
         try {
             $token ??= $this->currentToken($account);
             $userAgent = $request?->userAgent() ?? $token?->user_agent;
+            $ip = $request?->ip() ?? $token?->last_ip;
 
             return AccountActivity::create([
                 'account_type' => $account->getMorphClass(),
@@ -84,7 +85,8 @@ class AccountSecurityLogger
                 'device_id' => $token?->device_id,
                 'device' => AccountSessionService::deviceLabel($token, $userAgent),
                 'os' => AccountSessionService::osLabel($token, $userAgent),
-                'ip' => $request?->ip() ?? $token?->last_ip,
+                'ip' => $ip,
+                'approx_location' => app(GeoIpLocator::class)->locate($ip),
                 'user_agent' => $userAgent,
                 'meta' => $meta ?: null,
                 'created_at' => now(),

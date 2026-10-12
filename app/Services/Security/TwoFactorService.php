@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 class TwoFactorService
 {
     public const RECOVERY_CODES_COUNT = 8;
-    public const CHALLENGE_TTL = 600;          // ۱۰ دقیقه برای وارد کردن کد هنگام ورود
+    public const CHALLENGE_TTL = 300;          // two_factor_token حداکثر ۵ دقیقه معتبر است
     public const CHALLENGE_MAX_ATTEMPTS = 5;
 
     public function __construct(
@@ -183,6 +183,7 @@ class TwoFactorService
             'user_id' => $user->id,
             'kind' => $kind,
             'attempts' => 0,
+            'expires_at' => now()->timestamp + self::CHALLENGE_TTL,
         ], self::CHALLENGE_TTL);
 
         if ($settings->two_factor_method !== 'app') {
@@ -214,20 +215,43 @@ class TwoFactorService
 
         if (!$this->verifyLoginCode($user, $settings, $code)) {
             $challenge['attempts']++;
+            // هر کد اشتباه یک «ورود ناموفق» در فعالیت‌های اخیر است
+            $this->logger->failedLogin($user, request(), 'two_factor');
 
             if ($challenge['attempts'] >= self::CHALLENGE_MAX_ATTEMPTS) {
                 Cache::forget($key);
-                $this->logger->failedLogin($user, request(), 'two_factor');
-                throw new AccountSecurityException('تعداد تلاش ناموفق بیش از حد مجاز است. لطفاً دوباره وارد شوید.', 'TWO_FACTOR_LOCKED', 422);
+                throw new AccountSecurityException('تعداد تلاش ناموفق بیش از حد مجاز است. لطفاً دوباره وارد شوید.', 'TWO_FACTOR_LOCKED', 429);
             }
 
-            Cache::put($key, $challenge, self::CHALLENGE_TTL);
+            // مهلت از زمان شروع ورود حساب می‌شود، نه از آخرین تلاش
+            Cache::put($key, $challenge, max(1, ($challenge['expires_at'] ?? now()->timestamp + self::CHALLENGE_TTL) - now()->timestamp));
             throw new AccountSecurityException('کد تأیید نادرست است.', 'INVALID_CODE', 422);
         }
 
         Cache::forget($key);
 
         return ['user' => $user, 'kind' => $challenge['kind']];
+    }
+
+    /**
+     * ارسال مجدد کد پیامکی مرحله‌ی دوم ورود. فاصله‌ی ۶۰ ثانیه و سقف ارسال در ساعت را SecurityCodeService اعمال می‌کند (429).
+     *
+     * @return array{expires_in: int, resend_in: int, remaining_attempts: int}
+     */
+    public function resendChallenge(string $challengeToken): array
+    {
+        $challenge = Cache::get($this->challengeKey($challengeToken));
+        $user = $challenge ? User::find($challenge['user_id']) : null;
+
+        if (!$user) {
+            throw new AccountSecurityException('مهلت ورود به پایان رسیده است. لطفاً دوباره وارد شوید.', 'TWO_FACTOR_EXPIRED', 422);
+        }
+
+        if ($this->settings($user)->two_factor_method === 'app') {
+            throw new AccountSecurityException('کد را از اپ احراز هویت خود وارد کنید؛ ارسال پیامک برای این روش ممکن نیست.', 'RESEND_NOT_SUPPORTED', 422);
+        }
+
+        return $this->codes->send($user, '2fa-login', $user->phone);
     }
 
     // -----------------------------------------------------------------
@@ -247,7 +271,8 @@ class TwoFactorService
 
             return true;
         } catch (AccountSecurityException $e) {
-            if ($e->errorCode === 'CODE_EXPIRED' || $e->errorCode === 'CODE_LOCKED') {
+            // کد قفل‌شده مثل کد اشتباه شمرده می‌شود تا قفل شدن ورود یکدست 429 باشد
+            if ($e->errorCode === 'CODE_EXPIRED') {
                 throw $e;
             }
 

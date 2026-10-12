@@ -9,7 +9,6 @@ use App\Services\OrderService;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
-use PHPUnit\TextUI\Help;
 
 class EditOrder extends EditRecord
 {
@@ -24,10 +23,30 @@ class EditOrder extends EditRecord
         return $data;
     }
 
+    protected function beforeSave(): void
+    {
+        // محصول اعزام‌شده به لوپ: پیش از پرداخت پیش‌پرداخت، تعمیر شروع نمی‌شود و سفارش انجام‌شده ثبت نمی‌شود
+        $state = $this->form->getRawState();
+        $wantsDone = (int) ($state['status'] ?? $this->record->status) === 2 && (int) $this->record->status !== 2;
+        $prepaymentPaid = (int) ($state['prepayment_payment_status'] ?? $this->record->prepayment_payment_status) === 1;
+
+        if (OrderResource::awaitingLoopPrepayment($this->record) && !$prepaymentPaid && $wantsDone) {
+            Notification::make()
+                ->title('پیش‌پرداخت پرداخت نشده است')
+                ->body('تا وقتی کاربر پیش‌پرداخت را پرداخت نکرده، تعمیر شروع نمی‌شود و سفارش «انجام شده» ثبت نمی‌شود.')
+                ->danger()
+                ->send();
+
+            $this->halt();
+        }
+    }
+
     protected function afterSave(): void
     {
-        // بررسی تغییر وضعیت به "انجام شده" (2)
-        if(is_null($this->oldData['prepayment']) && $this->record->prepayment){
+        // پیامک «برآورد هزینه آماده است»: وقتی برآورد و درصد پیش‌پرداخت هر دو ثبت شدند.
+        // درصد پیش‌پرداخت از هنگام اعزام به لوپ پیش‌فرض ۶۰ دارد، پس ثبت برآورد هم ملاک است.
+        $estimateWasMissing = is_null($this->oldData['prepayment']) || is_null($this->oldData['loop_cost_estimate'] ?? null);
+        if ($estimateWasMissing && $this->record->prepayment && $this->record->loop_cost_estimate) {
             $user = $this->record->user;
             if($user){
                 Helper::send_sms($user->phone, 899612, ['ID'], [$this->record->id]);
@@ -36,6 +55,7 @@ class EditOrder extends EditRecord
         if($this->oldData['prepayment_payment_status'] ==0 && $this->record->prepayment_payment_status == 1){
             $this->record->update(['user_accept_date' => now()]);
         }
+        // بررسی تغییر وضعیت به "انجام شده" (2)
         if ($this->oldData && isset($this->oldData['status']) && $this->record->status == 2 && $this->oldData['status'] != 2) {
 
 

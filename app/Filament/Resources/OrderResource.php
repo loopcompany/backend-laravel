@@ -152,8 +152,10 @@ class OrderResource extends Resource
                     Forms\Components\TextInput::make('technician_price')
                         ->label('مبلغ نهایی لوپ بدون تخفیف و خدمات اضافی')
                         ->numeric()
-                        ->helperText('این فیلد تنها زمانی که کالا به لوپ اعزام شده باشد یا سفارش در محل کاربر انجام شده باشد قابل ویرایش است')
-                        ->disabled(fn(?Order $record) => is_null($record?->send_to_loop) && is_null($record?->done_in_place))
+                        ->helperText(fn(?Order $record) => self::awaitingLoopPrepayment($record)
+                            ? 'تا پرداخت پیش‌پرداخت توسط کاربر، تعمیر شروع نمی‌شود و مبلغ نهایی قابل ثبت نیست.'
+                            : 'این فیلد تنها زمانی که کالا به لوپ اعزام شده باشد یا سفارش در محل کاربر انجام شده باشد قابل ویرایش است')
+                        ->disabled(fn(?Order $record) => (is_null($record?->send_to_loop) && is_null($record?->done_in_place)) || self::awaitingLoopPrepayment($record))
                         ->suffix('تومان')
                         ->nullable(),
 
@@ -177,31 +179,45 @@ class OrderResource extends Resource
                 ->schema([
 
                     Forms\Components\DatePicker::make('date')
-                        ->label('تاریخ سرویس')
+                        ->label('تاریخ اعزام محصول / تکنسین')
                         ->jalali()
                         ->required(),
 
-                    Forms\Components\TextInput::make('time')
-                        ->label('ساعت سرویس')
+                    Forms\Components\Select::make('time')
+                        ->label('ساعت اعزام محصول / تکنسین')
+                        // بازه‌ی فعلی سفارش‌های قدیمی (مثلاً «9 - 10») هم در فهرست می‌ماند
+                        ->options(fn(?Order $record) => Order::DISPATCH_TIME_SLOTS
+                            + (filled($record?->time) && !array_key_exists($record->time, Order::DISPATCH_TIME_SLOTS) ? [$record->time => $record->time] : []))
+                        ->native(false)
                         ->required(),
 
+                    // این سه زمان را اپ تکنسین و گزارش تکنسین خودکار ثبت می‌کنند
                     Forms\Components\DateTimePicker::make('set_off_at')
                         ->label('زمان حرکت تکنسین')
                         ->jalali()
-                        ->nullable(),
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->helperText('خودکار از اپ تکنسین'),
 
                     Forms\Components\DateTimePicker::make('arrived_at')
                         ->label('زمان رسیدن تکنسین')
                         ->jalali()
-                        ->nullable(),
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->helperText('خودکار از اپ تکنسین'),
 
                     Forms\Components\DateTimePicker::make('send_to_loop')
                         ->label('زمان اعزام محصول به لوپ')
                         ->jalali()
-                        ->nullable(),
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->helperText('خودکار از گزارش تکنسین'),
 
                     Forms\Components\Select::make('shipment_status')
                         ->label('وضعیت اعزام محصول به محل کاربر')
+                        // ارسال به کاربر فقط پس از تسویه‌ی کامل (سند اپ کاربر، بخش ۹-۵)
+                        ->disabled(fn(?Order $record) => $record?->send_to_loop && (int) $record->payment_status !== 1)
+                        ->helperText(fn(?Order $record) => $record?->send_to_loop && (int) $record->payment_status !== 1 ? 'پس از پرداخت کامل سفارش فعال می‌شود.' : null)
                         ->options([
                             'تکنسین لوپ' => 'تکنسین لوپ',
                             'پیک کاربر' => 'پیک کاربر',
@@ -232,6 +248,38 @@ class OrderResource extends Resource
 
                 ])->columns(2),
 
+
+            Forms\Components\Section::make('مشخصات تحویل')
+                ->description('برای کالا / محصولی که از لوپ به کاربر برمی‌گردد (اعزام به لوپ یا تامین کالا). کاربر آن را در اپ ثبت می‌کند.')
+                ->visible(fn(?Order $record) => $record?->returnsGoodsToUser() ?? false)
+                ->schema([
+                    Forms\Components\Select::make('delivery_receiver_type')
+                        ->label('تحویل‌گیرنده')
+                        ->options(Order::DELIVERY_RECEIVER_TYPES)
+                        ->live(),
+                    Forms\Components\Select::make('delivery_method')
+                        ->label('روش ارسال')
+                        ->options(Order::DELIVERY_METHODS),
+                    Forms\Components\TextInput::make('delivery_receiver_name')
+                        ->label('نام تحویل‌گیرنده')
+                        ->maxLength(191)
+                        ->visible(fn(Forms\Get $get) => $get('delivery_receiver_type') === 'representative'),
+                    Forms\Components\TextInput::make('delivery_receiver_mobile')
+                        ->label('موبایل تحویل‌گیرنده')
+                        ->regex('/^09[0-9]{9}$/')
+                        ->visible(fn(Forms\Get $get) => $get('delivery_receiver_type') === 'representative'),
+                    Forms\Components\TextInput::make('delivery_receiver_national_id')
+                        ->label('کد ملی تحویل‌گیرنده')
+                        ->regex('/^[0-9]{10}$/')
+                        ->visible(fn(Forms\Get $get) => $get('delivery_receiver_type') === 'representative'),
+                    Forms\Components\Select::make('delivery_status')
+                        ->label('وضعیت تحویل')
+                        ->options(Order::DELIVERY_STATUSES)
+                        ->disableOptionWhen(fn(string $value, ?Order $record) => $value === 'shipped' && $record?->send_to_loop && (int) $record->payment_status !== 1),
+                    Forms\Components\Placeholder::make('delivered_at_view')
+                        ->label('تاریخ و ساعت تحویل')
+                        ->content(fn(?Order $record) => $record?->delivered_at ? \Morilog\Jalali\Jalalian::forge($record->delivered_at)->format('Y/m/d H:i') : 'ثبت نشده'),
+                ])->columns(3),
 
             Forms\Components\Section::make('توضیحات')
                 ->schema([
@@ -392,6 +440,15 @@ class OrderResource extends Resource
     }
 
 
+    /** محصول اعزام‌شده به لوپ که پیش‌پرداخت دارد ولی هنوز پرداخت نشده (شروع تعمیر ممنوع). */
+    public static function awaitingLoopPrepayment(?Order $record): bool
+    {
+        return $record !== null
+            && $record->send_to_loop !== null
+            && (float) $record->prepayment > 0
+            && (int) $record->prepayment_payment_status !== 1;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -479,7 +536,7 @@ class OrderResource extends Resource
 
                 Tables\Columns\TextColumn::make('date')
                     ->jalaliDate()
-                    ->label('تاریخ سرویس')
+                    ->label('تاریخ اعزام')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -1015,10 +1072,10 @@ class OrderResource extends Resource
                     ->schema([
                         Infolists\Components\TextEntry::make('date')
                             ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d') : '-')
-                            ->label('تاریخ سرویس'),
+                            ->label('تاریخ اعزام محصول / تکنسین'),
 
                         Infolists\Components\TextEntry::make('time')
-                            ->label('ساعت سرویس'),
+                            ->label('ساعت اعزام محصول / تکنسین'),
 
                         Infolists\Components\TextEntry::make('set_off_at')
                             ->label('زمان حرکت تکنسین')
@@ -1027,6 +1084,11 @@ class OrderResource extends Resource
 
                         Infolists\Components\TextEntry::make('arrived_at')
                             ->label('زمان رسیدن')
+                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
+                            ->placeholder('-'),
+
+                        Infolists\Components\TextEntry::make('send_to_loop')
+                            ->label('زمان اعزام محصول به لوپ')
                             ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
                             ->placeholder('-'),
 

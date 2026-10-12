@@ -68,6 +68,17 @@ class Organization extends Model
         return $this->hasMany(OrganizationUser::class);
     }
 
+    public function editRequests(): HasMany
+    {
+        return $this->hasMany(OrganizationEditRequest::class);
+    }
+
+    /** آخرین درخواست ویرایش فیلدهای قفل (برای `edit_request` پروفایل). */
+    public function latestEditRequest(): ?OrganizationEditRequest
+    {
+        return $this->editRequests()->latest('id')->first();
+    }
+
     /**
      * دریافت آخرین قرارداد
      */

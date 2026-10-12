@@ -8,6 +8,7 @@ use App\Models\Technician;
 use App\Rules\TechnicianBirthYear;
 use App\Support\TechnicianRestriction;
 use App\Models\Expertise;
+use App\Support\ProfilePhotoField;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -77,9 +78,7 @@ class TechnicianResource extends Resource
                                         ->required()
                                         ->maxLength(255)
                                         ->label('نام و نام خانوادگی'),
-                                    Forms\Components\FileUpload::make('profile_photo_path')
-                                        ->image()
-                                        ->label('تصویر پروفایل'),
+                                    ProfilePhotoField::make('profile_photo_path', 'technicians/profiles'),
 
                                     Forms\Components\TextInput::make('referral_code')
                                         ->required()
@@ -352,6 +351,11 @@ class TechnicianResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('profile_photo_path')
+                    ->label('عکس')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(asset('assets/images/logo.png')),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->label('نام'),

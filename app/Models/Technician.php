@@ -8,11 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Concerns\DeletesReplacedPublicFiles;
 use Laravel\Sanctum\HasApiTokens;
 
 class Technician extends Authenticatable
 {
-    use HasFactory, SoftDeletes, HasApiTokens;
+    use HasFactory, SoftDeletes, HasApiTokens, DeletesReplacedPublicFiles;
+
+    /** عکس پروفایل قبلی پس از تعویض/حذف در پنل پاک می‌شود. */
+    protected static array $publicFileAttributes = ['profile_photo_path'];
 
     // وضعیت‌های تایید
     const APPROVAL_PENDING = 'pending';

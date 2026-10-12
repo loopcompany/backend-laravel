@@ -17,7 +17,8 @@ class UpdateTechnicianPersonalInfoRequest extends FormRequest
         $technicianId = $this->user('sanctum')->id;
 
         return [
-            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            // عکس پروفایل فقط از پنل تغییر می‌کند؛ فیلد نسخه‌های قدیمی اپ پذیرفته و نادیده گرفته می‌شود
+            'profile_photo' => ['nullable'],
             'melicode' => ['nullable', 'string', 'size:10', 'regex:/^[0-9]{10}$/'],
             'birth_date' => ['nullable', 'date'],
             'father_name' => ['nullable', 'string', 'max:100'],
@@ -58,9 +59,6 @@ class UpdateTechnicianPersonalInfoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'profile_photo.image' => 'فایل باید یک تصویر باشد.',
-            'profile_photo.mimes' => 'فرمت تصویر باید jpeg، png یا jpg باشد.',
-            'profile_photo.max' => 'حجم تصویر نباید بیشتر از 2 مگابایت باشد.',
             'melicode.size' => 'کد ملی باید 10 رقم باشد.',
             'melicode.regex' => 'کد ملی باید فقط شامل اعداد باشد.',
             'birth_date.date' => 'تاریخ تولد نامعتبر است.',

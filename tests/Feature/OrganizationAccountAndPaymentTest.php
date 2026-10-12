@@ -11,7 +11,6 @@ use App\Models\OrganizationDocument;
 use App\Models\ReferralCode;
 use App\Models\User;
 use App\Models\UserTransaction;
-use App\Services\EditRequestApprovalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +82,7 @@ class OrganizationAccountAndPaymentTest extends TestCase
             ->assertJsonPath('data.verification_reason', 'شناسه ملی نادرست');
     }
 
-    public function test_update_profile_puts_identity_fields_into_edit_request_and_approval_applies_them(): void
+    public function test_identity_fields_are_locked_without_an_approved_edit_request(): void
     {
         $user = $this->organizationUser(['registration_number' => '111', 'economic_code' => '999']);
         Sanctum::actingAs($user);
@@ -91,22 +90,17 @@ class OrganizationAccountAndPaymentTest extends TestCase
         $this->postJson('/api/organization/update-profile', ['melicode' => '1234']) // نامعتبر
             ->assertStatus(422);
 
+        // شناسه ملی، شماره ثبت و شماره اقتصادی فیلدهای قفل‌اند (بخش ۱۱ سند اپ کاربر)
         $this->postJson('/api/organization/update-profile', [
             'melicode' => '14001234567',
             'registration_number' => '654321',
             'economic_code' => '',
-        ])->assertOk()
-            ->assertJsonPath('data.edited_organization.melicode', '14001234567')
-            ->assertJsonPath('data.edited_organization.registration_number', '654321')
-            ->assertJsonPath('data.edited_organization.economic_code', null)
-            // تا تأیید ادمین، اطلاعات فعلی تغییر نمی‌کند
-            ->assertJsonPath('data.melicode', '10101234567');
+        ])->assertStatus(403)
+            ->assertJsonPath('error_code', 'FIELDS_LOCKED');
 
-        app(EditRequestApprovalService::class)->approve(EditRequest::sole());
-
-        $this->assertSame('14001234567', $user->fresh()->melicode);
-        $this->assertSame('654321', $user->organization->fresh()->registration_number);
-        $this->assertNull($user->organization->fresh()->economic_code);
+        $this->assertSame('10101234567', $user->fresh()->melicode);
+        $this->assertSame('111', $user->organization->fresh()->registration_number);
+        $this->assertSame(0, EditRequest::count());
     }
 
     // ----------------------------------------------------------------- مدارک و کاربران مجاز

@@ -54,9 +54,11 @@ class OrganizationUpdateRequest extends FormRequest
                     }
                 },
             ],
-            'profile_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'profile_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            // حذف عکس پروفایل (فیلد آزاد؛ تأیید ادمین لازم نیست)
+            'remove_profile_image' => 'sometimes|boolean',
 
-            // شناسه ملی سازمان/شرکت، شماره ثبت و شماره اقتصادی (وارد درخواست ویرایش می‌شوند)
+            // شناسه ملی سازمان/شرکت، شماره ثبت و شماره اقتصادی (فیلدهای قفل؛ فقط پس از تأیید «درخواست ویرایش»)
             'melicode' => ['sometimes', 'nullable', 'regex:/^[0-9]{10,11}$/'],
             'registration_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'economic_code' => ['sometimes', 'nullable', 'regex:/^[0-9]{0,20}$/'],
@@ -126,7 +128,7 @@ class OrganizationUpdateRequest extends FormRequest
             'manager_national_code.regex' => 'The national code must be 10 digits.',
 
             'profile_image.image' => 'The file must be an image.',
-            'profile_image.mimes' => 'The image format must be jpeg, png, jpg, or gif.',
+            'profile_image.mimes' => 'The image format must be jpeg, png, jpg, gif or webp.',
             'profile_image.max' => 'The image size should not be more than 5 MB.',
 
             'organization_email.email' => 'The email format is invalid.',

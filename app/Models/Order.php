@@ -97,7 +97,45 @@ class Order extends Model
         'done_in_place',
         'technician_in_place_description',
         'admin_in_place_description',
-        'user_in_place_description'
+        'user_in_place_description',
+        // تامین کالا (اپ سازمانی)
+        'procurement_items',
+        'delivery_mode',
+        'technician_gender',
+        // مشخصات تحویل کالا / محصول از لوپ به کاربر
+        'delivery_receiver_type',
+        'delivery_receiver_name',
+        'delivery_receiver_mobile',
+        'delivery_receiver_national_id',
+        'delivery_method',
+        'delivery_status',
+        'delivered_at',
+    ];
+
+    public const DELIVERY_RECEIVER_TYPES = [
+        'self' => 'خود کاربر',
+        'representative' => 'نماینده / شخص دیگر',
+    ];
+
+    public const DELIVERY_METHODS = [
+        'loop_technician' => 'توسط تکنسین لوپ',
+        'user' => 'خود کاربر / تحویل حضوری',
+        'courier' => 'پیک حمل و نقل',
+    ];
+
+    public const DELIVERY_STATUSES = [
+        'pending' => 'در انتظار',
+        'ready' => 'آماده تحویل',
+        'shipped' => 'ارسال شد',
+        'delivered' => 'تحویل شد',
+    ];
+
+    /** بازه‌های «ساعت اعزام محصول / تکنسین» در پنل. */
+    public const DISPATCH_TIME_SLOTS = [
+        '10 - 12' => '۱۰ الی ۱۲',
+        '12 - 14' => '۱۲ الی ۱۴',
+        '14 - 16' => '۱۴ الی ۱۶',
+        '16 - 20' => '۱۶ الی ۲۰',
     ];
 
     protected $casts = [
@@ -118,6 +156,9 @@ class Order extends Model
         'emergency_help_at' => 'datetime',
         'referral_discount_percent' => 'integer',
         'promo_discount_percent' => 'integer',
+        'procurement_items' => 'array',
+        'delivery_mode' => 'array',
+        'delivered_at' => 'datetime',
     ];
 
     protected function casts(): array
@@ -132,6 +173,23 @@ class Order extends Model
     }
 
 
+
+    protected static function booted(): void
+    {
+        static::saving(function (Order $order) {
+            // محصول اعزام‌شده به لوپ بدون درصد پیش‌پرداخت تأیید نمی‌شود؛ پیش‌فرض از تنظیمات پنل (۶۰٪)
+            if ($order->send_to_loop !== null && $order->prepayment === null) {
+                $order->prepayment = AppSetting::int(AppSetting::LOOP_PREPAYMENT_PERCENT);
+            }
+        });
+
+        static::saved(function (Order $order) {
+            // پورسانت مأمور خرید با وضعیت سفارش هم‌گام می‌شود (pending / available / canceled)
+            if ($order->referral_code_id && $order->wasChanged(['status', 'payment_status', 'technician_price', 'extra_price', 'pakar_price'])) {
+                app(\App\Services\ReferralAgentService::class)->syncForOrder($order);
+            }
+        });
+    }
 
     public function delivery_reports(): HasOne
     {
@@ -203,6 +261,63 @@ class Order extends Model
     public function user_transaction(): HasOne
     {
         return $this->hasOne(UserTransaction::class);
+    }
+
+    /** استعلام تامین کالا (فقط سفارش سازمانی/شرکتی با اقلام تامین کالا). */
+    public function procurement(): HasOne
+    {
+        return $this->hasOne(OrderProcurement::class);
+    }
+
+    public function referralCommission(): HasOne
+    {
+        return $this->hasOne(ReferralCommission::class);
+    }
+
+    /** کالا / محصول از لوپ به کاربر برمی‌گردد (اعزام به لوپ یا تامین کالا). */
+    public function returnsGoodsToUser(): bool
+    {
+        return $this->send_to_loop !== null
+            || $this->delivery_receiver_type !== null
+            || ($this->relationLoaded('procurement') ? $this->procurement !== null : $this->procurement()->exists());
+    }
+
+    /** شکل `delivery` در پاسخ جزئیات / لیست سفارش (سند اپ کاربر، بخش ۱۰). */
+    public function deliveryPayload(): ?array
+    {
+        if (!$this->returnsGoodsToUser()) {
+            return null;
+        }
+
+        $isSelf = $this->delivery_receiver_type === 'self';
+        // بدون setRelation، تا user در خروجی JSON سفارش ظاهر نشود
+        $user = $isSelf ? ($this->relationLoaded('user') ? $this->user : User::find($this->user_id)) : null;
+
+        return [
+            'receiver_type' => $this->delivery_receiver_type,
+            'receiver_name' => $isSelf
+                ? (trim(($user?->name ?? '') . ' ' . ($user?->last_name ?? '')) ?: null)
+                : $this->delivery_receiver_name,
+            'receiver_mobile' => $isSelf ? $user?->phone : $this->delivery_receiver_mobile,
+            'receiver_national_id' => $isSelf ? null : $this->delivery_receiver_national_id,
+            'method' => $this->delivery_method,
+            'status' => $this->delivery_status ?? 'pending',
+            'delivered_at' => $this->delivered_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * فیلدهای `procurement` و `delivery` برای پاسخ‌های مشتری. رابطه‌ی procurement از خروجی خام
+     * حذف می‌شود تا شکل API جایگزین آن شود.
+     */
+    public function customerExtras(): array
+    {
+        $procurement = $this->relationLoaded('procurement') ? $this->procurement : $this->procurement()->with('items')->first();
+
+        return [
+            'procurement' => $procurement?->toApiArray(),
+            'delivery' => $this->deliveryPayload(),
+        ];
     }
 
     /**

@@ -9,7 +9,6 @@ use App\DTOs\UpdateTechnicianPasswordDTO;
 use App\Models\Technician;
 use App\Repositories\TechnicianRepository;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
 class TechnicianService
@@ -24,24 +23,18 @@ class TechnicianService
         try {
             $data = $dto->toArray();
 
-            // آپلود عکس پروفایل اگر ارسال شده باشد
-            if ($profilePhoto) {
-                // حذف عکس قبلی اگر وجود داشته باشد
-                if ($technician->profile_photo_path) {
-                    Storage::disk('public')->delete($technician->profile_photo_path);
-                }
-
-                // ذخیره عکس جدید
-                $path = $profilePhoto->store('technicians/profiles', 'public');
-                $data['profile_photo_path'] = $path;
-            }
+            // عکس پروفایل تکنسین فقط از پنل مدیریت تغییر می‌کند؛ تکنسین فقط آن را می‌بیند.
+            // نسخه‌های قدیمی اپ هنوز profile_photo می‌فرستند: نادیده گرفته می‌شود تا بقیه‌ی اطلاعات ذخیره شود.
+            unset($data['profile_photo_path']);
 
             // به‌روزرسانی اطلاعات
             $updatedTechnician = $this->technicianRepository->updatePersonalInfo($technician, $data);
 
             return [
                 'success' => true,
-                'message' => 'اطلاعات شخصی با موفقیت به‌روزرسانی شد.',
+                'message' => $profilePhoto
+                    ? 'اطلاعات شخصی به‌روزرسانی شد. تصویر پروفایل فقط از طریق پنل مدیریت قابل تغییر است.'
+                    : 'اطلاعات شخصی با موفقیت به‌روزرسانی شد.',
                 'data' => [
                     'technician' => [
                         'id' => $updatedTechnician->id,
@@ -66,6 +59,9 @@ class TechnicianService
                         'home_postal_code' => $updatedTechnician->home_postal_code,
                         'technician_type' => $updatedTechnician->technician_type,
                         'other_referral_code' => $updatedTechnician->other_referral_code,
+                        'profile_photo_path' => $updatedTechnician->profile_photo_path
+                            ? asset('storage/' . $updatedTechnician->profile_photo_path)
+                            : null,
                         'profile_photo_url' => $updatedTechnician->profile_photo_path
                             ? asset('storage/' . $updatedTechnician->profile_photo_path)
                             : null,

@@ -337,10 +337,14 @@ class TechnicianRegistrationService
         $accessToken = $newToken->accessToken;
 
         // forceFill لازم است، چون ستون‌های دستگاه در $fillable مدل PersonalAccessToken نیستند
-        $accessToken->forceFill(array_filter($device, fn ($v) => $v !== null && $v !== ''))->save();
+        $sessions = app(AccountSessionService::class);
+        $accessToken->forceFill(array_filter($device, fn ($v) => $v !== null && $v !== ''));
+        // نام تجاری دستگاه و موقعیت تقریبی یک بار هنگام ورود
+        $sessions->enrich($accessToken);
+        $accessToken->save();
 
         // ورود دوباره روی همان دستگاه، نشست قبلی همان دستگاه را جایگزین می‌کند
-        app(AccountSessionService::class)->replaceOtherTokensOfDevice($technician, $accessToken);
+        $sessions->replaceOtherTokensOfDevice($technician, $accessToken);
 
         $token = $newToken->plainTextToken;
 

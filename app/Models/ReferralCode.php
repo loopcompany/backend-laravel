@@ -15,6 +15,7 @@ class ReferralCode extends Model
         'user_id',
         'code',
         'status',
+        'multi_use',
         'discount_percent',
         'commission_percent',
         'used_by_user_id',
@@ -24,6 +25,7 @@ class ReferralCode extends Model
     protected $casts = [
         'discount_percent' => 'integer',
         'commission_percent' => 'integer',
+        'multi_use' => 'boolean',
         'used_at' => 'datetime',
     ];
 

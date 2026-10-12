@@ -8,6 +8,7 @@ use App\Services\ProfileUpdateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -80,8 +81,36 @@ class ProfileController extends Controller
                 $data['profile_photo_path'] = $request->file('profile_photo_path');
             }
             
+            // حذف عکس پروفایل (سند اپ کاربر، بخش ۱۲): { remove_profile_photo: 1 } کنار بقیه‌ی فیلدها
+            $removedPhoto = false;
+            if ($request->boolean('remove_profile_photo') && !$request->hasFile('profile_photo_path')) {
+                $oldPhoto = $user->profile_photo_path;
+                $user->forceFill(['profile_photo_path' => null])->save();
+                if ($oldPhoto && !str_starts_with($oldPhoto, 'http')) {
+                    Storage::disk('public')->delete($oldPhoto);
+                }
+                unset($data['profile_photo_path']);
+                $removedPhoto = true;
+            }
+            unset($data['remove_profile_photo']);
+
             // Create DTO from validated data
             $dto = UpdateProfileDTO::fromArray($data);
+
+            if ($removedPhoto && !$dto->hasChanges()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'عکس پروفایل حذف شد.',
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'last_name' => $user->last_name,
+                        'phone' => $user->phone,
+                        'email' => $user->email,
+                        'profile_photo_path' => null,
+                    ],
+                ]);
+            }
 
             // Update profile
             $result = $this->profileUpdateService->updateProfile($user, $dto);

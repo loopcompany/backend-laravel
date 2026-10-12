@@ -81,7 +81,26 @@ class AccountSessionService
             'ip_address' => $token->ip_address ?? $request->ip(),
             'last_ip' => $request->ip(),
             'user_agent' => $token->user_agent ?? $request->userAgent(),
-        ])->save();
+        ]);
+
+        $this->enrich($token);
+        $token->save();
+    }
+
+    /**
+     * نام تجاری دستگاه و موقعیت تقریبی را روی توکن می‌گذارد (save نمی‌کند).
+     * فقط وقتی مدل یا IP عوض شده (یا هنوز مقداری ندارد) محاسبه می‌شود، نه در هر درخواست.
+     */
+    public function enrich(PersonalAccessToken $token): void
+    {
+        if ($token->isDirty(['device_model', 'device_brand', 'platform']) || ($token->device_model && $token->device_name === null)) {
+            $token->device_name = app(DeviceNameResolver::class)->resolve($token->device_brand, $token->device_model, $token->platform);
+        }
+
+        $ip = $token->last_ip ?? $token->ip_address;
+        if ($token->isDirty(['last_ip', 'ip_address']) || ($ip && $token->last_location === null)) {
+            $token->last_location = app(GeoIpLocator::class)->locate($ip);
+        }
     }
 
     /**
@@ -120,12 +139,13 @@ class AccountSessionService
         }
     }
 
-    /** نام خوانای دستگاه، مثل «Samsung Galaxy A25». */
+    /** نام خوانای دستگاه، مثل «samsung Galaxy A25». */
     public static function deviceLabel(?PersonalAccessToken $token, ?string $userAgent = null): ?string
     {
         if ($token && ($token->device_model || $token->device_brand)) {
             $brand = (string) $token->device_brand;
-            $model = (string) $token->device_model;
+            // نام تجاری («Galaxy A22») بر کد مدل («SM-A225F») مقدم است
+            $model = (string) ($token->device_name ?: $token->device_model);
 
             return trim($brand !== '' && !str_starts_with(mb_strtolower($model), mb_strtolower($brand)) ? "{$brand} {$model}" : $model) ?: null;
         }

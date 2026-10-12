@@ -2,10 +2,12 @@
 
 namespace App\Repositories;
 
+use App\Models\AppSetting;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\DiscountUse;
 use App\Models\OrderGallery;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 class OrderRepository
 {
@@ -43,7 +45,8 @@ class OrderRepository
                 'technician' => function ($query) {
                     $query->withAvg('reviews as average_rating', 'technician_rate');
                 },
-                'discountUse.discount_code'
+                'discountUse.discount_code',
+                'procurement.items',
             ])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -66,7 +69,8 @@ class OrderRepository
                 'technician' => function ($query) {
                     $query->withAvg('reviews as average_rating', 'technician_rate');
                 },
-                'discountUse.discount_code'
+                'discountUse.discount_code',
+                'procurement.items',
             ]);
 
         // فیلتر بر اساس تاریخ شروع
@@ -109,7 +113,8 @@ class OrderRepository
             'technician',
             'user_address',
             'discountUse.discount_code',
-            'order_galleries'
+            'order_galleries',
+            'procurement.items',
         ])
             ->where('user_id', $userId)
             ->where('id', $orderId)
@@ -184,8 +189,12 @@ class OrderRepository
      */
     public function updateSendToLoop(int $orderId): bool
     {
+        // درصد پیش‌پرداخت خالی، پیش‌فرض تنظیمات پنل (۶۰٪) را می‌گیرد (سند اپ کاربر، بخش ۹-۵)
         return Order::where('id', $orderId)
-            ->update(['send_to_loop' => now()]);
+            ->update([
+                'send_to_loop' => now(),
+                'prepayment' => DB::raw('COALESCE(prepayment, ' . AppSetting::int(AppSetting::LOOP_PREPAYMENT_PERCENT) . ')'),
+            ]);
     }
     public function updateDoneInPlace(int $orderId, string $technician_in_place_description): bool
     {

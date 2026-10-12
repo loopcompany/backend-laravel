@@ -151,6 +151,10 @@ class OrderService
             'referral_commission_percent' => $referralCode?->commission_percent ?? 0,
             'promo_code_id' => $promoCode?->id,
             'promo_discount_percent' => $promoCode?->discount_percent ?? 0,
+            // تامین کالا: تا پیش از این فقط داخل متن description می‌آمد
+            'procurement_items' => !empty($data['procurement_items']) ? array_values($data['procurement_items']) : null,
+            'delivery_mode' => !empty($data['delivery_mode']) ? array_values(array_unique($data['delivery_mode'])) : null,
+            'technician_gender' => $data['technician_gender'] ?? null,
         ];
         // اضافه کردن اطلاعات service_schedule (برای سازمان‌ها)
         $serviceScheduleData = $this->extractServiceScheduleFromSteps($data['steps'] ?? []);
@@ -219,6 +223,16 @@ class OrderService
             $this->applyPromoCode($order->id, $promoCode, $userId);
         }
 
+        // استعلام تامین کالا برای حساب سازمانی/شرکتی (صف «استعلام تامین کالا» پنل)
+        if (!empty($data['procurement_items'])) {
+            app(ProcurementService::class)->createForOrder($order, $data['procurement_items'], $data['user']);
+        }
+
+        // پورسانت مأمور خرید (در انتظار تا تسویه‌ی کامل سفارش)
+        if ($referralCode) {
+            app(ReferralAgentService::class)->syncForOrder($order);
+        }
+
         // ارسال پیامک تأیید سفارش
         $this->sendOrderConfirmationSms($order, $data['user']);
 
@@ -247,6 +261,20 @@ class OrderService
                     'valid' => false,
                     'message' => 'کد معرف معتبر نیست.',
                 ];
+            }
+
+            // کد مأمور خرید چندبارمصرف است و با هر سفارش مصرف نمی‌شود
+            if ($referralCode->multi_use) {
+                if ($referralCode->status !== ReferralCode::STATUS_ACTIVE || (int) $referralCode->user_id === $userId) {
+                    return [
+                        'valid' => false,
+                        'message' => (int) $referralCode->user_id === $userId
+                            ? 'نمی‌توانید از کد معرف خودتان استفاده کنید.'
+                            : 'این کد معرف غیرفعال است.',
+                    ];
+                }
+
+                return ['valid' => true, 'referral_code' => $referralCode];
             }
 
             $alreadyUsedByCurrentUser =
@@ -547,7 +575,8 @@ class OrderService
                 }
                 $orderArray['discount_info'] = $discountInfo;
 
-                return $orderArray;
+                // تامین کالا و مشخصات تحویل (سند اپ کاربر، بخش ۹ و ۱۰)
+                return array_merge($orderArray, $order->customerExtras());
             });
 
             return [
@@ -614,7 +643,8 @@ class OrderService
                 }
                 $orderArray['discount_info'] = $discountInfo;
 
-                return $orderArray;
+                // تامین کالا و مشخصات تحویل (سند اپ کاربر، بخش ۹ و ۱۰)
+                return array_merge($orderArray, $order->customerExtras());
             });
 
             $result = [
@@ -726,6 +756,12 @@ class OrderService
                 ];
             }
             $order->discount_info = $discountInfo;
+
+            // تامین کالا و مشخصات تحویل (سند اپ کاربر، بخش ۹ و ۱۰)
+            $extras = $order->customerExtras();
+            $order->unsetRelation('procurement');
+            $order->setAttribute('procurement', $extras['procurement']);
+            $order->setAttribute('delivery', $extras['delivery']);
 
             CustomerFacingTechnician::forOrder($order);
 
@@ -1200,6 +1236,15 @@ class OrderService
 
             // اگر تصمیم "تایید" باشد
             if ($dto->isAccepted()) {
+                // محصول اعزام‌شده به لوپ: تأیید فقط با پرداخت پیش‌پرداخت (سند اپ کاربر، بخش ۹-۵)
+                if ((float) $order->prepayment > 0 && (float) $order->loop_cost_estimate > 0 && (int) $order->prepayment_payment_status !== 1) {
+                    return [
+                        'success' => false,
+                        'message' => 'برای تأیید، ابتدا پیش‌پرداخت ' . (int) $order->prepayment . ' درصدی را پرداخت کنید.',
+                        'error_code' => 'PREPAYMENT_REQUIRED'
+                    ];
+                }
+
                 $updated = $this->repo->acceptOrder($orderId, $dto->reason);
 
                 if (!$updated) {
@@ -1381,6 +1426,17 @@ class OrderService
                     'message' => 'خطا در ثبت توضیحات. لطفاً دوباره تلاش کنید.',
                     'error_code' => 'UPDATE_ERROR'
                 ];
+            }
+
+            // «تاریخ تحویل: موقع دریافت و ثبت از سوی کاربر تکمیل می‌شود» (سند اپ کاربر، بخش ۱۰-۳)
+            $order->refresh();
+            if ($order->returnsGoodsToUser() && $order->delivered_at === null) {
+                $order->forceFill(['delivered_at' => now(), 'delivery_status' => 'delivered'])->save();
+
+                $procurement = $order->procurement;
+                if ($procurement && $procurement->effectiveStatus() === \App\Models\OrderProcurement::STATUS_SHIPPED) {
+                    app(ProcurementService::class)->markDelivered($procurement);
+                }
             }
 
             Log::info('توضیحات نهایی کاربر ثبت شد', [

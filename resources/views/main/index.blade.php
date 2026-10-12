@@ -558,8 +558,7 @@
             <p class="desc">{{ $app['desc'] }}</p>
           </div>
 
-          <div class="qr-block">
-            <img class="qr" src="{{ asset('assets/new-style/qr.jpeg') }}" alt="QR کد دریافت {{ $app['gold'] }} {{ $app['name'] }}">
+          <div class="store-block">
             <div class="store-col">
               <div class="store-btn">
                 <img src="{{ asset('assets/new-style/google-play.png') }}" alt="Google Play">
@@ -568,6 +567,10 @@
               <div class="store-btn">
                 <img src="{{ asset('assets/new-style/app-store.png') }}" alt="App Store">
                 <span class="st-text en"><small>Download on the</small><strong>App Store</strong></span>
+              </div>
+              <div class="store-btn">
+                <img src="{{ asset('assets/images/bazar.png') }}" alt="بازار">
+                <span class="st-text en"><small>GET IT ON</small><strong>Bazaar</strong></span>
               </div>
             </div>
           </div>
@@ -1271,7 +1274,7 @@
     display:block;
   }
 
-  .store-col{display:flex; flex-direction:column; gap:clamp(6px,.8vw,9px); align-items:flex-start; flex:none; min-width:0;}
+  .store-col{display:flex; flex-direction:column; gap:clamp(6px,.8vw,9px); align-items:stretch; flex:none; min-width:0; width:clamp(132px,11.5vw,158px);}
   .store-btn{
     direction:ltr; text-align:left;
     display:flex; align-items:center; gap:clamp(6px,.8vw,9px);
@@ -1282,11 +1285,12 @@
   .store-btn .st-text{display:flex; flex-direction:column; line-height:1.3; white-space:nowrap;}
   .store-btn .st-text small{font-size:clamp(7.5px,.75vw,9px); color:var(--text-lo);}
   .store-btn .st-text strong{font-size:clamp(11px,1.15vw,14px); font-weight:600; color:var(--text-hi);}
-  .qr-block{display:flex; align-items:center; gap:clamp(8px,1.1vw,14px); direction:ltr;}
-  .qr{width:clamp(78px,8vw,112px); height:clamp(78px,8vw,112px); border-radius:8px; object-fit:cover; flex:none;}
+  /* نشان‌های فروشگاه‌ها کمی به سمت چپ کارت (لبه‌ی متن) */
+  .store-block{display:flex; align-items:center; direction:ltr; margin-left:-6px;}
   .get-btn{
     justify-content:center; width:clamp(158px,15vw,190px); height:clamp(48px,4.4vw,55px); max-width:100%;
     border-radius:11px; background:transparent; border:1.5px solid var(--gold-600); color:var(--gold-300);
+    font-family:'Vazirmatn', sans-serif; font-weight:700; font-size:clamp(15px,1.2vw,17px); letter-spacing:0;
   }
   .get-btn:hover{background:var(--gold-500); color:var(--navy-950);}
 
@@ -1356,16 +1360,10 @@
       white-space:nowrap;
     }
 
-    .qr-block{
-      width:100%;
-      gap:7px;
-      align-items:center;
-    }
-    .qr{width:64px; height:64px; border-radius:7px;}
-    .store-col{gap:5px; flex:1;}
+    .store-block{width:100%; margin-left:-4px;}
+    .store-col{gap:5px; width:112px;}
     .store-btn{
       width:100%;
-      max-width:104px;
       min-height:29px;
       gap:5px;
       padding:4px 6px;
@@ -1381,7 +1379,7 @@
       height:44px;
       padding:9px 16px;
       border-radius:10px;
-      font-size:13px;
+      font-size:14px;
       align-self:flex-start;
     }
 
@@ -1414,8 +1412,7 @@
     .app-card h3 .en{font-size:19px;}
     .app-card .tag{font-size:15px;}
     .app-card .desc{font-size:11px;}
-    .qr{width:60px; height:60px;}
-    .store-btn{max-width:96px;}
+    .store-col{width:104px;}
     .get-btn{width:132px; height:42px;}
     .app-card-phone img{height:315px;}
   }

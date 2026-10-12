@@ -56,7 +56,7 @@ class AdminPanelProvider extends PanelProvider
             ->font('Vazirmatn', asset('assets/css/filament-font.css'))
             ->authGuard('admin')
             ->authPasswordBroker('admins')
-            ->profile()
+            ->profile(\App\Filament\Pages\Auth\EditProfile::class)
             ->databaseNotifications()
             ->colors([
                 'primary' => Color::Blue,

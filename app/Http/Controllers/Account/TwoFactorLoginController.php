@@ -13,7 +13,8 @@ use Throwable;
 
 /**
  * مرحله‌ی دوم ورود وقتی تأیید دومرحله‌ای فعال است.
- * POST /api/auth/two-factor/verify { two_factor_token, code } — کد بازیابی هم پذیرفته می‌شود.
+ * POST /api/auth/two-factor/verify و /api/organization/two-factor/verify { two_factor_token, code } — کد بازیابی هم پذیرفته می‌شود.
+ * کد اشتباه 422 و تلاش بیش از حد 429 است (401 در اپ پیغام «نشست منقضی شده» را باز می‌کند).
  * پاسخ موفق همان قالب پاسخ ورود اصلی (کاربر یا سازمان) است.
  */
 class TwoFactorLoginController extends Controller
@@ -54,6 +55,22 @@ class TwoFactorLoginController extends Controller
             'success' => true,
             'message' => $result['message'],
             'data' => $result['data'],
+        ]);
+    }
+
+    /** POST /api/auth/two-factor/resend و /api/organization/two-factor/resend { two_factor_token } */
+    public function resend(Request $request, TwoFactorService $twoFactor): JsonResponse
+    {
+        $data = $request->validate([
+            'two_factor_token' => 'required|string|max:128',
+        ], [
+            'two_factor_token.required' => 'شناسه‌ی مرحله‌ی دوم ورود الزامی است.',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'کد تأیید دوباره ارسال شد.',
+            'data' => $twoFactor->resendChallenge($data['two_factor_token']),
         ]);
     }
 

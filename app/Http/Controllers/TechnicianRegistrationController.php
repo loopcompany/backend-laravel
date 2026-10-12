@@ -187,14 +187,14 @@ class TechnicianRegistrationController extends Controller
             if (!$technician) {
                 return response()->json([
                     'success' => false,
-                    'message' => '????? ????? ???? ???? ???.',
+                    'message' => 'کاربر احراز هویت نشده است.',
                     'error_code' => 'UNAUTHORIZED'
                 ], 401);
             }
 
             $technicianId = $technician->id;
 
-            // ??? ???? ????
+            // حذف توکن فعلی
             $request->user()->currentAccessToken()->delete();
 
             // Log logout activity (non-blocking)
@@ -206,13 +206,13 @@ class TechnicianRegistrationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => '???? ?? ?????? ????? ??.',
+                'message' => 'خروج با موفقیت انجام شد.',
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => '??? ?? ????. ???? ????? ???? ????.',
+                'message' => 'خطا در خروج. لطفاً دوباره تلاش کنید.',
                 'error_code' => 'LOGOUT_ERROR'
             ], 500);
         }
@@ -226,14 +226,14 @@ class TechnicianRegistrationController extends Controller
             if (!$technician) {
                 return response()->json([
                     'success' => false,
-                    'message' => '????? ????? ???? ???? ???.',
+                    'message' => 'کاربر احراز هویت نشده است.',
                     'error_code' => 'UNAUTHORIZED'
                 ], 401);
             }
 
             $technicianId = $technician->id;
 
-            // ??? ???? ??????? ?????
+            // حذف همه‌ی توکن‌های تکنسین
             $technician->tokens()->delete();
 
             // Log logout_all activity (non-blocking)
@@ -245,13 +245,13 @@ class TechnicianRegistrationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => '???? ?? ??? ???????? ?? ?????? ????? ??.',
+                'message' => 'خروج از همه دستگاه‌ها با موفقیت انجام شد.',
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => '??? ?? ???? ?? ??? ????????. ???? ????? ???? ????.',
+                'message' => 'خطا در خروج. لطفاً دوباره تلاش کنید.',
                 'error_code' => 'LOGOUT_ALL_ERROR'
             ], 500);
         }

@@ -200,7 +200,8 @@ class UpdateProfileRequest extends FormRequest
                 'image',
                 'mimes:jpeg,jpg,png,webp',
                 'max:5120'
-            ]
+            ],
+            'remove_profile_photo' => ['sometimes', 'boolean'],
         ];
     }
 

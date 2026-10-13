@@ -60,9 +60,9 @@
      @endif
      <div id="sticky-header" class="techno_nav_manu d-md-none d-lg-block d-sm-none d-none">
          <div class="container">
-             <div class="row">
-                 <div class="col-md-3">
-                     <div class="logo" style="margin-top: 11px;">
+             <div class="row align-items-center flex-nowrap">
+                 <div class="col-auto">
+                     <div class="logo">
                          <a class="logo_img" href="{{ route('web.home') }}" title="لوپ">
                              <img src="{{ asset('assets/images/1.png') }}" alt="لوپ">
                          </a>
@@ -71,7 +71,7 @@
                          </a>
                      </div>
                  </div>
-                 <div class="col-md-9">
+                 <div class="col">
                      <nav class="techno_menu">
                          <!-- منوی عادی -->
                          <ul class="nav_scroll nav-normal">
@@ -149,6 +149,40 @@
              color: #ecc873 !important;
          }
 
+         /* همه آیتم‌های منوی دسکتاپ در یک ردیف */
+         #sticky-header .techno_menu > ul {
+             display: flex;
+             flex-wrap: nowrap;
+             justify-content: flex-end;
+             align-items: center;
+             width: 100%;
+             margin: 0;
+             padding: 0;
+         }
+
+         #sticky-header .techno_menu > ul > li > a {
+             white-space: nowrap;
+             font-size: 15px;
+             margin: 30px 8px;
+         }
+
+         #sticky-header.sticky .techno_menu > ul > li > a {
+             font-size: 13px;
+             margin: 22px 6px;
+         }
+
+         @media (min-width: 992px) and (max-width: 1199px) {
+             #sticky-header .techno_menu > ul > li > a {
+                 font-size: 13px !important;
+                 margin: 30px 5px !important;
+             }
+
+             #sticky-header.sticky .techno_menu > ul > li > a {
+                 font-size: 11px !important;
+                 margin: 22px 3px !important;
+             }
+         }
+
          .nav-sticky {
              display: none;
          }
@@ -164,8 +198,6 @@
 
          #sticky-header.sticky .nav-sticky {
              display: flex !important;
-             gap: 8px;
-             align-items: center;
          }
 
          #sticky-header.sticky .nav-sticky .phone {

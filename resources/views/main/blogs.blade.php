@@ -104,7 +104,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="pagination_area text-center mt-5">
-                            {{ $blogs->links() }}
+                            {{ $blogs->links('layout.main.pagination') }}
                         </div>
                     </div>
                 </div>
@@ -235,10 +235,6 @@
             font-size: 14px;
             padding: 8px 20px;
             border-radius: 5px;
-        }
-        
-        .pagination_area .pagination {
-            justify-content: center;
         }
         
         @media (max-width: 768px) {

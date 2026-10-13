@@ -15,6 +15,11 @@ class ViewOrder extends ViewRecord
     {
         return [
             Actions\EditAction::make(),
+            Actions\Action::make('print_label')
+                ->label('چاپ لیبل')
+                ->icon('heroicon-o-printer')
+                ->url(fn (): string => route('admin.orders.label', ['order' => $this->record->getKey()]))
+                ->openUrlInNewTab(),
         ];
     }
 

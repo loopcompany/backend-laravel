@@ -605,6 +605,12 @@ class OrderResource extends Resource
                     ->color('info')
                     ->url(fn(Order $record): string => route('web.reciept', ['id' => $record->id]))
                     ->openUrlInNewTab(),
+                Tables\Actions\Action::make('print_label')
+                    ->label('چاپ لیبل ۶٫۵ × ۳ سانتی‌متر')
+                    ->icon('heroicon-o-printer')
+                    ->color('gray')
+                    ->url(fn (Order $record): string => route('admin.orders.label', ['order' => $record->id]))
+                    ->openUrlInNewTab(),
                 
                 Tables\Actions\Action::make('record_offline_payment')
                     ->label('ثبت پرداخت خارج از برنامه')

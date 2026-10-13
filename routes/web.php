@@ -67,6 +67,10 @@ Route::get('/admin/cooperation-requests/{cooperationRequest}/files/{type}', [\Ap
     ->whereIn('type', ['resume', 'certificates', 'portfolio'])
     ->name('admin.cooperation-requests.file');
 
+Route::get('/admin/orders/{order}/label', \App\Http\Controllers\Admin\OrderLabelController::class)
+    ->middleware(['auth:admin', 'can:view-orders'])
+    ->name('admin.orders.label');
+
 Route::prefix('admin/cards')->middleware(['auth:admin'])->group(function () {
     Route::get('/create', [DigitalBusinessCardEditorController::class, 'create'])
         ->name('admin.cards.create');

@@ -16,3 +16,4 @@ storage/framework/views/*
 Dockerfile*
 compose*.yaml
 docker-compose*.yml
+public/downloads/windows/*.exe

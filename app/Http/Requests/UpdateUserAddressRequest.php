@@ -21,6 +21,7 @@ class UpdateUserAddressRequest extends FormRequest
             'mobile' => 'sometimes|required|string|max:20',
             'city' => 'sometimes|required|string|max:255',
             'region' => 'sometimes|required|string|max:255',
+            'room' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'address' => 'sometimes|required|string|max:1000',

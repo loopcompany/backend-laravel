@@ -84,6 +84,7 @@ class UserAddressService
             'unit' => $address->unit,
             'number' => $address->number,
             'floor' => $address->floor,
+            'room' => $address->room,
             'full_name' => $address->fname . ' ' . $address->lname,
             'telephone' => $address->telephone,
             'mobile' => $address->mobile,

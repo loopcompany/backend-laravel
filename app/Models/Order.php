@@ -200,6 +200,11 @@ class Order extends Model
         return $this->hasOne(TechnicianOrderReport::class);
     }
 
+    public function fieldServiceVisits(): HasMany
+    {
+        return $this->hasMany(FieldServiceVisit::class)->orderByDesc('id');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

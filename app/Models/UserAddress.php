@@ -23,6 +23,7 @@ class UserAddress extends Model
         'unit',
         'number',
         'floor',
+        'room',
     ];
 
     protected $casts = [

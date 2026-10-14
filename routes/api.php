@@ -19,6 +19,7 @@ use App\Http\Controllers\EducationRequestController;
 use App\Http\Controllers\ExpertiseController;
 use App\Http\Controllers\ExtraServiceController;
 use App\Http\Controllers\FaultReportController;
+use App\Http\Controllers\FieldServiceController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\GemController;
 use App\Http\Controllers\InfoController;
@@ -160,6 +161,10 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         ->middleware('signed:relative')
         ->name('api.organization.edit-requests.letter');
 
+    Route::get('/field-service/photos/{photo}', [FieldServiceController::class, 'photo'])
+        ->middleware('signed:relative')
+        ->name('api.field-service.photos.show');
+
     // Organization registration routes (no middleware required)
     Route::prefix('organization')->group(function () {
         // Registration
@@ -201,6 +206,8 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::post('/documents', [OrganizationAccountController::class, 'storeDocument'])->name('api.organization.documents.store');
             Route::delete('/documents/{id}', [OrganizationAccountController::class, 'destroyDocument'])->whereNumber('id')->name('api.organization.documents.destroy');
             Route::get('/users', [OrganizationAccountController::class, 'users'])->name('api.organization.users');
+            Route::get('/orders/{order}/field-service', [FieldServiceController::class, 'organizationIndex'])->name('api.organization.field-service.index');
+            Route::post('/orders/{order}/field-service/{visit}/review', [FieldServiceController::class, 'review'])->name('api.organization.field-service.review');
             Route::post('/users', [OrganizationAccountController::class, 'storeUser'])->name('api.organization.users.store');
             Route::delete('/users/{id}', [OrganizationAccountController::class, 'destroyUser'])->whereNumber('id')->name('api.organization.users.destroy');
 
@@ -410,6 +417,11 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             // Orders
             Route::get('/orders', [TechnicianProfileController::class, 'getMyOrders'])->name('api.technician.orders');
             Route::get('/orders/{orderId}/detail', [TechnicianProfileController::class, 'getOrderDetail'])->name('api.technician.orders.detail');
+            Route::get('/orders/{order}/field-service', [FieldServiceController::class, 'technicianIndex'])->name('api.technician.field-service.index');
+            Route::post('/orders/{order}/field-service/start', [FieldServiceController::class, 'start'])->name('api.technician.field-service.start');
+            Route::put('/orders/{order}/field-service/{visit}', [FieldServiceController::class, 'submit'])->name('api.technician.field-service.submit');
+            Route::post('/orders/{order}/field-service/{visit}/photos', [FieldServiceController::class, 'uploadPhoto'])->name('api.technician.field-service.photos.store');
+            Route::delete('/orders/{order}/field-service/{visit}/photos/{photo}', [FieldServiceController::class, 'deletePhoto'])->name('api.technician.field-service.photos.destroy');
             Route::post('/orders/{orderId}/start', [TechnicianProfileController::class, 'startOrder'])->name('api.technician.orders.start');
             Route::post('/orders/{orderId}/end', [TechnicianProfileController::class, 'endOrder'])->name('api.technician.orders.end');
             Route::post('/orders/{orderId}/cancel', [TechnicianProfileController::class, 'cancelOrder'])->name('api.technician.orders.cancel');

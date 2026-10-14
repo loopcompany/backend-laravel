@@ -85,6 +85,7 @@
                              <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
                              <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
                              <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل تکنسین</a></li>
+                             <li><a href="{{ route('web.technician.register-form') }}">ثبت‌نام تکنسین</a></li>
                          </ul>
 
                          <!-- منوی استیکی -->
@@ -95,6 +96,7 @@
                                      سازمانی/شرکتی</a></li>
                              <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
                              <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل تکنسین</a></li>
+                             <li><a href="{{ route('web.technician.register-form') }}">ثبت‌نام تکنسین</a></li>
                              <li><a href="#contact">راهنما</a>
                                  <ul class="sub-menu">
                                      <li><a href="{{ asset('assets/guid/user.pdf') }}">راهنمای اپلیکیشن کاربر</a></li>
@@ -134,6 +136,7 @@
                      <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
                      <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
                      <li><a href="{{ rtrim(config('app.technician_panel_url'), '/') }}" target="_blank">پنل متخصص</a></li>
+                     <li><a href="{{ route('web.technician.register-form') }}">ثبت‌نام تکنسین</a></li>
                  </ul>
              </nav>
          </div>

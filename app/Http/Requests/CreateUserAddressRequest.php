@@ -24,6 +24,7 @@ class CreateUserAddressRequest extends FormRequest
             'unit' => 'required|numeric',
             'number' => 'required|numeric',
             'floor' => 'required|numeric',
+            'room' => 'nullable|string|max:100',
             'region_id' => 'nullable',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',

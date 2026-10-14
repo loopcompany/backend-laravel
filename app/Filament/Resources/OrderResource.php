@@ -914,6 +914,8 @@ class OrderResource extends Resource
                             ->label('واحد') ,
                         Infolists\Components\TextEntry::make('user_address.floor')
                             ->label('طبقه') ,
+                        Infolists\Components\TextEntry::make('user_address.room')
+                            ->label('اتاق'),
                         Infolists\Components\TextEntry::make('user_address.address')
                             ->label('آدرس')
                             ->columnSpanFull(),
@@ -1178,6 +1180,7 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\FieldServiceVisitsRelationManager::class,
             RelationManagers\OrderGalleriesRelationManager::class,
             RelationManagers\ExtraServicesRelationManager::class,
             RelationManagers\TechnicianReviewsRelationManager::class,

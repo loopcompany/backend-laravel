@@ -76,6 +76,7 @@
                          <!-- منوی عادی -->
                          <ul class="nav_scroll nav-normal">
                              <li class="nav-apps"><a href="{{ route('web.home') }}#apps">دانلود اپلیکیشن‌های هوشمند</a></li>
+                             <li class="nav-apps"><a href="{{ route('web.home') }}#windows-app">دانلود نسخه نرم‌افزار ویندوز</a></li>
                              <li><a href="{{ route('web.home') }}">خانه</a></li>
                              <li><a href="{{ route('web.about') }}">درباره ما</a></li>
                              <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
@@ -89,6 +90,7 @@
                          <!-- منوی استیکی -->
                          <ul class="nav_scroll nav-sticky">
                              <li class="nav-apps"><a href="{{ route('web.home') }}#apps">دانلود اپلیکیشن‌های هوشمند</a></li>
+                             <li class="nav-apps"><a href="{{ route('web.home') }}#windows-app">دانلود نسخه نرم‌افزار ویندوز</a></li>
                              <li><a href="{{ config('app.user_panel_grouping_url') }}" target="_blank">پنل
                                      سازمانی/شرکتی</a></li>
                              <li><a href="{{ rtrim(config('app.user_panel_url'), '/') }}" target="_blank">پنل کاربر</a></li>
@@ -122,6 +124,7 @@
              <nav class="techno_menu">
                  <ul class="nav_scroll">
                      <li class="nav-apps"><a href="{{ route('web.home') }}#apps">دانلود اپلیکیشن‌های هوشمند</a></li>
+                     <li class="nav-apps"><a href="{{ route('web.home') }}#windows-app">دانلود نسخه نرم‌افزار ویندوز</a></li>
                      <li><a href="{{ route('web.home') }}">خانه</a></li>
                      <li><a href="{{ route('web.about') }}">درباره ما</a></li>
 

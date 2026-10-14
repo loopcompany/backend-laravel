@@ -588,6 +588,8 @@
     </div>
   </div>
 </section>
+
+@include('main.partials.windows-app')
 <style>
   :root{
     --navy-950:#050b16;

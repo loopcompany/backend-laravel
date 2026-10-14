@@ -19,6 +19,8 @@ services:
     volumes:
       - laravel-database:/var/www/html/database
       - laravel-storage:/var/www/html/storage
+      # Windows installers live on the host (too big for git/the image)
+      - ./public/downloads/windows:/var/www/html/public/downloads/windows:ro
     restart: unless-stopped
 
 volumes:

@@ -52,3 +52,6 @@ Thumbs.db
 
 # Custom AI instructions for web development - keep local only
 .github/copilot-instructions.md
+
+# Windows desktop installers (too large for git — upload to server manually)
+/public/downloads/windows/*.exe

@@ -40,7 +40,9 @@ Route::get('/cards/{slug}', [DigitalBusinessCardController::class, 'show'])->nam
 Route::get('/loop-learn', [LoopLearnRegistrationController::class, 'index'])->name('loop.learn');
 
 // Public Technician Profile (for QR Code)
-Route::get('/technician/{id}', [\App\Http\Controllers\Web\PublicTechnicianController::class, 'show'])->name('web.technician.public');
+Route::get('/technician/{id}', [\App\Http\Controllers\Web\PublicTechnicianController::class, 'show'])
+    ->whereNumber('id')
+    ->name('web.technician.public');
 Route::post('/contact', [MainController::class, 'submitContact'])->name('submit.contact');
 Route::post('/loop-learn-submit', [LoopLearnRegistrationController::class, 'store'])->name('loop.learn.submit');
 Route::get('/delete-account-request', [MainController::class, 'deleteAccountRequest'])->name('web.delete-account-request');

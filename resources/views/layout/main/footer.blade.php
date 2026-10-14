@@ -1,5 +1,6 @@
 @php
     $footerContacts = $globalContacts ?? $contacts ?? collect();
+    $footerSocials = $globalSocials ?? $socials ?? collect();
     $footerPhone = $footerContacts->where('type', 'phone')->first();
     $footerEmail = $footerContacts->where('type', 'email')->first();
     $footerOffice = $footerContacts->where('type', 'office')->first();
@@ -40,6 +41,33 @@
         color: #a9b4c5;
         font-size: 13.5px;
         line-height: 1.9;
+    }
+    .loop-site-footer .loop-footer-socials {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .loop-site-footer .loop-footer-socials a {
+        display: flex;
+        width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1px solid #29415f;
+        border-radius: 50%;
+        background: #10223a;
+        transition: border-color .25s, transform .25s;
+    }
+    .loop-site-footer .loop-footer-socials a:hover {
+        border-color: #d9a940;
+        transform: translateY(-2px);
+    }
+    .loop-site-footer .loop-footer-socials img {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        object-fit: contain;
     }
     .loop-site-footer .loop-footer-col h6 {
         margin: 0 0 18px;
@@ -137,6 +165,15 @@
             <div class="loop-footer-brand">
                 <a href="{{ route('web.home') }}" class="loop-footer-brand-name">LOOP</a>
                 <p>لوپ یک اکوسیستم یکپارچه از خدمات و تکنولوژی برای سازمان‌ها، کسب‌وکارها و تیم‌های پیشرو است.</p>
+                <div class="loop-footer-socials">
+                    @foreach ($footerSocials as $social)
+                        <a href="{{ $social->link }}" target="_blank" rel="noopener noreferrer" title="{{ $social->title ?? '' }}">
+                            @if ($social->icon)
+                                <img src="{{ asset('storage/' . $social->icon) }}" alt="{{ $social->title ?? '' }}">
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
                 <div class="loop-footer-trust">
                     <a referrerpolicy="origin" target="_blank" href="https://trustseal.enamad.ir/?id=6860144&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa">
                         <img referrerpolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=6860144&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa" alt="نماد اعتماد الکترونیکی">

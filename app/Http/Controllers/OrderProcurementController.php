@@ -119,7 +119,17 @@ class OrderProcurementController extends Controller
             'delivery_receiver_mobile' => $isSelf ? null : $data['receiver_mobile'],
             'delivery_receiver_national_id' => $isSelf ? null : ($data['receiver_national_id'] ?? null),
             'delivery_status' => $order->delivery_status ?? 'pending',
-        ])->save();
+        ]);
+
+        // تغییر تحویل‌گیرنده یا روش ارسال پس از تأیید ادمین ← تأیید باطل می‌شود تا ادمین دوباره تأیید کند
+        if ($order->isDirty([
+            'delivery_receiver_type', 'delivery_method', 'delivery_receiver_name',
+            'delivery_receiver_mobile', 'delivery_receiver_national_id',
+        ])) {
+            $order->delivery_confirmed_at = null;
+        }
+
+        $order->save();
 
         return $this->ok('مشخصات تحویل ثبت شد.', $order->deliveryPayload());
     }

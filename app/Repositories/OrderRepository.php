@@ -60,7 +60,8 @@ class OrderRepository
         ?string $fromDate = null,
         ?string $toDate = null,
         ?int $status = null,
-        ?int $perPage = null
+        ?int $perPage = null,
+        ?string $cancelled = null
     ) {
         $query = Order::where('user_id', $userId)
             ->with([
@@ -86,6 +87,14 @@ class OrderRepository
         // فیلتر بر اساس وضعیت
         if ($status !== null) {
             $query->where('status', $status);
+        }
+
+        // «سفارشات» بدون لغوشده‌ها (exclude) یا فقط «سفارش‌های لغوشده» (only)
+        $cancelStatuses = array_keys(Order::CANCELLED_BY);
+        if ($cancelled === 'exclude') {
+            $query->whereNotIn('status', $cancelStatuses);
+        } elseif ($cancelled === 'only') {
+            $query->whereIn('status', $cancelStatuses);
         }
 
         $query->orderBy('created_at', 'desc');
@@ -337,6 +346,9 @@ class OrderRepository
                 'status' => 3, // لغو توسط کاربر
                 'user_cancellation_reason' => $reason,
                 'user_cancellation_date' => now(),
+                // آپدیت مستقیم است و OrderObserver اجرا نمی‌شود
+                'cancelled_by' => Order::CANCELLED_BY[3],
+                'cancelled_at' => now(),
             ]);
     }
 

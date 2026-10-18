@@ -182,7 +182,7 @@ class OrderController extends Controller
         }
 
         // اگر فیلتری ارسال نشده، از متد قدیمی استفاده کن (Backward Compatible)
-        if (!$request->hasAny(['from_date', 'to_date', 'status', 'per_page'])) {
+        if (!$request->hasAny(['from_date', 'to_date', 'status', 'per_page', 'exclude_cancelled', 'only_cancelled'])) {
             $result = $this->service->getUserOrders($user->id);
 
             if (!$result['success']) {
@@ -206,14 +206,21 @@ class OrderController extends Controller
             'to_date' => 'nullable|date_format:Y-m-d|after_or_equal:from_date',
             'status' => 'nullable|integer',
             'per_page' => 'nullable|integer|min:1|max:100',
+            'exclude_cancelled' => 'nullable|boolean',
+            'only_cancelled' => 'nullable|boolean',
         ]);
+
+        // exclude_cancelled=1: همه به جز وضعیت‌های ۳ تا ۶ ، only_cancelled=1: فقط ۳ تا ۶
+        $cancelled = !empty($validated['only_cancelled']) ? 'only'
+            : (!empty($validated['exclude_cancelled']) ? 'exclude' : null);
 
         $result = $this->service->getUserOrdersWithFilters(
             $user->id,
             $validated['from_date'] ?? null,
             $validated['to_date'] ?? null,
             $validated['status'] ?? null,
-            $validated['per_page'] ?? null
+            $validated['per_page'] ?? null,
+            $cancelled
         );
 
         if (!$result['success']) {

@@ -47,10 +47,9 @@
         <p>در راستای توسعه فعالیت‌های <span class="en">LOOP</span>، زمینه همکاری بانوان در بخش تکنسینی رایانه نیز فراهم شده است؛ فرصتی برای حضور در حوزه‌های تخصصی فناوری، کسب تجربه، توسعه مهارت‌های فنی و مشارکت در ارائه خدمات حرفه‌ای.</p>
         <p>در <span class="en">LOOP</span>، معیار اصلی همکاری، شایستگی، دانش، مهارت، مسئولیت‌پذیری و تناسب توانمندی‌های افراد با الزامات هر موقعیت شغلی است.</p>
       </div>
-      <picture class="cr-split-media">
-        <source media="(max-width: 767px)" srcset="{{ asset('assets/new-style/careers/workshop-mobile.jpg') }}" width="900" height="1599">
-        <img src="{{ asset('assets/new-style/careers/workshop-desktop.jpg') }}" alt="تکنسین لوپ در حال تعمیر برد لپ‌تاپ" width="1280" height="853" loading="lazy">
-      </picture>
+      <div class="cr-split-media">
+        <img src="{{ asset('assets/new-style/careers/technician.jpg') }}" alt="تکنسین بانوی لوپ در حال سرویس کیس رایانه در کارگاه لوپ" width="1024" height="1536" loading="lazy">
+      </div>
     </div>
   </section>
 
@@ -459,8 +458,9 @@
         </div>
         <form action="{{ route('web.careers.track') }}" method="POST" class="cr-track-form">
           @csrf
-          <input type="text" name="tracking_code" value="{{ old('tracking_code') }}" placeholder="کد پیگیری" class="ltr" required maxlength="20" aria-label="کد پیگیری">
-          <input type="tel" name="track_mobile" value="{{ old('track_mobile') }}" placeholder="شماره موبایل" class="ltr" required maxlength="11" inputmode="numeric" aria-label="شماره موبایل">
+          <input type="text" name="tracking_code" value="{{ old('tracking_code') }}" placeholder="کد پیگیری" class="ltr" required maxlength="20" aria-label="کد پیگیری" data-label="کد پیگیری">
+          <input type="tel" name="track_mobile" value="{{ old('track_mobile') }}" placeholder="شماره موبایل" class="ltr" required maxlength="11" inputmode="numeric" aria-label="شماره موبایل" data-label="شماره موبایل"
+                 pattern="[0۰٠][9۹٩][0-9۰-۹٠-٩]{9}" data-msg-pattern="شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد.">
           <button type="submit" class="cr-btn solid">استعلام</button>
         </form>
         @if ($trackErrors->any())
@@ -512,7 +512,10 @@
   .cr-split-text h2{color:var(--text-hi); font-size:clamp(22px,2.6vw,32px); font-weight:800; margin:8px 0 16px;}
   .cr-split-text p{color:var(--text-mid); font-size:16px; text-align:justify;}
   .cr-split-text p+p{margin-top:12px;}
-  .cr-split-media img{border-radius:22px; border:1px solid var(--navy-700); box-shadow:0 24px 60px rgba(0,0,0,.45);}
+  .cr-split-media img{
+    display:block; width:100%; max-width:380px; height:auto; aspect-ratio:2/3; object-fit:cover; margin-inline:auto;
+    border-radius:22px; border:1px solid var(--navy-700); box-shadow:0 24px 60px rgba(0,0,0,.45);
+  }
 
   .cr-path-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
   .cr-path-card{background:rgba(255,255,255,.03); border:1px solid var(--navy-700); border-radius:18px; padding:26px 24px;}

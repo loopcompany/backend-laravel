@@ -107,15 +107,10 @@ class OrderResource extends Resource
 
                     Forms\Components\Select::make('status')
                         ->label('وضعیت سفارش')
-                        ->options([
-                            0 => 'در انتظار',
-                            1 => 'در حال انجام',
-                            2 => 'انجام شده',
-                            3 => 'لغو شده توسط کاربر',
-                            4 => 'لغو شده توسط تکنسین',
-                            5 => 'لغو شده توسط ادمین',
-                            6 => 'منقضی شده',
-                        ])
+                        ->options(self::STATUS_OPTIONS)
+                        // لغو از پنل همیشه ۵ ثبت می‌شود؛ ۳، ۴ و ۶ فقط از اپ کاربر / اپ تکنسین / سیستم
+                        ->disableOptionWhen(fn(string $value, ?Order $record) => self::isPanelLockedStatus((int) $value, $record))
+                        ->helperText('برای لغو سفارش از پنل، «لغو از سوی پنل» را انتخاب کنید.')
                         ->required()
                         ->default(0),
 
@@ -250,6 +245,7 @@ class OrderResource extends Resource
 
 
             Forms\Components\Section::make('مشخصات تحویل')
+                ->key('delivery_section')
                 ->description('برای کالا / محصولی که از لوپ به کاربر برمی‌گردد (اعزام به لوپ یا تامین کالا). کاربر آن را در اپ ثبت می‌کند.')
                 ->visible(fn(?Order $record) => $record?->returnsGoodsToUser() ?? false)
                 ->schema([
@@ -279,7 +275,30 @@ class OrderResource extends Resource
                     Forms\Components\Placeholder::make('delivered_at_view')
                         ->label('تاریخ و ساعت تحویل')
                         ->content(fn(?Order $record) => $record?->delivered_at ? \Morilog\Jalali\Jalalian::forge($record->delivered_at)->format('Y/m/d H:i') : 'ثبت نشده'),
-                ])->columns(3),
+                    Forms\Components\Placeholder::make('delivery_confirmed_at_view')
+                        ->label('تأیید و ارسال برای کاربر')
+                        ->content(fn(?Order $record) => self::deliveryConfirmationLabel($record)),
+                ])
+                ->headerActions([
+                    Forms\Components\Actions\Action::make('confirm_delivery')
+                        ->label(fn(?Order $record) => $record?->delivery_confirmed_at ? 'ذخیره و تأیید مجدد برای کاربر' : 'تأیید و ارسال برای کاربر')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('تأیید و ارسال مشخصات تحویل برای کاربر')
+                        ->modalDescription('مشخصات تحویل همین فرم ذخیره می‌شود و از این لحظه در رسید کاربر نمایش داده می‌شود.')
+                        ->action(function (Order $record, Forms\Get $get) {
+                            self::confirmDelivery($record, [
+                                'delivery_receiver_type' => $get('delivery_receiver_type'),
+                                'delivery_method' => $get('delivery_method'),
+                                'delivery_receiver_name' => $get('delivery_receiver_name'),
+                                'delivery_receiver_mobile' => $get('delivery_receiver_mobile'),
+                                'delivery_receiver_national_id' => $get('delivery_receiver_national_id'),
+                                'delivery_status' => $get('delivery_status'),
+                            ]);
+                        }),
+                ])
+                ->columns(3),
 
             Forms\Components\Section::make('توضیحات')
                 ->schema([
@@ -1112,6 +1131,35 @@ class OrderResource extends Resource
                     ])
                     ->columns(2),
 
+                Infolists\Components\Section::make('مشخصات تحویل')
+                    ->visible(fn(Order $record) => $record->returnsGoodsToUser())
+                    ->schema([
+                        Infolists\Components\TextEntry::make('delivery_receiver_type')
+                            ->label('تحویل‌گیرنده')
+                            ->formatStateUsing(fn($state, Order $record) => $state === 'representative'
+                                ? trim(($record->delivery_receiver_name ?? '') . ' ' . ($record->delivery_receiver_mobile ? '(' . $record->delivery_receiver_mobile . ')' : '')) ?: Order::DELIVERY_RECEIVER_TYPES[$state]
+                                : (Order::DELIVERY_RECEIVER_TYPES[$state] ?? '-'))
+                            ->placeholder('ثبت نشده'),
+                        Infolists\Components\TextEntry::make('delivery_method')
+                            ->label('روش ارسال')
+                            ->formatStateUsing(fn($state) => Order::DELIVERY_METHODS[$state] ?? $state)
+                            ->placeholder('ثبت نشده'),
+                        Infolists\Components\TextEntry::make('delivery_status')
+                            ->label('وضعیت تحویل')
+                            ->formatStateUsing(fn($state) => Order::DELIVERY_STATUSES[$state] ?? $state)
+                            ->placeholder(Order::DELIVERY_STATUSES['pending']),
+                        Infolists\Components\TextEntry::make('delivered_at')
+                            ->label('تاریخ و ساعت تحویل')
+                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
+                            ->placeholder('ثبت نشده'),
+                        Infolists\Components\TextEntry::make('delivery_confirmed_at')
+                            ->label('تأیید و ارسال برای کاربر')
+                            ->state(fn(Order $record) => self::deliveryConfirmationLabel($record))
+                            ->badge()
+                            ->color(fn(Order $record) => $record->delivery_confirmed_at ? 'success' : 'warning'),
+                    ])
+                    ->columns(3),
+
                 Infolists\Components\Section::make('توضیحات')
                     ->schema([
                         Infolists\Components\TextEntry::make('des')
@@ -1188,6 +1236,58 @@ class OrderResource extends Resource
             RelationManagers\DeliveryReportRelationManager::class,
             RelationManagers\UserChatsRelationManager::class,
         ];
+    }
+
+    /** وضعیت‌های سفارش در پنل (متن‌ها مثل اپ کاربر) */
+    public const STATUS_OPTIONS = [
+        0 => 'در انتظار',
+        1 => 'در حال انجام',
+        2 => 'انجام شده',
+        3 => 'لغو از سوی کاربر',
+        4 => 'لغو از سوی تکنسین',
+        5 => 'لغو از سوی پنل',
+        6 => 'لغو از سوی سیستم (پایان مهلت سفارش)',
+    ];
+
+    /** وضعیت‌هایی که پنل نباید ثبت کند (مگر اینکه سفارش همین حالا در آن وضعیت باشد) */
+    public const PANEL_LOCKED_STATUSES = [3, 4, 6];
+
+    public static function isPanelLockedStatus(int $status, ?Order $record): bool
+    {
+        return in_array($status, self::PANEL_LOCKED_STATUSES, true)
+            && ($record === null || (int) $record->status !== $status);
+    }
+
+    public static function deliveryConfirmationLabel(?Order $record): string
+    {
+        return $record?->delivery_confirmed_at
+            ? 'تأیید شده در ' . \Morilog\Jalali\Jalalian::forge($record->delivery_confirmed_at)->format('Y/m/d H:i')
+            : 'هنوز تأیید نشده — در رسید کاربر «نامشخص» نمایش داده می‌شود';
+    }
+
+    /**
+     * تأیید و ارسال مشخصات تحویل برای کاربر: از این لحظه رسید کاربر مشخصات تحویل را نشان می‌دهد.
+     * $delivery مقادیر فعلی فرم ویرایش است (در صفحه‌ی نمایش خالی است و همان داده‌ی ذخیره‌شده تأیید می‌شود).
+     */
+    public static function confirmDelivery(Order $record, array $delivery = []): void
+    {
+        $delivery = array_intersect_key($delivery, array_flip([
+            'delivery_receiver_type', 'delivery_method', 'delivery_receiver_name',
+            'delivery_receiver_mobile', 'delivery_receiver_national_id', 'delivery_status',
+        ]));
+
+        if (($delivery['delivery_receiver_type'] ?? $record->delivery_receiver_type) === 'self') {
+            $delivery['delivery_receiver_name'] = null;
+            $delivery['delivery_receiver_mobile'] = null;
+            $delivery['delivery_receiver_national_id'] = null;
+        }
+
+        $record->forceFill($delivery + ['delivery_confirmed_at' => now()])->save();
+
+        \Filament\Notifications\Notification::make()
+            ->title('مشخصات تحویل تأیید و برای کاربر ارسال شد')
+            ->success()
+            ->send();
     }
 
     public static function getPages(): array

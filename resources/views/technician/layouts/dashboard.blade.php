@@ -135,6 +135,7 @@
 <!-- Template Functions -->
 <script src="{{ asset('assets/js/functions.js') }}"></script>
 
+<script type="text/javascript" src="{{ asset('assets/js/fa-validation.js') }}"></script>
 @stack('scripts')
 
 </body>

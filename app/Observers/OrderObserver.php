@@ -17,6 +17,10 @@ class OrderObserver
      */
     public function updating(Order $order): void
     {
+        if ($order->isDirty('status')) {
+            $this->syncCancellation($order);
+        }
+
         // بررسی اینکه آیا date یا time تغییر کرده است
         if ($order->isDirty('date') || $order->isDirty('time')) {
             // اگر is_time_changed قبلاً 1 نبوده، آن را 1 می‌کنیم
@@ -185,6 +189,31 @@ class OrderObserver
             'سفارش شما با موفقیت ثبت شد.',
             ['type' => 'order_created', 'order_id' => $order->id, 'screen' => 'order-detail']
         );
+    }
+
+    /**
+     * Handle the Order "creating" event.
+     */
+    public function creating(Order $order): void
+    {
+        $this->syncCancellation($order);
+    }
+
+    /**
+     * منبع و زمان لغو را از کد وضعیت پر می‌کند (۳ کاربر، ۴ تکنسین، ۵ پنل، ۶ سیستم)
+     * و با برگشت سفارش به وضعیت فعال، آن‌ها را پاک می‌کند.
+     */
+    private function syncCancellation(Order $order): void
+    {
+        $cancelledBy = Order::CANCELLED_BY[(int) $order->status] ?? null;
+
+        if ($cancelledBy === null) {
+            $order->cancelled_by = null;
+            $order->cancelled_at = null;
+        } elseif ($order->cancelled_by !== $cancelledBy || $order->cancelled_at === null) {
+            $order->cancelled_by = $cancelledBy;
+            $order->cancelled_at = now();
+        }
     }
 
     private function sendPush(object $notifiable, string $title, string $body, array $data): void

@@ -603,7 +603,8 @@ class OrderService
         ?string $fromDate = null,
         ?string $toDate = null,
         ?int $status = null,
-        ?int $perPage = null
+        ?int $perPage = null,
+        ?string $cancelled = null
     ): array {
         try {
             $orders = $this->repo->getUserOrdersWithFilters(
@@ -611,7 +612,8 @@ class OrderService
                 $fromDate,
                 $toDate,
                 $status,
-                $perPage
+                $perPage,
+                $cancelled
             );
 
             // اگر pagination فعال بود
@@ -654,6 +656,8 @@ class OrderService
                     'from_date' => $fromDate,
                     'to_date' => $toDate,
                     'status' => $status,
+                    'exclude_cancelled' => $cancelled === 'exclude',
+                    'only_cancelled' => $cancelled === 'only',
                 ]
             ];
 

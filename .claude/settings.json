@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "mcp__claude-in-chrome__tabs_context_mcp"
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "Bash(rtk docker *)",
+      "Bash(rtk read *)",
+      "Bash(python3 -I -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "ClaudeInChromeDomain(localhost:8001)",
+      "ClaudeInChromeDomain(172.24.0.3:8000)",
+      "mcp__claude-in-chrome__tabs_create_mcp"
     ]
   }
 }

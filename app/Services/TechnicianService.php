@@ -244,6 +244,9 @@ class TechnicianService
                     'is_urgent' => $order->is_urgent,
                     'description' => $order->des,
                     'technician_cancel_reason' => $order->technician_cancel_reason,
+                    // منبع و زمان لغو: user | technician | admin | system
+                    'cancelled_by' => $order->cancelled_by,
+                    'cancelled_at' => $order->cancelled_at?->toIso8601String(),
                     'technician_description' => $order->technician_des,
                     'pakar_price' => $order->pakar_price,
                     'technician_price' => $order->technician_price,

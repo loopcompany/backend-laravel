@@ -265,6 +265,8 @@
     <!-- jquery js -->
     <script src="{{ asset('assets/jalali/jalalidatepicker.min.js') }}"></script>
 
+    <!-- پیغام‌های اعتبارسنجی فرم به فارسی -->
+    <script type="text/javascript" src="{{ asset('assets/js/fa-validation.js') }}"></script>
     @yield('script')
 </body>
 

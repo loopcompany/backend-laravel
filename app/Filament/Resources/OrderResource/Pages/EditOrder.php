@@ -27,6 +27,18 @@ class EditOrder extends EditRecord
     {
         // محصول اعزام‌شده به لوپ: پیش از پرداخت پیش‌پرداخت، تعمیر شروع نمی‌شود و سفارش انجام‌شده ثبت نمی‌شود
         $state = $this->form->getRawState();
+
+        // لغو از پنل همیشه «لغو از سوی پنل» (۵) است؛ ۳/۴/۶ فقط از اپ کاربر، اپ تکنسین و سیستم ثبت می‌شوند
+        if (isset($state['status']) && OrderResource::isPanelLockedStatus((int) $state['status'], $this->record)) {
+            Notification::make()
+                ->title('این وضعیت از پنل قابل ثبت نیست')
+                ->body('برای لغو سفارش از پنل، «لغو از سوی پنل» را انتخاب کنید.')
+                ->danger()
+                ->send();
+
+            $this->halt();
+        }
+
         $wantsDone = (int) ($state['status'] ?? $this->record->status) === 2 && (int) $this->record->status !== 2;
         $prepaymentPaid = (int) ($state['prepayment_payment_status'] ?? $this->record->prepayment_payment_status) === 1;
 

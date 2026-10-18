@@ -182,7 +182,7 @@ class InvoicePdfService
         if ($extra) {
             $star = asset('assets/yellow-star.png');
 
-        } else if (in_array($status, [3, 4, 5])) {
+        } else if (in_array($status, [3, 4, 5, 6])) {
             $star = asset('assets/red-star.png');
         } elseif ($status == 2) {
             $star = asset('assets/green-star.png');

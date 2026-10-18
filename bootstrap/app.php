@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // اضافه کردن Analytics middleware به web group
         $middleware->web(append: [
             \App\Http\Middleware\AnalyticsMiddleware::class,
+            \App\Http\Middleware\SetSiteLocale::class,
         ]);
 
         // Register custom middleware aliases

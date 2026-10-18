@@ -51,7 +51,11 @@ class MainController extends Controller
             ->orderByRaw("CASE type WHEN 'office' THEN 1 WHEN 'email' THEN 2 WHEN 'phone' THEN 3 ELSE 4 END")
             ->get();
 
-        return view('main.index', compact('leafCategories', 'recentBlogs', 'testimonials', 'contacts'));
+        // Client Hints برای پیشنهاد نسخه‌ی مناسب ویندوز در بخش #windows-app
+        return response()
+            ->view('main.index', compact('leafCategories', 'recentBlogs', 'testimonials', 'contacts'))
+            ->header('Accept-CH', \App\Support\WindowsBuildDetector::CLIENT_HINTS)
+            ->header('Vary', 'User-Agent, '.\App\Support\WindowsBuildDetector::CLIENT_HINTS);
     }
 
     /**

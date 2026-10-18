@@ -224,15 +224,8 @@ class CreateOrderCustom extends Page implements HasForms
 
                     Forms\Components\Select::make('status')
                         ->label('وضعیت سفارش')
-                        ->options([
-                            0 => 'در انتظار',
-                            1 => 'در حال انجام',
-                            2 => 'انجام شده',
-                            3 => 'لغو شده توسط کاربر',
-                            4 => 'لغو شده توسط تکنسین',
-                            5 => 'لغو شده توسط ادمین',
-                            6 => 'منقضی شده',
-                        ])
+                        ->options(OrderResource::STATUS_OPTIONS)
+                        ->disableOptionWhen(fn(string $value) => OrderResource::isPanelLockedStatus((int) $value, null))
                         ->required()
                         ->default(0),
 

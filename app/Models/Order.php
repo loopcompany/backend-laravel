@@ -110,6 +110,19 @@ class Order extends Model
         'delivery_method',
         'delivery_status',
         'delivered_at',
+        // زمان تأیید و ارسال مشخصات تحویل برای کاربر از پنل ادمین
+        'delivery_confirmed_at',
+        // منبع و زمان لغو سفارش
+        'cancelled_by',
+        'cancelled_at',
+    ];
+
+    /** کدهای وضعیت لغو و منبع لغو متناظر (cancelled_by) */
+    public const CANCELLED_BY = [
+        3 => 'user',
+        4 => 'technician',
+        5 => 'admin',
+        6 => 'system',
     ];
 
     public const DELIVERY_RECEIVER_TYPES = [
@@ -159,6 +172,8 @@ class Order extends Model
         'procurement_items' => 'array',
         'delivery_mode' => 'array',
         'delivered_at' => 'datetime',
+        'delivery_confirmed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     protected function casts(): array
@@ -308,6 +323,8 @@ class Order extends Model
             'method' => $this->delivery_method,
             'status' => $this->delivery_status ?? 'pending',
             'delivered_at' => $this->delivered_at?->toIso8601String(),
+            // تا ادمین تأیید نکند null است و اپ همه‌ی ردیف‌های تحویل را «نامشخص» نشان می‌دهد
+            'confirmed_at' => $this->delivery_confirmed_at?->toIso8601String(),
         ];
     }
 

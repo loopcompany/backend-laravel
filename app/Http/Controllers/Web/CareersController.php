@@ -41,12 +41,23 @@ class CareersController extends Controller
 
     public function track(Request $request): RedirectResponse
     {
+        // ارقام فارسی/عربی کد پیگیری و موبایل به لاتین
+        $digits = fn ($v) => is_string($v) ? strtr(trim($v), [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4', '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ]) : $v;
+        $request->merge([
+            'tracking_code' => $digits($request->input('tracking_code')),
+            'track_mobile' => $digits($request->input('track_mobile')),
+        ]);
+
         $data = $request->validate([
             'tracking_code' => ['required', 'string', 'max:20'],
             'track_mobile' => ['required', 'regex:/^09[0-9]{9}$/'],
         ], [
-            'tracking_code.required' => 'کد پیگیری را وارد کنید.',
-            'track_mobile.required' => 'شماره موبایل ثبت‌شده در درخواست را وارد کنید.',
+            'tracking_code.required' => 'لطفاً کد پیگیری را وارد نمایید.',
+            'tracking_code.max' => 'کد پیگیری حداکثر ۲۰ کاراکتر است.',
+            'track_mobile.required' => 'لطفاً شماره موبایل را وارد نمایید.',
             'track_mobile.regex' => 'شماره موبایل باید با 09 شروع شده و ۱۱ رقم باشد.',
         ]);
 

@@ -7,6 +7,10 @@ use App\Http\Requests\TechnicianRegistrationRequest;
 use App\Http\Requests\TechnicianPhoneVerificationRequest;
 use App\Http\Requests\TechnicianLoginRequest;
 use App\Http\Requests\TechnicianForgotPasswordRequest;
+use App\Models\Expertise;
+use App\Rules\TechnicianBirthYear;
+use App\Services\AdminPanelNotificationService;
+use Morilog\Jalali\CalendarUtils;
 use App\Services\TechnicianRegistrationService;
 use App\Services\LoginActivityService;
 use Illuminate\Http\Request;
@@ -23,11 +27,35 @@ class WebTechnicianAuthController extends Controller
     
     public function showRegisterForm()
     {
-        return view('technician.auth.register');
+        $maxBirthYear = TechnicianBirthYear::maxAllowedJalaliYear();
+
+        return view('technician.auth.register', [
+            'expertises' => Expertise::select('id', 'title')->orderBy('title')->get(),
+            // آخرین روز سال مجاز (اسفند ۲۹ یا ۳۰) — همان سقفی که اپ تکنسین در تقویم تولد اعمال می‌کند
+            'maxBirthDate' => sprintf('%d/12/%d', $maxBirthYear, CalendarUtils::isLeapJalaliYear($maxBirthYear) ? 30 : 29),
+        ]);
     }
 
-    public function register(TechnicianRegistrationRequest $request)
+    public function register(TechnicianRegistrationRequest $request, AdminPanelNotificationService $adminNotifications)
     {
+        // فیلدهایی که اپ تکنسین در سمت کلاینت اجباری می‌کند ولی API آن‌ها را اختیاری پذیرفته است
+        $request->validate([
+            'melicode' => 'required',
+            'birth_date' => 'required',
+            'email' => 'required',
+            'expertise_ids' => 'required|array|min:1',
+            'resume' => 'required',
+            'accept_terms' => 'accepted',
+        ], [
+            'melicode.required' => 'کد ملی الزامی است.',
+            'birth_date.required' => 'تاریخ تولد الزامی است.',
+            'email.required' => 'آدرس ایمیل الزامی است.',
+            'expertise_ids.required' => 'لطفاً حداقل یک تخصص انتخاب کنید.',
+            'expertise_ids.min' => 'لطفاً حداقل یک تخصص انتخاب کنید.',
+            'resume.required' => 'بارگذاری رزومه الزامی است.',
+            'accept_terms.accepted' => 'پذیرش قوانین و مقررات الزامی می‌باشد.',
+        ]);
+
         $data = $request->validated();
         
         // Add resume file if exists
@@ -35,7 +63,6 @@ class WebTechnicianAuthController extends Controller
             $data['resume'] = $request->file('resume');
         }
         
-        // Reuse existing service without modification
         $result = $this->service->register($data);
         
         if (!$result['success']) {
@@ -43,6 +70,11 @@ class WebTechnicianAuthController extends Controller
                 ->withErrors(['message' => $result['message']])
                 ->withInput();
         }
+
+        $adminNotifications->sendToAdmins(
+            'ثبت‌نام تکنسین جدید',
+            'درخواست ثبت‌نام یک تکنسین جدید برای بررسی در پنل ثبت شد.'
+        );
         
         return redirect()
             ->route('web.technician.verify-phone-form')

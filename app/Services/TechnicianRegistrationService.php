@@ -52,7 +52,7 @@ class TechnicianRegistrationService
         }
 
         // ارسال کد تأیید
-        $verificationResult = $this->sendVerificationCode($technician, $data['hashApp']);
+        $verificationResult = $this->sendVerificationCode($technician, $data['hashApp'] ?? null);
 
         if (!$verificationResult['success']) {
             return $verificationResult;

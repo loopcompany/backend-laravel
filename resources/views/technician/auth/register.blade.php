@@ -17,6 +17,12 @@
             text-align: right;
             unicode-bidi: embed;
         }
+
+        .technician-register-img {
+            max-height: 70vh;
+            width: auto;
+            object-fit: cover;
+        }
     </style>
     
     <main>
@@ -33,8 +39,13 @@
                                 <h2 class="fw-bold fs-3">به جمع تکنسین‌ها ما بپیوندید</h2>
                                 <p class="mb-0 h6 fw-light">فرصت‌های کاری جدید در انتظار شماست!</p>
                             </div>
-                            <!-- SVG Image -->
-                            <img src="{{ asset('assets/images/element/02.svg') }}" class="mt-5" alt="">
+                            <!-- Image -->
+                            <picture>
+                                <source srcset="{{ asset('assets/images/technician/register.webp') }}" type="image/webp">
+                                <img src="{{ asset('assets/images/technician/register.png') }}"
+                                    class="mt-5 d-block mx-auto img-fluid rounded-4 shadow technician-register-img"
+                                    alt="تکنسین‌های لوپ در حال کار" width="1024" height="1536">
+                            </picture>
                         </div>
                     </div>
 

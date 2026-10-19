@@ -175,8 +175,8 @@
                     @endforeach
                 </div>
                 <div class="loop-footer-trust">
-                    <a referrerpolicy="origin" target="_blank" href="https://trustseal.enamad.ir/?id=6860144&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa">
-                        <img referrerpolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=6860144&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa" alt="نماد اعتماد الکترونیکی">
+                    <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
+                        <img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa' alt='' style='cursor:pointer' code='JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
                     </a>
                     <img src="{{ asset('assets/images/samandehi.png') }}" alt="نشان ساماندهی">
                     <img src="{{ asset('assets/images/logonama.png') }}" alt="لوگو نما">

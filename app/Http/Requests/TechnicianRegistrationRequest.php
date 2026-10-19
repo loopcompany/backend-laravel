@@ -34,6 +34,7 @@ class TechnicianRegistrationRequest extends FormRequest
             'education_status' => 'required|string|max:191',
             'education_field' => 'required|string|max:191',
             'telephone' => 'required|string|max:20',
+            'mobile' => 'nullable|string|regex:/^09[0-9]{9}$/',
             'vehicle_type' => 'nullable|string|max:191',
             'home_postal_code' => 'required|string|size:10|regex:/^[0-9]{10}$/',
             'region' => 'required|string|max:191',
@@ -97,6 +98,7 @@ class TechnicianRegistrationRequest extends FormRequest
             
             'telephone.required' => 'شماره تلفن ثابت الزامی است.',
             'telephone.max' => 'شماره تلفن ثابت نباید بیش از 20 کاراکتر باشد.',
+            'mobile.regex' => 'شماره موبایل دوم باید با 09 شروع شده و 11 رقم باشد.',
             
             
             'vehicle_type.required' => 'نوع وسیله نقلیه الزامی است.',

@@ -1,6 +1,6 @@
 @php
   // فایل‌های نصب ویندوز روی سرور در public/downloads/windows قرار می‌گیرند (در گیت و ایمیج داکر نیستند)
-  $windowsVersion = '1.1.1';
+  $windowsVersion = '1.1.3';
   $faDigits = fn ($v) => strtr((string) $v, ['0'=>'۰','1'=>'۱','2'=>'۲','3'=>'۳','4'=>'۴','5'=>'۵','6'=>'۶','7'=>'۷','8'=>'۸','9'=>'۹']);
   $windowsBuilds = collect([
     ['key' => 'win10-64', 'os' => 'ویندوز ۱۰ و ۱۱', 'arch' => '۶۴ بیتی', 'file' => "Loop-{$windowsVersion}-Windows-10-11-64bit-Setup.exe"],

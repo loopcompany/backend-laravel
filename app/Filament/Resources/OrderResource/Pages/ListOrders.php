@@ -6,6 +6,8 @@ use App\Filament\Resources\OrderResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
+use App\Models\Order;
+use App\Models\OrderWorkflow;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListOrders extends ListRecords
@@ -19,43 +21,38 @@ class ListOrders extends ListRecords
         ];
     }
 
+    /**
+     * تب‌ها به ترتیب مراحل فرآیند؛ هر مرحله رنگ و آیکون اختصاصی دارد (هم‌رنگ نشان وضعیت و نوار ردیف).
+     */
     public function getTabs(): array
     {
-        return [
-            'all' => Tab::make('همه سفارشات'),
+        $counts = Order::query()
+            ->selectRaw('workflow_stage, count(*) as c')
+            ->groupBy('workflow_stage')
+            ->pluck('c', 'workflow_stage');
 
-            'pending' => Tab::make('در انتظار')
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 0))
-                ->badge(fn() => \App\Models\Order::where('status', 0)->count())
-                ->badgeColor('warning'),
-            'company' => Tab::make('سفارش‌های سازمانی')
-                ->modifyQueryUsing(
-                    fn(Builder $query) => $query
-                        ->whereHas('user', fn($q) => $q->where('account_type', '!=', 'individual'))
-                )
-                ->badge(fn() => \App\Models\Order::whereHas('user', fn($q) => $q->where('account_type', '!=', 'individual'))->count())
-                ->badgeColor('warning'),
+        $tabs = ['all' => Tab::make('همه سفارشات')->icon('heroicon-o-queue-list')];
 
-            'processing' => Tab::make('در حال انجام')
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 1))
-                ->badge(fn() => \App\Models\Order::where('status', 1)->count())
-                ->badgeColor('primary'),
+        foreach (OrderWorkflow::STAGES as $stage => $label) {
+            $tabs[$stage] = Tab::make($label)
+                ->icon(OrderWorkflow::STAGE_ICONS[$stage])
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('workflow_stage', $stage))
+                ->badge($counts[$stage] ?? 0)
+                ->badgeColor(OrderWorkflow::STAGE_COLORS[$stage]);
+        }
 
-            'completed' => Tab::make('انجام شده')
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 2))
-                ->badge(fn() => \App\Models\Order::where('status', 2)->count())
-                ->badgeColor('success'),
+        $tabs['company'] = Tab::make('سفارش‌های سازمانی')
+            ->icon('heroicon-o-building-office-2')
+            ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('user', fn ($q) => $q->where('account_type', '!=', 'individual')))
+            ->badge(fn () => Order::whereHas('user', fn ($q) => $q->where('account_type', '!=', 'individual'))->count())
+            ->badgeColor('lime');
 
-            'cancelled' => Tab::make('لغو شده')
-                ->modifyQueryUsing(fn(Builder $query) => $query->whereIn('status', [3, 4, 5, 6]))
-                ->badge(fn() => \App\Models\Order::whereIn('status', [3, 4, 5, 6])->count())
-                ->badgeColor('danger'),
+        $tabs['unpaid'] = Tab::make('پرداخت نشده')
+            ->icon('heroicon-o-banknotes')
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('payment_status', 0)->whereNotIn('workflow_stage', [OrderWorkflow::STAGE_CANCELLED]))
+            ->badge(fn () => Order::where('payment_status', 0)->whereNotIn('workflow_stage', [OrderWorkflow::STAGE_CANCELLED])->count())
+            ->badgeColor('slate');
 
-
-            'unpaid' => Tab::make('پرداخت نشده')
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('payment_status', 0))
-                ->badge(fn() => \App\Models\Order::where('payment_status', 0)->count())
-                ->badgeColor('warning'),
-        ];
+        return $tabs;
     }
 }

@@ -9,7 +9,7 @@ services:
       APP_DEBUG: "true"
       APP_URL: http://localhost:8000
       USER_PANEL_URL: http://localhost:8000/user/login
-      TECHNICIAN_PANEL_URL: http://localhost:8000/technician/login
+      TECHNICIAN_PANEL_URL: http://localhost:8081
       TECHNICIAN_REGISTER_URL: http://localhost:8000/technician/register
       LOG_CHANNEL: stderr_json
       LOG_LEVEL: info

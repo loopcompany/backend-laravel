@@ -63,23 +63,26 @@ class OrderCancelSourceAndDeliveryConfirmTest extends TestCase
         $this->assertSame('user', collect($list->json('data'))->firstWhere('id', $order->id)['cancelled_by']);
     }
 
-    public function test_technician_cancel_is_reported_as_cancelled_by_technician(): void
+    /** فرآیند سفارش بند ۵-۵: انصراف تکنسین سفارش را لغو نمی‌کند؛ برای تخصیص مجدد به پنل برمی‌گردد. */
+    public function test_technician_cancel_returns_order_to_panel_instead_of_cancelling(): void
     {
         $technician = $this->makeTechnician();
         $order = $this->makeOrder($this->makeUser(), ['technician_id' => $technician->id, 'status' => 1]);
         Sanctum::actingAs($technician);
 
         $this->postJson("/api/technician/orders/{$order->id}/cancel", ['technician_cancel_reason' => 'خرابی خودرو'])
-            ->assertOk();
+            ->assertOk()
+            ->assertJsonPath('data.returned_to_panel', true);
 
         $order->refresh();
-        $this->assertSame(4, (int) $order->status);
-        $this->assertSame('technician', $order->cancelled_by);
+        $this->assertSame(0, (int) $order->status);
+        $this->assertNull($order->cancelled_by);
+        $this->assertNull($order->technician_id);
+        $this->assertSame('خرابی خودرو', $order->technician_cancel_reason);
+        $this->assertSame('assignment', $order->workflow_stage);
 
-        $item = collect($this->getJson('/api/technician/orders')->assertOk()->json('data.orders') ?? $this->getJson('/api/technician/orders')->json('data'))
-            ->firstWhere('id', $order->id);
-        $this->assertSame('technician', $item['cancelled_by'] ?? null);
-        $this->assertNotNull($item['cancelled_at'] ?? null);
+        $orders = collect($this->getJson('/api/technician/orders')->assertOk()->json('data.orders') ?? $this->getJson('/api/technician/orders')->json('data'));
+        $this->assertNull($orders->firstWhere('id', $order->id));
     }
 
     public function test_reject_decision_path_sets_user_source(): void
@@ -106,21 +109,20 @@ class OrderCancelSourceAndDeliveryConfirmTest extends TestCase
         $this->assertNull($order->cancelled_at);
     }
 
-    public function test_panel_cannot_save_user_or_technician_cancel_codes(): void
+    public function test_panel_cancels_only_through_workflow_and_records_admin_source(): void
     {
         $this->actingAsAdmin();
         $order = $this->makeOrder($this->makeUser(), ['status' => 0, 'time' => '10 - 12', 'date' => now()->toDateString()]);
 
+        // وضعیت در فرم ویرایش فقط‌خواندنی است
         Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
-            ->fillForm(['status' => 3])
-            ->call('save')
-            ->assertNotified('این وضعیت از پنل قابل ثبت نیست');
-        $this->assertSame(0, (int) $order->fresh()->status);
+            ->assertFormFieldIsDisabled('status')
+            ->assertFormFieldIsDisabled('technician_id');
 
-        Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
-            ->fillForm(['status' => 5])
-            ->call('save')
-            ->assertHasNoFormErrors();
+        Livewire::test(ViewOrder::class, ['record' => $order->getRouteKey()])
+            ->callAction('workflow_cancel', ['cancel_reason_type' => 'user_request', 'cancel_reason' => 'درخواست تلفنی کاربر'])
+            ->assertHasNoActionErrors();
+
         $order->refresh();
         $this->assertSame(5, (int) $order->status);
         $this->assertSame('admin', $order->cancelled_by);

@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Contact;
 use App\Models\MinPrice;
 use App\Models\Order;
+use App\Models\Partner;
 use App\Models\PdfDocument;
 use App\Models\Social;
 use App\Models\Term;
@@ -51,9 +52,12 @@ class MainController extends Controller
             ->orderByRaw("CASE type WHEN 'office' THEN 1 WHEN 'email' THEN 2 WHEN 'phone' THEN 3 ELSE 4 END")
             ->get();
 
+        // شرکت‌ها و سازمان‌های همکار برای بخش «سوابق همکاری»
+        $partners = Partner::visible()->get();
+
         // Client Hints برای پیشنهاد نسخه‌ی مناسب ویندوز در بخش #windows-app
         return response()
-            ->view('main.index', compact('leafCategories', 'recentBlogs', 'testimonials', 'contacts'))
+            ->view('main.index', compact('leafCategories', 'recentBlogs', 'testimonials', 'contacts', 'partners'))
             ->header('Accept-CH', \App\Support\WindowsBuildDetector::CLIENT_HINTS)
             ->header('Vary', 'User-Agent, '.\App\Support\WindowsBuildDetector::CLIENT_HINTS);
     }

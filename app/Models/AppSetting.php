@@ -19,12 +19,18 @@ class AppSetting extends Model
     public const LOOP_PREPAYMENT_PERCENT = 'loop_prepayment_percent';
     /** حداقل مبلغ برداشت پورسانت مأمور خرید به شبا (تومان). */
     public const REFERRAL_MIN_WITHDRAW_AMOUNT = 'referral_min_withdraw_amount';
+    /**
+     * اختیار قیمت‌گذاری تکنسین (بند ۷-۲ فرآیند سفارش): پیشنهاد قیمت جدید تکنسین تا این درصد بیشتر از
+     * آخرین قیمت تأییدشده‌ی کاربر، بدون بررسی پنل برای کاربر ارسال می‌شود. ۰ = بدون اختیار.
+     */
+    public const TECHNICIAN_REQUOTE_LIMIT_PERCENT = 'technician_requote_limit_percent';
 
     public const DEFAULTS = [
         self::BUSINESS_END_TIME => '17:00',
         self::PROCUREMENT_PREPAYMENT_PERCENT => 60,
         self::LOOP_PREPAYMENT_PERCENT => 60,
         self::REFERRAL_MIN_WITHDRAW_AMOUNT => 500000,
+        self::TECHNICIAN_REQUOTE_LIMIT_PERCENT => 0,
     ];
 
     private const CACHE_KEY = 'app-settings';

@@ -389,6 +389,8 @@ class TechnicianOrderReportService
                 ];
             }
 
+            $this->syncWorkflow($orderId, fn ($workflow, $order) => $workflow->onTechnicianSentToLoop($order));
+
             Log::info('سفارش به لوپ ارسال شد', [
                 'order_id' => $orderId,
                 'technician_id' => $technicianId,
@@ -465,6 +467,8 @@ class TechnicianOrderReportService
                     'error_code' => 'UPDATE_ERROR'
                 ];
             }
+
+            $this->syncWorkflow($orderId, fn ($workflow, $order) => $workflow->onTechnicianDoneInPlace($order));
 
             Log::info('سفارش در محل انجام شد', [
                 'order_id' => $orderId,
@@ -637,6 +641,19 @@ class TechnicianOrderReportService
         ];
     }
 
+    /** همگام‌سازی فرآیند پنل پس از آپدیت مستقیم سفارش؛ خطای آن پاسخ اپ را خراب نمی‌کند. */
+    private function syncWorkflow(int $orderId, callable $callback): void
+    {
+        try {
+            $order = \App\Models\Order::find($orderId);
+            if ($order) {
+                $callback(app(\App\Services\OrderWorkflowService::class), $order);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Order workflow sync failed: ' . $e->getMessage(), ['order_id' => $orderId]);
+        }
+    }
+
     /**
      * فرمت کردن داده‌های گزارش
      */
@@ -714,6 +731,8 @@ class TechnicianOrderReportService
                     'error_code' => 'UPDATE_ERROR'
                 ];
             }
+
+            $this->syncWorkflow($orderId, fn ($workflow, $order) => $workflow->onTechnicianSetOff($order));
 
             Log::info('زمان حرکت تکنسین ثبت شد', [
                 'technician_id' => $technicianId,
@@ -804,6 +823,8 @@ class TechnicianOrderReportService
                     'error_code' => 'UPDATE_ERROR'
                 ];
             }
+
+            $this->syncWorkflow($orderId, fn ($workflow, $order) => $workflow->onTechnicianArrived($order));
 
             Log::info('زمان رسیدن تکنسین ثبت شد', [
                 'technician_id' => $technicianId,

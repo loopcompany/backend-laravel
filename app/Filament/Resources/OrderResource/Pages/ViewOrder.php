@@ -11,9 +11,19 @@ class ViewOrder extends ViewRecord
 {
     protected static string $resource = OrderResource::class;
 
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+
+        // جزئیات فرآیند برای سفارش‌های قبلی ساخته می‌شود تا تب‌های مراحل پر شوند
+        app(\App\Services\OrderWorkflowService::class)->details($this->record);
+        $this->record->loadMissing(['user.organization', 'technician', 'technician_order_report', 'delivery_reports', 'workflow.reviewer']);
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            OrderResource\Workflow\OrderWorkflowPanel::cancelAction(),
             Actions\EditAction::make(),
             Actions\Action::make('print_label')
                 ->label('چاپ لیبل')

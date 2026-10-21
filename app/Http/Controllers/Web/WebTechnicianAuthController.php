@@ -99,9 +99,8 @@ class WebTechnicianAuthController extends Controller
                 ->withInput();
         }
         
-        return redirect()
-            ->route('web.technician.login-form')
-            ->with('success', 'شماره تلفن شما با موفقیت تأیید شد. اکنون می‌توانید وارد شوید.');
+        // کد پرسنلی و رمز عبور پیامک شده است؛ ورود در خود اپ تکنسین انجام می‌شود
+        return redirect()->away($this->technicianPanelLoginUrl());
     }
 
     public function resendVerificationCode(Request $request)
@@ -126,9 +125,15 @@ class WebTechnicianAuthController extends Controller
 
     // ========== Login Views & Actions ==========
     
+    // ورود و پنل تکنسین همان اپ تکنسین (نسخه‌ی وب) است، نه صفحه‌های جداگانه‌ی سایت
     public function showLoginForm()
     {
-        return view('technician.auth.login');
+        return redirect()->away($this->technicianPanelLoginUrl());
+    }
+
+    private function technicianPanelLoginUrl(): string
+    {
+        return rtrim(config('app.technician_panel_url'), '/') . '/login';
     }
 
     public function login(TechnicianLoginRequest $request)
@@ -250,9 +255,7 @@ class WebTechnicianAuthController extends Controller
                 ->withInput();
         }
         
-        return redirect()
-            ->route('web.technician.login-form')
-            ->with('success', 'رمز عبور شما با موفقیت تغییر یافت. اکنون می‌توانید وارد شوید.');
+        return redirect()->away($this->technicianPanelLoginUrl());
     }
 
     // ========== Dashboard (Placeholder) ==========

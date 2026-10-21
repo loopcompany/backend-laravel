@@ -297,7 +297,9 @@ class TechnicianProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $result['message']
+            'message' => $result['message'],
+            // سفارش لغو نمی‌شود؛ برای تخصیص مجدد به پنل برمی‌گردد و از لیست تکنسین خارج می‌شود
+            'data' => $result['data'] ?? null,
         ], 200);
     }
 

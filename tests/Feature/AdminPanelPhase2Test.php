@@ -113,10 +113,15 @@ class AdminPanelPhase2Test extends TestCase
 
         Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
             ->assertFormFieldIsDisabled('technician_price')
-            ->fillForm(['status' => 2])
-            ->call('save')
-            ->assertNotified('پیش‌پرداخت پرداخت نشده است');
+            ->assertFormFieldIsDisabled('status');
 
+        // قیمت نهایی و مختومه شدن فقط از مرحله‌ی «پایان سفارش» و پس از پرداخت پیش‌پرداخت
+        $workflow = app(\App\Services\OrderWorkflowService::class);
+        $order->forceFill(['workflow_stage' => 'closed'])->saveQuietly();
+        $workflow->details($order)->update(['field_result' => 'transferred_to_loop']);
+
+        $this->assertThrows(fn () => $workflow->recordFinalPrice($order->fresh(), 900000), \App\Services\OrderWorkflowException::class, 'پیش‌پرداخت');
+        $this->assertThrows(fn () => $workflow->closeFile($order->fresh()), \App\Services\OrderWorkflowException::class);
         $this->assertSame(1, (int) $order->fresh()->status);
     }
 

@@ -4,17 +4,51 @@ namespace App\Filament\Resources\OrderResource\Pages;
 
 use App\Filament\Resources\OrderResource;
 use App\Helpers\Helper;
-use App\Models\Order;
-use App\Services\OrderService;
 use Filament\Actions;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Notifications\Notification;
 
 class EditOrder extends EditRecord
 {
     protected static string $resource = OrderResource::class;
 
+    /** استپر و تب مراحل فرآیند بالای فرم (filament.resources.order-resource.pages.edit-order) */
+    protected static string $view = 'filament.resources.order-resource.pages.edit-order';
+
     public ?array $oldData = null;
+
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+
+        // جزئیات فرآیند برای سفارش‌های قبلی ساخته می‌شود تا تب‌های مراحل پر شوند
+        app(\App\Services\OrderWorkflowService::class)->details($this->record);
+        $this->record->loadMissing(['user.organization', 'technician', 'technician_order_report', 'delivery_reports', 'workflow.reviewer']);
+    }
+
+    /** استپر + تب هر مرحله با اطلاعات و اقدام‌های همان مرحله (همان صفحه‌ی جزئیات) */
+    public function workflowInfolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->record($this->record)
+            ->schema(OrderResource\Workflow\OrderWorkflowPanel::schema());
+    }
+
+    /** فرم ویرایش و رابطه‌ها (بازدیدها، گالری، خدمات اضافی، …) به‌صورت تب زیر مراحل */
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
+
+    public function getContentTabLabel(): ?string
+    {
+        return 'ویرایش اطلاعات سفارش';
+    }
+
+    public function getContentTabIcon(): ?string
+    {
+        return 'heroicon-o-pencil-square';
+    }
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
@@ -23,35 +57,8 @@ class EditOrder extends EditRecord
         return $data;
     }
 
-    protected function beforeSave(): void
-    {
-        // محصول اعزام‌شده به لوپ: پیش از پرداخت پیش‌پرداخت، تعمیر شروع نمی‌شود و سفارش انجام‌شده ثبت نمی‌شود
-        $state = $this->form->getRawState();
-
-        // لغو از پنل همیشه «لغو از سوی پنل» (۵) است؛ ۳/۴/۶ فقط از اپ کاربر، اپ تکنسین و سیستم ثبت می‌شوند
-        if (isset($state['status']) && OrderResource::isPanelLockedStatus((int) $state['status'], $this->record)) {
-            Notification::make()
-                ->title('این وضعیت از پنل قابل ثبت نیست')
-                ->body('برای لغو سفارش از پنل، «لغو از سوی پنل» را انتخاب کنید.')
-                ->danger()
-                ->send();
-
-            $this->halt();
-        }
-
-        $wantsDone = (int) ($state['status'] ?? $this->record->status) === 2 && (int) $this->record->status !== 2;
-        $prepaymentPaid = (int) ($state['prepayment_payment_status'] ?? $this->record->prepayment_payment_status) === 1;
-
-        if (OrderResource::awaitingLoopPrepayment($this->record) && !$prepaymentPaid && $wantsDone) {
-            Notification::make()
-                ->title('پیش‌پرداخت پرداخت نشده است')
-                ->body('تا وقتی کاربر پیش‌پرداخت را پرداخت نکرده، تعمیر شروع نمی‌شود و سفارش «انجام شده» ثبت نمی‌شود.')
-                ->danger()
-                ->send();
-
-            $this->halt();
-        }
-    }
+    // وضعیت، تکنسین و قیمت نهایی در این فرم فقط‌خواندنی‌اند و از مراحل صفحه‌ی جزئیات تغییر می‌کنند
+    // (OrderWorkflowService: لغو، مختومه کردن پرونده با واریز سهم تکنسین، ثبت قیمت نهایی).
 
     protected function afterSave(): void
     {
@@ -67,47 +74,30 @@ class EditOrder extends EditRecord
         if($this->oldData['prepayment_payment_status'] ==0 && $this->record->prepayment_payment_status == 1){
             $this->record->update(['user_accept_date' => now()]);
         }
-        // بررسی تغییر وضعیت به "انجام شده" (2)
-        if ($this->oldData && isset($this->oldData['status']) && $this->record->status == 2 && $this->oldData['status'] != 2) {
-
-
-            // اگر finished_at خالی باشه، الان ست کن
-            if (!$this->record->finished_at) {
-                $this->record->update(['finished_at' => now()]);
-            }
-
-            // پردازش پرداخت به تکنسین
-            $orderService = app(OrderService::class);
-            $paymentResult = $orderService->processTechnicianPayment($this->record);
-
-            if ($paymentResult['success']) {
-                Notification::make()
-                    ->title('پرداخت به تکنسین انجام شد')
-                    ->body('سهم تکنسین با موفقیت به کیف پول او واریز شد.')
-                    ->success()
-                    ->send();
-            } else {
-                // فقط در صورتی که خطای مهمی باشه نوتیفیکیشن بده
-                if (!in_array($paymentResult['error_code'] ?? '', ['NO_TECHNICIAN', 'NOT_PAID', 'ALREADY_PAID_TO_TECHNICIAN'])) {
-                    Notification::make()
-                        ->title('خطا در پرداخت به تکنسین')
-                        ->body($paymentResult['message'])
-                        ->warning()
-                        ->send();
-                }
-            }
-        }
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\ViewAction::make(),
+            OrderResource\Workflow\OrderWorkflowPanel::cancelAction(),
+            Actions\Action::make('print_label')
+                ->label('چاپ لیبل')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->url(fn (): string => route('admin.orders.label', ['order' => $this->record->getKey()]))
+                ->openUrlInNewTab(),
+            Actions\Action::make('download_invoice')
+                ->label('دانلود رسید')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->url(fn (): string => route('web.reciept', ['id' => $this->record->getKey()]))
+                ->openUrlInNewTab(),
         ];
     }
 
+    /** پس از ذخیره روی همین صفحه (استپر و مراحل) می‌ماند */
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return $this->getResource()::getUrl('edit', ['record' => $this->record]);
     }
 }

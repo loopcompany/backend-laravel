@@ -309,10 +309,17 @@ class OrderWorkflowPanel
                             ->state(fn (Order $record) => self::procurementSummary($record))
                             ->visible(fn (Order $record) => !empty($record->procurement_items))
                             ->columnSpanFull(),
-                        Infolists\Components\ImageEntry::make('image_path')
-                            ->label('تصویر ارسالی کاربر')
-                            ->height(220)
-                            ->visible(fn (Order $record) => $record->image_path != null),
+                    ]),
+
+                // تصاویر ارسالی کاربر: اپ آن‌ها را در file_paths (جدول order_galleries) می‌فرستد؛
+                // image_path قدیمی است و اپ فعلی پرش نمی‌کند
+                Infolists\Components\Section::make(fn (Order $record) => 'تصاویر و فایل‌های ارسالی کاربر (' . count(self::userFiles($record)) . ')')
+                    ->icon('heroicon-o-photo')
+                    ->schema([
+                        Infolists\Components\ViewEntry::make('user_images')
+                            ->hiddenLabel()
+                            ->view('filament.infolists.order-user-images')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
@@ -885,7 +892,7 @@ class OrderWorkflowPanel
         return self::workflowAction('assign_technician', fn (Order $r) => $r->technician_id ? 'تخصیص مجدد تکنسین' : 'تخصیص تکنسین', 'heroicon-o-user-plus', 'primary',
             fn (Order $r) => self::isStage($r, OrderWorkflow::STAGE_ASSIGNMENT) && $r->workflow?->assignment_status !== 'accepted')
             ->modalWidth('2xl')
-            ->modalDescription(fn (Order $record) => $record->workflow?->review_status !== 'approved' ? 'اطلاعات سفارش هنوز تأیید نشده است.' : 'تکنسین‌ها به ترتیب تخصص، منطقه و ظرفیت کاری مرتب شده‌اند.')
+            ->modalDescription(fn (Order $record) => $record->workflow?->review_status !== 'approved' ? 'اطلاعات سفارش هنوز تأیید نشده است.' : 'تکنسین‌های میدانی اول، سپس هم‌منطقه با کاربر، روشن و با کمترین سفارش فعال؛ تخصص هر تکنسین در فهرست آمده است.')
             ->fillForm(fn (Order $record) => ['technician_id' => $record->technician_id, 'date' => $record->date, 'time' => $record->time])
             ->form([
                 Forms\Components\Select::make('technician_id')
@@ -1100,7 +1107,10 @@ class OrderWorkflowPanel
         return in_array(self::workflow()->stage($record), $stages, true);
     }
 
-    /** ۵-۲ — تکنسین‌ها به ترتیب: تخصص در دسته‌ی سفارش، همان منطقه، روشن بودن، کمترین سفارش فعال. */
+    /**
+     * ۵-۲ — تکنسین‌ها به ترتیب: تکنسین میدانی، همان منطقه‌ی کاربر، روشن بودن، کمترین سفارش فعال (ظرفیت کاری).
+     * تخصص‌های هر تکنسین (technician_expertises) در برچسب نمایش داده می‌شود.
+     */
     public static function technicianOptions(Order $order): array
     {
         $region = (string) ($order->user_address?->region ?? '');
@@ -1108,27 +1118,71 @@ class OrderWorkflowPanel
         return Technician::query()
             ->where('approval_status', Technician::APPROVAL_APPROVED)
             ->where('has_access', 1)
-            ->with('categories:id')
+            ->with('expertises:id,title')
             ->withCount(['orders as active_orders_count' => fn ($q) => $q->whereNotIn('workflow_stage', [OrderWorkflow::STAGE_CLOSED, OrderWorkflow::STAGE_CANCELLED])->whereNotIn('status', [2, 3, 4, 5, 6])])
             ->get()
             ->map(fn (Technician $t) => [
                 'id' => $t->id,
-                'specialist' => $t->categories->contains('id', $order->category_id),
+                'field' => !str_contains((string) $t->technician_type, 'داخلی'),
                 'same_region' => $region !== '' && (string) $t->region === $region,
                 'online' => (string) $t->at_work === '1',
                 'load' => (int) $t->active_orders_count,
                 'name' => $t->name,
                 'region' => $t->region,
+                'expertises' => $t->expertises->pluck('title')->take(3)->implode('، '),
             ])
-            ->sortBy([['specialist', 'desc'], ['same_region', 'desc'], ['online', 'desc'], ['load', 'asc']])
+            ->sortBy([['field', 'desc'], ['same_region', 'desc'], ['online', 'desc'], ['load', 'asc']])
             ->mapWithKeys(fn (array $t) => [$t['id'] => implode(' | ', array_filter([
                 $t['name'],
-                $t['specialist'] ? 'متخصص این خدمت' : null,
+                $t['field'] ? null : 'تکنسین داخلی',
+                $t['expertises'] ?: null,
                 $t['region'] ? 'منطقه ' . $t['region'] . ($t['same_region'] ? ' (هم‌منطقه)' : '') : null,
                 $t['load'] . ' سفارش فعال',
                 $t['online'] ? 'روشن' : 'خاموش',
             ]))])
             ->all();
+    }
+
+    /**
+     * همه‌ی تصاویر / فایل‌هایی که کاربر هنگام ثبت سفارش فرستاده: گالری سفارش (file_paths اپ)،
+     * image_path قدیمی و فایل‌های زمان‌بندی خدمت سازمانی.
+     *
+     * @return array<int, array{url:string, label:string, is_image:bool, extension:string}>
+     */
+    public static function userFiles(Order $order): array
+    {
+        $galleries = $order->relationLoaded('order_galleries') ? $order->order_galleries : $order->order_galleries()->get();
+
+        $paths = collect()
+            ->when(filled($order->image_path), fn ($c) => $c->push(['path' => $order->image_path, 'label' => 'تصویر سفارش']))
+            ->merge($galleries->map(fn ($g, $i) => ['path' => $g->image_path, 'label' => 'تصویر ' . ($i + 1)]))
+            ->when(filled($order->service_schedule_long_file), fn ($c) => $c->push(['path' => $order->service_schedule_long_file, 'label' => 'فایل زمان‌بندی بلندمدت']))
+            ->when(filled($order->service_schedule_short_file), fn ($c) => $c->push(['path' => $order->service_schedule_short_file, 'label' => 'فایل زمان‌بندی کوتاه‌مدت']))
+            ->filter(fn ($f) => filled($f['path']))
+            ->unique('path');
+
+        return $paths->map(function (array $file) {
+            $extension = strtolower(pathinfo(parse_url($file['path'], PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+
+            return [
+                'url' => self::publicFileUrl($file['path']),
+                'label' => $file['label'],
+                'extension' => $extension,
+                'is_image' => in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', ''], true),
+            ];
+        })->values()->all();
+    }
+
+    /** نشانی فایل دیسک public با دامنه‌ی همین درخواست (مستقل از APP_URL). */
+    public static function publicFileUrl(string $path): string
+    {
+        if (preg_match('#^(https?:)?//#i', $path) || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+
+        $path = ltrim(preg_replace('#^(/?storage/)#', '', $path), '/');
+
+        return asset('storage/' . $path);
     }
 
     public static function quoteSummary(?OrderQuote $quote): string

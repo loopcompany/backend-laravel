@@ -17,7 +17,7 @@ class ViewOrder extends ViewRecord
 
         // جزئیات فرآیند برای سفارش‌های قبلی ساخته می‌شود تا تب‌های مراحل پر شوند
         app(\App\Services\OrderWorkflowService::class)->details($this->record);
-        $this->record->loadMissing(['user.organization', 'technician', 'technician_order_report', 'delivery_reports', 'workflow.reviewer']);
+        $this->record->loadMissing(['user.organization', 'technician', 'technician_order_report', 'delivery_reports', 'workflow.reviewer', 'order_galleries']);
     }
 
     protected function getHeaderActions(): array

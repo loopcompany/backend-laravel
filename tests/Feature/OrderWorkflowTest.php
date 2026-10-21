@@ -415,6 +415,29 @@ class OrderWorkflowTest extends TestCase
             ->assertTableActionDoesNotExist('view');
     }
 
+    /** باگ: تصاویری که اپ هنگام ثبت سفارش در file_paths می‌فرستد در صفحه‌ی ویرایش نمایش داده نمی‌شد. */
+    public function test_user_images_sent_with_order_are_shown_on_edit_page(): void
+    {
+        $this->actingAsAdmin();
+        $user = $this->makeUser();
+        $order = $this->makeOrder($user, ['time' => '10 - 12', 'date' => now()->toDateString()]);
+        Sanctum::actingAs($user);
+
+        // همان مسیری که اپ می‌رود: uploadMultiple → file_paths در ثبت سفارش → order_galleries
+        \App\Models\OrderGallery::create(['order_id' => $order->id, 'image_path' => 'profile/first-photo.jpg']);
+        \App\Models\OrderGallery::create(['order_id' => $order->id, 'image_path' => 'profile/second-photo.png']);
+
+        Livewire::test(OrderResource\Pages\EditOrder::class, ['record' => $order->id])
+            ->assertOk()
+            ->assertSee('تصاویر و فایل‌های ارسالی کاربر (2)')
+            ->assertSee('/storage/profile/first-photo.jpg', false)
+            ->assertSee('/storage/profile/second-photo.png', false);
+
+        $empty = $this->makeOrder($user, ['time' => '10 - 12', 'date' => now()->toDateString()]);
+        Livewire::test(OrderResource\Pages\EditOrder::class, ['record' => $empty->id])
+            ->assertSee('کاربر هنگام ثبت سفارش تصویر یا فایلی ارسال نکرده است.');
+    }
+
     public function test_panel_status_edit_is_synced_with_stage(): void
     {
         $this->actingAsAdmin();

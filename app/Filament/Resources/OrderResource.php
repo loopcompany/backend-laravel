@@ -322,12 +322,15 @@ class OrderResource extends Resource
                         ->disabledOn('edit')
                         ->nullable(),
 
+                    // فیلد قدیمی؛ تصاویر اپ فعلی در تب «ثبت سفارش» و تب «تصاویر سفارش» نمایش داده می‌شوند
                     Forms\Components\FileUpload::make('image_path')
-                        ->label('تصویر سفارش')
+                        ->label('تصویر سفارش (قدیمی)')
                         ->image()
+                        ->disk('public')
                         ->directory('orders')
                         ->visibility('public')
-                        ->disabled(),
+                        ->disabled()
+                        ->visible(fn (?Order $record) => filled($record?->image_path)),
 
                 ]),
 
@@ -705,7 +708,7 @@ class OrderResource extends Resource
                             ->options(fn (Order $record) => OrderResource\Workflow\OrderWorkflowPanel::technicianOptions($record))
                             ->searchable()
                             ->required()
-                            ->helperText('به ترتیب تخصص، منطقه و ظرفیت کاری. تکنسین باید مأموریت را تأیید کند.'),
+                            ->helperText('میدانی، هم‌منطقه، روشن و کم‌سفارش‌تر اول؛ تخصص هر تکنسین در فهرست آمده. تکنسین باید مأموریت را تأیید کند.'),
                         Forms\Components\Textarea::make('note')
                             ->label('توضیحات مأموریت')
                             ->rows(2)

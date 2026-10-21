@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
+use App\Filament\Resources\OrderResource\Workflow\OrderWorkflowPanel;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -22,9 +23,13 @@ class OrderGalleriesRelationManager extends RelationManager
     {
         return $form
             ->schema([
+                // همان دیسک و پوشه‌ای که اپ کاربر هنگام ثبت سفارش در آن آپلود می‌کند
                 Forms\Components\FileUpload::make('image_path')
                     ->required()
                     ->label('تصویر')
+                    ->disk('public')
+                    ->directory('order')
+                    ->visibility('public')
                     ->downloadable()
                     ->openable()
                     ->image(),
@@ -39,9 +44,12 @@ class OrderGalleriesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('id')
                     ->label('شناسه')
                 ,
+                // نشانی با دامنه‌ی همین درخواست ساخته می‌شود تا به APP_URL وابسته نباشد؛ کلیک = اندازه‌ی کامل
                 Tables\Columns\ImageColumn::make('image_path')
                     ->label('تصویر')
-                ,
+                    ->getStateUsing(fn ($record) => filled($record->image_path) ? OrderWorkflowPanel::publicFileUrl($record->image_path) : null)
+                    ->height(90)
+                    ->url(fn ($record) => filled($record->image_path) ? OrderWorkflowPanel::publicFileUrl($record->image_path) : null, shouldOpenInNewTab: true),
             ])
             ->filters([
                 //

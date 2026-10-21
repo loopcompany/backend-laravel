@@ -70,6 +70,14 @@ class FinancialSettings extends Page implements HasForms
                             ->helperText('برای هر محصول اعزام‌شده به لوپ که درصد پیش‌پرداخت آن خالی است.'),
                     ]),
 
+                Forms\Components\Section::make('قیمت‌گذاری مجدد سفارش')
+                    ->schema([
+                        Forms\Components\TextInput::make(AppSetting::TECHNICIAN_REQUOTE_LIMIT_PERCENT)
+                            ->label('اختیار قیمت‌گذاری تکنسین')
+                            ->numeric()->minValue(0)->maxValue(100)->suffix('%')->required()
+                            ->helperText('پیشنهاد قیمت جدید تکنسین تا این درصد بیشتر از آخرین قیمت تأییدشده‌ی کاربر، بدون بررسی پنل مستقیم برای تأیید کاربر ارسال می‌شود. ۰ یعنی همه‌ی پیشنهادها باید در پنل بررسی شوند. تأیید کاربر همیشه لازم است.'),
+                    ]),
+
                 Forms\Components\Section::make('کیف پول مأمور خرید')
                     ->schema([
                         Forms\Components\TextInput::make(AppSetting::REFERRAL_MIN_WITHDRAW_AMOUNT)

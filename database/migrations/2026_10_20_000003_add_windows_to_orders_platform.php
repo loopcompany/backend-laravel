@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * فرآیند سفارش (توضیحات ۲): سفارش‌های سایت / اپ / نسخه ویندوز در پنل تفکیک‌شده نمایش داده می‌شوند؛
+ * نسخه ویندوز تا امروز مقدار جداگانه‌ای در ستون platform نداشت.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('orders', function (Blueprint $table) {
+            $table->enum('platform', ['android', 'web', 'ios', 'phone', 'person', 'windows'])->default('android')->change();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('orders', function (Blueprint $table) {
+            $table->enum('platform', ['android', 'web', 'ios', 'phone', 'person'])->default('android')->change();
+        });
+    }
+};

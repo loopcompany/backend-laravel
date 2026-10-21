@@ -58,9 +58,22 @@ class AdminPanelProvider extends PanelProvider
             ->authPasswordBroker('admins')
             ->profile(\App\Filament\Pages\Auth\EditProfile::class)
             ->databaseNotifications()
+            ->renderHook(\Filament\View\PanelsRenderHook::STYLES_AFTER, fn () => view('filament.hooks.order-stage-styles'))
             ->colors([
                 'primary' => Color::Blue,
                 'gray' => Color::Slate,
+                // رنگ مراحل فرآیند سفارش (OrderWorkflow::STAGE_COLORS) و تب‌های لیست سفارشات
+                'amber' => Color::Amber,
+                'orange' => Color::Orange,
+                'sky' => Color::Sky,
+                'blue' => Color::Blue,
+                'pink' => Color::Pink,
+                'violet' => Color::Violet,
+                'teal' => Color::Teal,
+                'emerald' => Color::Emerald,
+                'red' => Color::Red,
+                'lime' => Color::Lime,
+                'slate' => Color::Slate,
             ])
             ->brandName('پنل مدیریت')
             ->darkMode(false)

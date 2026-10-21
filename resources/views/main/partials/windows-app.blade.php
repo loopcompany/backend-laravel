@@ -51,7 +51,7 @@
       — نسخه‌ی <span class="win-detected-pill">پیشنهادی</span> مناسب رایانه‌ی شما مشخص شده است.
     </p>
     <p class="win-detected win-detected--other" id="win-not-windows" @if ($winDetected['is_windows']) hidden @endif>
-      برای نصب نرم‌افزار، این صفحه را روی رایانه‌ی ویندوزی باز کنید.
+برای نصب نرم‌افزار، لطفاً این صفحه را در رایانه‌ای با سیستم‌عامل ویندوز باز کنید
     </p>
 
     <p class="win-hint">نسخه نرم‌افزار: <b>{{ $windowsVersion }}</b> · نمی‌دانید ویندوز شما ۳۲ یا ۶۴ بیتی است؟ در ویندوز به مسیر <b>Settings › System › About</b> بروید و بخش <b>System type</b> را ببینید.</p>

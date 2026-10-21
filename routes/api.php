@@ -28,6 +28,7 @@ use App\Http\Controllers\LetterRateController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ManpowerRequestController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderWorkflowController;
 use App\Http\Controllers\PhoneVerificationController;
 use App\Http\Controllers\PollApplicationController;
 use App\Http\Controllers\ProfileController;
@@ -372,6 +373,9 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::get('/{orderId}/extra-services', [ExtraServiceController::class, 'showOrderExtraServices'])->name('api.orders.extra-services.show');
             Route::post('/{orderId}/initial-accept', [OrderController::class, 'userInitialAccept'])->name('api.orders.initial-accept');
             Route::post('/{orderId}/decision', [OrderController::class, 'userOrderDecision'])->name('api.orders.decision');
+            // فرآیند سفارش: مرحله و نسخه‌های قیمت، تأیید / رد قیمت ارسال‌شده
+            Route::get('/{orderId}/workflow', [OrderWorkflowController::class, 'userShow'])->whereNumber('orderId')->name('api.orders.workflow');
+            Route::post('/{orderId}/quote/decision', [OrderWorkflowController::class, 'userQuoteDecision'])->whereNumber('orderId')->name('api.orders.quote.decision');
             Route::post('/{orderId}/return-followup', [OrderController::class, 'userReturnFollowup'])->name('api.orders.return-followup');
             Route::post('/{orderId}/final-description', [OrderController::class, 'setUserFinalDescription'])->name('api.orders.final-description');
             Route::post('/{orderId}/in-place-description', [OrderController::class, 'setUserInPlaceDescription'])->name('api.orders.in-place-description');
@@ -433,6 +437,10 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::post('/orders/{orderId}/technician-description', [TechnicianOrderReportController::class, 'setTechnicianDescription'])->name('api.technician.orders.set-description');
             Route::post('/orders/{orderId}/set-off', [TechnicianOrderReportController::class, 'setOff'])->name('api.technician.orders.set-off');
             Route::post('/orders/{orderId}/arrive', [TechnicianOrderReportController::class, 'arrive'])->name('api.technician.orders.arrive');
+            // فرآیند سفارش: پاسخ به مأموریت، نتیجه‌ی مراجعه، پیشنهاد قیمت جدید
+            Route::post('/orders/{orderId}/assignment', [OrderWorkflowController::class, 'technicianAssignment'])->whereNumber('orderId')->name('api.technician.orders.assignment');
+            Route::post('/orders/{orderId}/visit-outcome', [OrderWorkflowController::class, 'technicianVisitOutcome'])->whereNumber('orderId')->name('api.technician.orders.visit-outcome');
+            Route::post('/orders/{orderId}/requote', [OrderWorkflowController::class, 'technicianRequote'])->whereNumber('orderId')->name('api.technician.orders.requote');
 
             // Extra Services (خدمات اضافی)
             Route::get('/extra-services', [ExtraServiceController::class, 'getExtraServices'])->name('api.technician.extra-services.index');

@@ -769,6 +769,12 @@ class OrderService
 
             CustomerFacingTechnician::forOrder($order);
 
+            // مرحله‌ی فرآیند و نسخه‌های قیمت ارسال‌شده برای کاربر
+            // رابطه‌ی داخلی workflow (توضیحات پنل) در پاسخ نمی‌آید؛ فقط خروجی مخصوص کاربر
+            $workflowPayload = app(OrderWorkflowService::class)->customerPayload($order);
+            $order->unsetRelation('workflow');
+            $order->setAttribute('workflow', $workflowPayload);
+
             return [
                 'success' => true,
                 'data' => $order
@@ -1181,6 +1187,7 @@ class OrderService
 
             // دریافت سفارش به‌روزرسانی شده
             $order->refresh();
+            $this->syncWorkflow(fn (OrderWorkflowService $workflow) => $workflow->onUserInitialAccept($order));
 
             return [
                 'success' => true,
@@ -1286,6 +1293,8 @@ class OrderService
                         'message' => 'خطا در ثبت رد سفارش'
                     ];
                 }
+
+                $this->syncWorkflow(fn (OrderWorkflowService $workflow) => $workflow->onUserRejectedLoopEstimate($order));
 
                 Log::info('سفارش توسط کاربر رد شد', [
                     'user_id' => $userId,
@@ -1775,6 +1784,11 @@ class OrderService
                 ];
             }
 
+            // ۵-۳ — اطلاعات مأموریت: وضعیت تخصیص، قیمت تأییدشده و توضیحات پنل
+            $workflowPayload = app(OrderWorkflowService::class)->technicianPayload($order);
+            $order->unsetRelation('workflow');
+            $order->setAttribute('workflow', $workflowPayload);
+
             return [
                 'success' => true,
                 'data' => $order
@@ -1843,50 +1857,42 @@ class OrderService
                 ];
             }
 
-            DB::beginTransaction();
-
+            // بند ۵-۵ فرآیند سفارش: عدم امکان انجام مأموریت سفارش را لغو نمی‌کند؛ برای تخصیص مجدد به پنل برمی‌گردد
             try {
-                // به‌روزرسانی سفارش
-                $this->repo->updateOrder($orderId, [
-                    'status' => 4, // لغو توسط تکنسین
-                    'technician_cancel_reason' => $cancelReason
-                ]);
-
-                // ارسال پیامک به کاربر
-                if ($order->user && $order->user->phone) {
-                    $smsService = app(SmsService::class);
-                    $smsService->sendOrderCancelledByTechnicianToUser($order->user->phone, $order->id);
-                }
-
-                // ارسال پیامک به ادمین (از جدول contacts)
-                $adminContact = \App\Models\Contact::where('type', 'sms')->first();
-                if ($adminContact && $adminContact->link) {
-                    $smsService = app(SmsService::class);
-                    $smsService->sendOrderCancelledByTechnicianToAdmin($adminContact->link, $order->id);
-
-                    Log::info('پیامک لغو سفارش توسط تکنسین به ادمین ارسال شد', [
-                        'order_id' => $order->id,
-                        'admin_phone' => $adminContact->link
-                    ]);
-                }
-
-                DB::commit();
-
-                Log::info('سفارش توسط تکنسین لغو شد', [
-                    'technician_id' => $technicianId,
-                    'order_id' => $orderId,
-                    'reason' => $cancelReason
-                ]);
-
+                app(OrderWorkflowService::class)->technicianWithdraw($order, $cancelReason);
+            } catch (OrderWorkflowException $e) {
                 return [
-                    'success' => true,
-                    'message' => 'سفارش با موفقیت لغو شد.'
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'error_code' => $e->errorCode,
                 ];
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
             }
+
+            // ارسال پیامک به ادمین (از جدول contacts) برای تخصیص مجدد
+            $adminContact = \App\Models\Contact::where('type', 'sms')->first();
+            if ($adminContact && $adminContact->link) {
+                app(SmsService::class)->sendOrderCancelledByTechnicianToAdmin($adminContact->link, $order->id);
+
+                Log::info('پیامک انصراف تکنسین از مأموریت به ادمین ارسال شد', [
+                    'order_id' => $order->id,
+                    'admin_phone' => $adminContact->link
+                ]);
+            }
+
+            Log::info('تکنسین از مأموریت انصراف داد؛ سفارش به پنل بازگشت', [
+                'technician_id' => $technicianId,
+                'order_id' => $orderId,
+                'reason' => $cancelReason
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'انصراف شما ثبت شد و سفارش برای تخصیص مجدد به پنل بازگشت.',
+                'data' => [
+                    'order_id' => $order->id,
+                    'returned_to_panel' => true,
+                ],
+            ];
 
         } catch (\Exception $e) {
             Log::error('Failed to cancel order by technician: ' . $e->getMessage(), [
@@ -2324,6 +2330,16 @@ class OrderService
     /**
      * دریافت برچسب فارسی نوع حساب کاربری
      */
+    /** همگام‌سازی فرآیند پنل؛ خطای آن نباید پاسخ اپ را خراب کند. */
+    private function syncWorkflow(callable $callback): void
+    {
+        try {
+            $callback(app(OrderWorkflowService::class));
+        } catch (\Throwable $e) {
+            Log::warning('Order workflow sync failed: ' . $e->getMessage());
+        }
+    }
+
     private function getUserTypeLabel(string $accountType): string
     {
         return match ($accountType) {

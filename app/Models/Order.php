@@ -33,6 +33,7 @@ class Order extends Model
         'category_id',
         'technician_id',
         'status',
+        'workflow_stage',
         'payment_status',
         'payment_method',
         'payment_channel',
@@ -292,6 +293,24 @@ class Order extends Model
     public function referralCommission(): HasOne
     {
         return $this->hasOne(ReferralCommission::class);
+    }
+
+    /** جزئیات فرآیند پنل (بررسی، تخصیص، مراجعه، ارجاع، لغو، پایان). */
+    public function workflow(): HasOne
+    {
+        return $this->hasOne(OrderWorkflow::class);
+    }
+
+    /** نسخه‌های قیمت (اولیه، اصلاح‌شده، نهایی). */
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(OrderQuote::class)->orderBy('version');
+    }
+
+    /** تاریخچه‌ی تغییر مرحله / وضعیت. */
+    public function stageLogs(): HasMany
+    {
+        return $this->hasMany(OrderStageLog::class)->orderByDesc('id');
     }
 
     /** کالا / محصول از لوپ به کاربر برمی‌گردد (اعزام به لوپ یا تامین کالا). */

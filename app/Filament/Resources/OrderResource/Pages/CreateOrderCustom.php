@@ -208,26 +208,8 @@ class CreateOrderCustom extends Page implements HasForms
                             return $schema;
                         }),
 
-                    Forms\Components\Select::make('technician_id')
-                        ->label('تکنسین')
-                        ->relationship(
-                            'technician',
-                            'name',
-                            fn($query) =>
-                            $query->where('approval_status', 'approved')
-                                ->where('has_access', 1)
-                        )
-                        ->searchable()
-                        ->preload()
-                        ->nullable()
-                        ->helperText('فقط تکنسین‌های تایید شده نمایش داده می‌شوند'),
-
-                    Forms\Components\Select::make('status')
-                        ->label('وضعیت سفارش')
-                        ->options(OrderResource::STATUS_OPTIONS)
-                        ->disableOptionWhen(fn(string $value) => OrderResource::isPanelLockedStatus((int) $value, null))
-                        ->required()
-                        ->default(0),
+                    // سفارش تلفنی هم مثل سایر کانال‌ها وارد مرحله‌ی «بررسی اطلاعات» می‌شود؛
+                    // تکنسین و وضعیت از مراحل صفحه‌ی جزئیات تعیین می‌شوند
 
                     Forms\Components\Select::make('payment_status')
                         ->label('وضعیت پرداخت')
@@ -238,14 +220,6 @@ class CreateOrderCustom extends Page implements HasForms
                         ->required()
                         ->default(0),
 
-                    Forms\Components\Select::make('is_technician_verified')
-                        ->label('احراز هویت تکنسین')
-                        ->options([
-                            '0' => 'در انتظار',
-                            '1' => 'تایید شده',
-                            '2' => 'رد شده',
-                        ])
-                        ->default('0'),
                 ])
                 ->columns(2),
 
@@ -257,17 +231,7 @@ class CreateOrderCustom extends Page implements HasForms
                         ->numeric()
                         ->suffix('تومان'),
 
-                    Forms\Components\TextInput::make('technician_price')
-                        ->label('مبلغ نهایی لوپ')
-                        ->numeric()
-                        ->suffix('تومان')
-                        ->nullable(),
-
-                    Forms\Components\TextInput::make('extra_price')
-                        ->label('مبلغ قطعات و خدمات اضافی')
-                        ->numeric()
-                        ->suffix('تومان')
-                        ->nullable(),
+                    // قیمت اولیه و نهایی از مراحل «قیمت‌گذاری اولیه» و «پایان سفارش» ثبت می‌شوند
 
                     Forms\Components\TextInput::make('discount_price')
                         ->label('مبلغ تخفیف')
@@ -390,6 +354,7 @@ class CreateOrderCustom extends Page implements HasForms
 
         // مقدار ثابت
         $data['platform'] = 'phone';
+        $data['status'] = 0;
 
         // ایجاد سفارش اصلی
         $order = Order::create($data);
@@ -491,8 +456,8 @@ class CreateOrderCustom extends Page implements HasForms
             ->success()
             ->send();
 
-        // ریدایرکت
-        $this->redirect(OrderResource::getUrl('index'));
+        // ادامه‌ی فرآیند (بررسی اطلاعات) در صفحه‌ی جزئیات سفارش
+        $this->redirect(OrderResource::getUrl('view', ['record' => $order]));
     }
 
     protected function generateFieldComponent($field, $details, $key): Forms\Components\Component

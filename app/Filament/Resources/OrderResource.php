@@ -91,28 +91,21 @@ class OrderResource extends Resource
                         ->disabled()
                         ->dehydrated(false),
 
+                    // تخصیص تکنسین فقط از مرحله‌ی «تخصیص تکنسین» صفحه‌ی جزئیات (بررسی و تأیید قیمت پیش از آن الزامی است)
                     Forms\Components\Select::make('technician_id')
                         ->label('تکنسین')
-                        ->relationship(
-                            'technician',
-                            'name',
-                            fn($query) => $query->where('approval_status', 'approved')->where('at_work', '1')->where('has_access', 1)
-                        )
-                        ->searchable()
-                        ->preload()
-                        ->nullable()
-                        ->helperText('فقط تکنسین‌ها تایید شده و دارای دسترسی و با وضعیت روشن نمایش داده می‌شوند')
-                        ->disabled(fn(?Order $record) => $record && in_array($record->status, [3, 4, 5]))
-                        ->dehydrated(fn(?Order $record) => !($record && in_array($record->status, [3, 4, 5]))),
+                        ->relationship('technician', 'name')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->helperText('تخصیص و تغییر تکنسین از تب «تخصیص تکنسین» در صفحه‌ی جزئیات سفارش انجام می‌شود.'),
 
+                    // وضعیت فقط با اقدام‌های مراحل فرآیند تغییر می‌کند تا شرط‌ها و تاریخچه رعایت شود (بند ۱۲-۴)
                     Forms\Components\Select::make('status')
                         ->label('وضعیت سفارش')
                         ->options(self::STATUS_OPTIONS)
-                        // لغو از پنل همیشه ۵ ثبت می‌شود؛ ۳، ۴ و ۶ فقط از اپ کاربر / اپ تکنسین / سیستم
-                        ->disableOptionWhen(fn(string $value, ?Order $record) => self::isPanelLockedStatus((int) $value, $record))
-                        ->helperText('برای لغو سفارش از پنل، «لغو از سوی پنل» را انتخاب کنید.')
-                        ->required()
-                        ->default(0),
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->helperText('وضعیت با اقدام‌های هر مرحله در صفحه‌ی جزئیات تغییر می‌کند؛ لغو با «لغو سفارش» و پایان با «مختومه کردن پرونده».'),
 
                     Forms\Components\Select::make('payment_status')
                         ->label('وضعیت پرداخت')
@@ -144,15 +137,16 @@ class OrderResource extends Resource
                         ->numeric()
                         ->suffix('تومان'),
 
+                    // قیمت نهایی نسخه‌دار از تب «پایان سفارش» ثبت می‌شود (بند ۱۲-۲)
                     Forms\Components\TextInput::make('technician_price')
                         ->label('مبلغ نهایی لوپ بدون تخفیف و خدمات اضافی')
                         ->numeric()
+                        ->suffix('تومان')
+                        ->disabled()
+                        ->dehydrated(false)
                         ->helperText(fn(?Order $record) => self::awaitingLoopPrepayment($record)
                             ? 'تا پرداخت پیش‌پرداخت توسط کاربر، تعمیر شروع نمی‌شود و مبلغ نهایی قابل ثبت نیست.'
-                            : 'این فیلد تنها زمانی که کالا به لوپ اعزام شده باشد یا سفارش در محل کاربر انجام شده باشد قابل ویرایش است')
-                        ->disabled(fn(?Order $record) => (is_null($record?->send_to_loop) && is_null($record?->done_in_place)) || self::awaitingLoopPrepayment($record))
-                        ->suffix('تومان')
-                        ->nullable(),
+                            : 'از اقدام «ثبت قیمت نهایی» در تب «پایان سفارش» ثبت می‌شود.'),
 
                     Forms\Components\TextInput::make('extra_price')
                         ->label('مبلغ قطعات و خدمات اضافی')
@@ -328,12 +322,15 @@ class OrderResource extends Resource
                         ->disabledOn('edit')
                         ->nullable(),
 
+                    // فیلد قدیمی؛ تصاویر اپ فعلی در تب «ثبت سفارش» و تب «تصاویر سفارش» نمایش داده می‌شوند
                     Forms\Components\FileUpload::make('image_path')
-                        ->label('تصویر سفارش')
+                        ->label('تصویر سفارش (قدیمی)')
                         ->image()
+                        ->disk('public')
                         ->directory('orders')
                         ->visibility('public')
-                        ->disabled(),
+                        ->disabled()
+                        ->visible(fn (?Order $record) => filled($record?->image_path)),
 
                 ]),
 
@@ -477,6 +474,16 @@ class OrderResource extends Resource
                     ->sortable()
                     ->searchable(),
 
+                // وضعیت سفارش: مرحله‌ی فرآیند با رنگ و آیکون اختصاصی + وضعیت جزئی زیر آن
+                Tables\Columns\TextColumn::make('workflow_stage')
+                    ->label('وضعیت سفارش')
+                    ->formatStateUsing(fn (?string $state) => \App\Models\OrderWorkflow::stageLabel($state))
+                    ->badge()
+                    ->color(fn (?string $state) => \App\Models\OrderWorkflow::STAGE_COLORS[$state] ?? 'gray')
+                    ->icon(fn (?string $state) => \App\Models\OrderWorkflow::STAGE_ICONS[$state] ?? null)
+                    ->description(fn (Order $record) => OrderResource\Workflow\OrderWorkflowPanel::rowHint($record))
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('user.code')
                     ->label('کد کاربر')
                     ->searchable()
@@ -512,24 +519,10 @@ class OrderResource extends Resource
                     ->default('تخصیص داده نشده')
                     ->color(fn($state) => $state ? 'success' : 'gray'),
 
-                Tables\Columns\BadgeColumn::make('status')
-                    ->label('وضعیت')
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        '0' => 'در انتظار',
-                        '1' => 'در حال انجام',
-                        '2' => 'انجام شده',
-                        '3' => 'لغو - کاربر',
-                        '4' => 'لغو - تکنسین',
-                        '5' => 'لغو - ادمین',
-                        '6' => 'منقضی شده',
-                        default => 'نامشخص',
-                    })
-                    ->colors([
-                        'warning' => '0',
-                        'primary' => '1',
-                        'success' => '2',
-                        'danger' => ['3', '4', '5', '6'],
-                    ]),
+                Tables\Columns\TextColumn::make('platform')
+                    ->label('کانال ثبت')
+                    ->formatStateUsing(fn (?string $state) => \App\Services\OrderWorkflowService::channelLabel($state))
+                    ->toggleable(),
 
                 Tables\Columns\BadgeColumn::make('payment_status')
                     ->label('پرداخت')
@@ -576,6 +569,23 @@ class OrderResource extends Resource
                         6 => 'منقضی شده',
                     ]),
 
+                Tables\Filters\SelectFilter::make('workflow_stage')
+                    ->label('مرحله‌ی فرآیند')
+                    ->options(\App\Models\OrderWorkflow::STAGES),
+
+                Tables\Filters\SelectFilter::make('channel')
+                    ->label('کانال ثبت')
+                    ->options([
+                        'app' => 'اپلیکیشن',
+                        'web' => 'وب‌سایت',
+                        'windows' => 'نسخه ویندوز',
+                        'phone' => 'تماس تلفنی (ثبت در پنل)',
+                        'person' => 'حضوری',
+                    ])
+                    ->query(fn (Builder $query, array $data) => $query->when($data['value'] ?? null, fn (Builder $q, string $channel) => $channel === 'app'
+                        ? $q->whereIn('platform', ['android', 'ios'])
+                        : $q->where('platform', $channel))),
+
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('وضعیت پرداخت')
                     ->options([
@@ -616,7 +626,6 @@ class OrderResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('download_invoice')
                     ->label('دانلود رسید')
@@ -696,43 +705,33 @@ class OrderResource extends Resource
                     ->form([
                         Forms\Components\Select::make('technician_id')
                             ->label('انتخاب تکنسین')
-                            ->options(Technician::where('approval_status', 'approved')->where('at_work', '1')->where('has_access', 1)->pluck('name', 'id'))
+                            ->options(fn (Order $record) => OrderResource\Workflow\OrderWorkflowPanel::technicianOptions($record))
                             ->searchable()
                             ->required()
-                            ->helperText('فقط تکنسین‌ها تأیید شده نمایش داده می‌شوند'),
+                            ->helperText('میدانی، هم‌منطقه، روشن و کم‌سفارش‌تر اول؛ تخصص هر تکنسین در فهرست آمده. تکنسین باید مأموریت را تأیید کند.'),
+                        Forms\Components\Textarea::make('note')
+                            ->label('توضیحات مأموریت')
+                            ->rows(2)
+                            ->maxLength(2000),
                     ])
-                    ->action(function (Order $record, array $data): void {
-                        $record->update([
-                            'technician_id' => $data['technician_id'],
-                            'status' => $record->status == 0 ? 1 : $record->status,
-                        ]);
-
-                        // ارسال SMS به تکنسین
-                        $technician = \App\Models\Technician::find($data['technician_id']);
-                        if ($technician && $technician->phone) {
-                            $smsService = app(\App\Services\SmsService::class);
-                            $smsSent = $smsService->sendOrderAssignedByAdminToTechnician($technician->phone, $record->id);
-
-                            if ($smsSent) {
-                                \Illuminate\Support\Facades\Log::info('SMS اختصاص سفارش به تکنسین ارسال شد', [
-                                    'order_id' => $record->id,
-                                    'technician_id' => $technician->id,
-                                    'technician_phone' => $technician->phone
-                                ]);
-                            }
+                    ->action(function (Order $record, array $data, Tables\Actions\Action $action): void {
+                        try {
+                            app(\App\Services\OrderWorkflowService::class)->assignTechnician($record, (int) $data['technician_id'], $data['note'] ?? null);
+                        } catch (\App\Services\OrderWorkflowException $e) {
+                            \Filament\Notifications\Notification::make()->title($e->getMessage())->danger()->send();
+                            $action->halt();
                         }
 
                         \Filament\Notifications\Notification::make()
-                            ->title('تکنسین با موفقیت اختصاص یافت')
-                            ->body('پیامک اطلاع‌رسانی به تکنسین ارسال شد')
+                            ->title('تکنسین اختصاص یافت')
+                            ->body('پیامک اطلاع‌رسانی به تکنسین ارسال شد؛ منتظر تأیید تکنسین.')
                             ->success()
                             ->send();
                     })
-                    ->visible(
-                        fn(Order $record): bool =>
-                        $record->technician_id == null &&
-                        !in_array($record->status, [3, 4, 5]) // سفارشات لغو شده نمی‌توانند تکنسین اختصاص بگیرند
-                    ),
+                    // تخصیص فقط پس از بررسی و تأیید قیمت اولیه (مرحله‌ی «تخصیص تکنسین»)
+                    ->visible(fn (Order $record): bool => static::canEdit($record)
+                        && $record->workflow_stage === \App\Models\OrderWorkflow::STAGE_ASSIGNMENT
+                        && $record->technician_id === null),
 
                 Tables\Actions\Action::make('mark_as_returned')
                     ->label('محصول عودت داده شد')
@@ -760,469 +759,22 @@ class OrderResource extends Resource
                         $record->returned_at == null
                     ),
 
-                Tables\Actions\Action::make('start_work')
-                    ->label('شروع کار')
-                    ->icon('heroicon-o-play')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('شروع کار')
-                    ->modalDescription('آیا مطمئن هستید که می‌خواهید زمان شروع کار را ثبت کنید؟')
-                    ->modalSubmitActionLabel('بله، شروع کن')
-                    ->modalCancelActionLabel('انصراف')
-                    ->action(function (Order $record): void {
-                        $record->update([
-                            'started_at' => now(),
-                            'status' => 1, // در حال انجام
-                        ]);
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('زمان شروع کار ثبت شد')
-                            ->body('وضعیت سفارش به "در حال انجام" تغییر یافت.')
-                            ->success()
-                            ->send();
-                    })
-                    ->visible(
-                        fn(Order $record): bool =>
-                        $record->started_at == null &&
-                        $record->technician_id != null &&
-                        !in_array($record->status, [2, 3, 4, 5, 6]) // فقط برای سفارشات فعال
-                    ),
-
-                Tables\Actions\Action::make('complete_work')
-                    ->label('اتمام کار')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('primary')
-                    ->requiresConfirmation()
-                    ->modalHeading('اتمام کار')
-                    ->modalDescription('آیا مطمئن هستید که می‌خواهید کار را به اتمام برسانید؟ وضعیت سفارش به "انجام شده" تغییر خواهد یافت.')
-                    ->modalSubmitActionLabel('بله، اتمام یافت')
-                    ->modalCancelActionLabel('انصراف')
-                    ->action(function (Order $record): void {
-                        try {
-                            $record->update([
-                                'finished_at' => now(),
-                                'status' => 2, // انجام شده
-                            ]);
-
-                            // پردازش پرداخت به تکنسین
-                            $orderService = app(\App\Services\OrderService::class);
-                            $paymentResult = $orderService->processTechnicianPayment($record);
-
-                            if ($paymentResult['success']) {
-                                \Filament\Notifications\Notification::make()
-                                    ->title('کار با موفقیت به اتمام رسید')
-                                    ->body('وضعیت سفارش به "انجام شده" تغییر یافت و سهم تکنسین واریز شد.')
-                                    ->success()
-                                    ->send();
-                            } else {
-                                \Filament\Notifications\Notification::make()
-                                    ->title('کار به اتمام رسید اما پرداخت به تکنسین انجام نشد')
-                                    ->body($paymentResult['message'])
-                                    ->warning()
-                                    ->send();
-                            }
-                        } catch (\Exception $e) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('خطا در اتمام کار')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    })
-                    ->after(fn() => redirect()->back())
-                    ->visible(
-                        fn(Order $record): bool =>
-                        $record->started_at != null &&
-                        $record->finished_at == null &&
-                        !in_array($record->status, [2, 3, 4, 5, 6]) // فقط برای سفارشات فعال
-                    ),
             ])
             ->bulkActions([
 
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['workflow', 'quotes']))
+            // نوار رنگی کنار هر ردیف هم‌رنگ مرحله (filament.hooks.order-stage-styles)
+            ->recordClasses(fn (Order $record) => 'ow-row-' . ($record->workflow_stage ?? 'review'))
+            // دکمه‌ی «نمایش» برداشته شد؛ کلیک روی ردیف صفحه‌ی ویرایش (استپر و مراحل) را باز می‌کند
+            ->recordUrl(fn (Order $record) => static::canEdit($record) ? static::getUrl('edit', ['record' => $record]) : static::getUrl('view', ['record' => $record]));
     }
 
+    /** جزئیات سفارش بر اساس مراحل فرآیند (استپر + تب هر مرحله). */
     public static function infolist(Infolists\Infolist $infolist): Infolists\Infolist
     {
-        return $infolist
-            ->schema([
-                Infolists\Components\Section::make('اطلاعات سفارش')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('id')
-                            ->label('شماره سفارش'),
-
-                        Infolists\Components\TextEntry::make('category.title')
-                            ->label('دسته‌بندی'),
-
-                        Infolists\Components\TextEntry::make('status')
-                            ->label('وضعیت سفارش')
-                            ->badge()
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
-                                '0' => 'بررسی / جایگزین / پیش رسید',
-                                '1' => 'در حال انجام',
-                                '2' => 'انجام شده',
-                                '3' => 'لغو شده توسط کاربر',
-                                '4' => 'لغو شده توسط تکنسین',
-                                '5' => 'لغو شده توسط ادمین',
-                                '6' => 'منقضی شده',
-                                default => 'نامشخص',
-                            })
-                            ->color(fn(string $state): string => match ($state) {
-                                '0' => 'warning',
-                                '1' => 'primary',
-                                '2' => 'success',
-                                default => 'danger',
-                            }),
-
-                        Infolists\Components\TextEntry::make('payment_status')
-                            ->label('وضعیت پرداخت')
-                            ->badge()
-                            ->formatStateUsing(fn(string $state): string => $state === '1' ? 'پرداخت شده' : 'پرداخت نشده')
-                            ->color(fn(string $state): string => $state === '1' ? 'success' : 'danger'),
-                        Infolists\Components\TextEntry::make('payment_method')
-                            ->label('روش پرداخت')
-                            ->formatStateUsing(fn ($state) => Order::PAYMENT_METHODS[$state] ?? $state),
-                        Infolists\Components\TextEntry::make('payment_channel')
-                            ->label('کانال پرداخت')
-                            ->formatStateUsing(fn ($state) => Order::PAYMENT_CHANNELS[$state] ?? $state)
-                            ->placeholder('-'),
-                        Infolists\Components\TextEntry::make('remaining_amount')
-                            ->label('مانده')
-                            ->formatStateUsing(fn ($state) => $state ? number_format($state) . ' تومان' : '-')
-                            ->placeholder('-'),
-                    ])
-                    ->columns(2),
-
-                Infolists\Components\Section::make('اطلاعات کاربر')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('user.code')
-                            ->label('کد کاربری'),
-
-                        Infolists\Components\TextEntry::make('user.account_type')
-                            ->label('نوع حساب کاربری')
-                            ->badge()
-                            ->formatStateUsing(fn(?string $state): string => match ($state) {
-                                'individual' => 'کاربر عادی',
-                                'company' => 'شرکت خصوصی',
-                                // 'organization' => 'کاربر سازمانی',
-                                'g_organization' => 'سازمانی دولتی',
-                                's_g_organization' => 'سازمانی نیمه دولتی',
-                                default => 'نامشخص',
-                            })
-                            ->color(fn(?string $state): string => match ($state) {
-                                'individual' => 'info',
-                                'organization' => 'success',
-                                default => 'gray',
-                            }),
-
-                        Infolists\Components\TextEntry::make('user.name')
-                            ->label('نام کاربر'),
-                        Infolists\Components\TextEntry::make('user.last_name')
-                            ->label('نام خانوادگی کاربر'),
-
-                        Infolists\Components\TextEntry::make('user.melicode')
-                            ->label('کد ملی'),
-
-                        Infolists\Components\TextEntry::make('user.phone')
-                            ->label('شماره همراه'),
-
-                        Infolists\Components\TextEntry::make('user_address.number')
-                            ->label('پلاک') ,
-                        Infolists\Components\TextEntry::make('user_address.unit')
-                            ->label('واحد') ,
-                        Infolists\Components\TextEntry::make('user_address.floor')
-                            ->label('طبقه') ,
-                        Infolists\Components\TextEntry::make('user_address.room')
-                            ->label('اتاق'),
-                        Infolists\Components\TextEntry::make('user_address.address')
-                            ->label('آدرس')
-                            ->columnSpanFull(),
-
-                        Infolists\Components\TextEntry::make('user_address.city')
-                            ->label('شهر'),
-
-                        Infolists\Components\TextEntry::make('user_address.region')
-                            ->label('منطقه'),
-                    ])
-                    ->columns(2),
-
-                Infolists\Components\Section::make('اطلاعات تکنسین')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('technician.name')
-                            ->label('نام تکنسین')
-                            ->default('تخصیص داده نشده'),
-
-                        Infolists\Components\TextEntry::make('technician.phone')
-                            ->label('شماره تلفن'),
-
-                        Infolists\Components\TextEntry::make('is_technician_verified')
-                            ->label('احراز هویت تکنسین')
-                            ->badge()
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
-                                '0' => 'در انتظار',
-                                '1' => 'تایید شده',
-                                '2' => 'رد شده',
-                                default => 'نامشخص',
-                            })
-                            ->color(fn(string $state): string => match ($state) {
-                                '1' => 'success',
-                                '2' => 'danger',
-                                default => 'warning',
-                            }),
-                    ])
-                    ->columns(2)
-                    ->visible(fn(Order $record) => $record->technician_id != null),
-
-                Infolists\Components\Section::make('مبالغ')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('pakar_price')
-                            ->label('مبلغ پایه لوپ')
-                            ->formatStateUsing(fn($state) => number_format($state) . ' تومان'),
-
-                        Infolists\Components\TextEntry::make('technician_price')
-                            ->label('مبلغ نهایی لوپ بدون تخفیف و خدمات اضافی')
-                            ->formatStateUsing(fn($state) => $state ? number_format($state) . ' تومان' : '-'),
-                        Infolists\Components\TextEntry::make('prepayment')
-                            ->label('درصد پیش پرداخت')
-                            ->formatStateUsing(fn($state) => $state ? $state . ' درصد' : '-'),
-
-                        Infolists\Components\TextEntry::make('extra_price')
-                            ->label('مبلغ خدمات اضافی')
-                            ->formatStateUsing(fn($state) => $state ? number_format($state) . ' تومان' : '-'),
-
-                        // Infolists\Components\TextEntry::make('discount_price')
-                        //     ->label('مبلغ تخفیف')
-                        //     ->formatStateUsing(fn($state) => number_format($state) . ' تومان'),
-
-                        Infolists\Components\TextEntry::make('discount_percent')
-                            ->label('درصد تخفیف')
-                            ->state(function (Order $record) {
-                                if (!$record->relationLoaded('discountUse')) {
-                                    $record->load('discountUse.discount_code.club');
-                                }
-
-                                $discountUse = $record->discountUse;
-
-                                if (!$discountUse || !$discountUse->discount_code) {
-                                    return '-';
-                                }
-
-                                return $discountUse->discount_code->discount_percent . '%';
-                            })
-                            ->visible(fn(Order $record) => $record->discountUse && $record->discountUse->discount_code)
-                            ->badge()
-                            ->color('warning'),
-
-                        Infolists\Components\TextEntry::make('discount_code')
-                            ->label('کد تخفیف')
-                            ->state(function (Order $record) {
-                                if (!$record->relationLoaded('discountUse')) {
-                                    $record->load('discountUse.discount_code');
-                                }
-
-                                return $record->discountUse?->discount_code?->code ?? '-';
-                            })
-                            ->visible(fn(Order $record) => $record->discountUse && $record->discountUse->discount_code)
-                            ->badge()
-                            ->color('success'),
-
-                        Infolists\Components\TextEntry::make('total_price')
-                            ->label('مبلغ کل (قبل از تخفیف)')
-                            ->state(function (Order $record) {
-                                $total = ($record->technician_price ?? 0)
-                                    + ($record->extra_price ?? 0);
-                                return number_format($total) . ' تومان';
-                            })
-                            ->weight('bold')
-                            ->size('lg')
-                            ->color('info'),
-
-                        Infolists\Components\TextEntry::make('final_price')
-                            ->label('مبلغ نهایی (با تخفیف)')
-                            ->state(function (Order $record) {
-                                if (!$record->relationLoaded('discountUse')) {
-                                    $record->load('discountUse.discount_code.club');
-                                }
-
-                                $discountFromUse = 0;
-                                $discountUse = $record->discountUse;
-
-                                if ($discountUse && $discountUse->discount_code) {
-                                    $basePrice = $record->technician_price ?? $record->pakar_price ?? 0;
-                                    $totalPrice = $basePrice + ($record->extra_price ?? 0);
-                                    $discountAmount = ($totalPrice * $discountUse->discount_code->discount_percent) / 100;
-
-                                    if (
-                                        $discountUse->discount_code->club &&
-                                        $discountUse->discount_code->club->max_price &&
-                                        $discountAmount > $discountUse->discount_code->club->max_price
-                                    ) {
-                                        $discountAmount = $discountUse->discount_code->club->max_price;
-                                    }
-
-                                    $discountFromUse = $discountAmount;
-                                }
-
-                                $discount = max($discountFromUse, $record->discount_price ?? 0);
-                                $total = ($record->technician_price ?? 0) + ($record->extra_price ?? 0) - $discount;
-
-                                return number_format(max(0, $total)) . ' تومان';
-                            })
-                            ->visible(fn(Order $record) => $record->discountUse && $record->discountUse->discount_code)
-                            ->weight('bold')
-                            ->size('lg')
-                            ->color('success'),
-                    ])
-                    ->columns(2),
-
-                Infolists\Components\Section::make('جزئیات سفارش')
-                    ->schema([
-                        Infolists\Components\ViewEntry::make('order_details')
-                            ->label('')
-                            ->view('filament.infolists.order-details')
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible(),
-
-                Infolists\Components\Section::make('موقعیت جغرافیایی')
-                    ->schema([
-                        Infolists\Components\ViewEntry::make('location_map')
-                            ->label('')
-                            ->view('filament.infolists.location-map')
-                            ->columnSpanFull(),
-                    ])
-                    ->visible(fn(Order $record) => $record->user_address?->latitude && $record->user_address?->longitude)
-                    ->collapsible(),
-
-                Infolists\Components\Section::make('زمان‌بندی')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('date')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d') : '-')
-                            ->label('تاریخ اعزام محصول / تکنسین'),
-
-                        Infolists\Components\TextEntry::make('time')
-                            ->label('ساعت اعزام محصول / تکنسین'),
-
-                        Infolists\Components\TextEntry::make('set_off_at')
-                            ->label('زمان حرکت تکنسین')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
-                            ->placeholder('-'),
-
-                        Infolists\Components\TextEntry::make('arrived_at')
-                            ->label('زمان رسیدن')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
-                            ->placeholder('-'),
-
-                        Infolists\Components\TextEntry::make('send_to_loop')
-                            ->label('زمان اعزام محصول به لوپ')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
-                            ->placeholder('-'),
-
-                        Infolists\Components\TextEntry::make('started_at')
-                            ->label('زمان شروع')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
-                            ->placeholder('-'),
-
-                        Infolists\Components\TextEntry::make('finished_at')
-                            ->label('زمان پایان')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
-                            ->placeholder('-'),
-                    ])
-                    ->columns(2),
-
-                Infolists\Components\Section::make('مشخصات تحویل')
-                    ->visible(fn(Order $record) => $record->returnsGoodsToUser())
-                    ->schema([
-                        Infolists\Components\TextEntry::make('delivery_receiver_type')
-                            ->label('تحویل‌گیرنده')
-                            ->formatStateUsing(fn($state, Order $record) => $state === 'representative'
-                                ? trim(($record->delivery_receiver_name ?? '') . ' ' . ($record->delivery_receiver_mobile ? '(' . $record->delivery_receiver_mobile . ')' : '')) ?: Order::DELIVERY_RECEIVER_TYPES[$state]
-                                : (Order::DELIVERY_RECEIVER_TYPES[$state] ?? '-'))
-                            ->placeholder('ثبت نشده'),
-                        Infolists\Components\TextEntry::make('delivery_method')
-                            ->label('روش ارسال')
-                            ->formatStateUsing(fn($state) => Order::DELIVERY_METHODS[$state] ?? $state)
-                            ->placeholder('ثبت نشده'),
-                        Infolists\Components\TextEntry::make('delivery_status')
-                            ->label('وضعیت تحویل')
-                            ->formatStateUsing(fn($state) => Order::DELIVERY_STATUSES[$state] ?? $state)
-                            ->placeholder(Order::DELIVERY_STATUSES['pending']),
-                        Infolists\Components\TextEntry::make('delivered_at')
-                            ->label('تاریخ و ساعت تحویل')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-')
-                            ->placeholder('ثبت نشده'),
-                        Infolists\Components\TextEntry::make('delivery_confirmed_at')
-                            ->label('تأیید و ارسال برای کاربر')
-                            ->state(fn(Order $record) => self::deliveryConfirmationLabel($record))
-                            ->badge()
-                            ->color(fn(Order $record) => $record->delivery_confirmed_at ? 'success' : 'warning'),
-                    ])
-                    ->columns(3),
-
-                Infolists\Components\Section::make('توضیحات')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('des')
-                            ->label('توضیحات کاربر')
-                            ->default('-')
-                            ->columnSpanFull(),
-                        Infolists\Components\TextEntry::make('technician_in_place_description')
-                            ->label('توضیحات تکنسین پس از انجام سفارش در محل کاربر')
-                            ->default('-')
-                            ->columnSpanFull(),
-                        Infolists\Components\TextEntry::make('admin_in_place_description')
-                            ->label('توضیحات مدیریت پس از انجام سفارش در محل کاربر')
-                            ->default('-')
-                            ->columnSpanFull(),
-                        Infolists\Components\TextEntry::make('user_in_place_description')
-                            ->label('توضیحات کاربر پس از انجام سفارش در محل کاربر')
-                            ->default('-')
-                            ->columnSpanFull(),
-
-                        Infolists\Components\TextEntry::make('technician_des')
-                            ->label('توضیحات سفارش پس از بررسی')
-                            ->default('-')
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible(),
-
-                Infolists\Components\Section::make('تصویر سفارش')
-                    ->schema([
-                        Infolists\Components\ImageEntry::make('image_path')
-                            ->label('')
-                            ->size(400),
-                    ])
-                    ->visible(fn(Order $record) => $record->image_path != null)
-                    ->collapsible(),
-
-                Infolists\Components\Section::make('سایر اطلاعات')
-                    ->schema([
-
-
-                        Infolists\Components\TextEntry::make('emergency_help')
-                            ->label('درخواست کمک اضطراری')
-                            ->badge()
-                            ->formatStateUsing(fn($state) => $state)
-                            ->color(fn($record) => $record->emergency_help_at ? 'danger' : 'gray')
-                            ->weight(fn($record) => $record->emergency_help_at ? 'bold' : 'normal')
-                            ->size(fn($record) => $record->emergency_help_at ? 'lg' : 'md'),
-
-
-                        Infolists\Components\TextEntry::make('female_count')
-                            ->label(' تکنسین درخواستی ')
-                            ->badge()
-                            ->formatStateUsing(fn($record) => $record->female_count > 0 ? 'خانم' : 'آقا'),
-
-
-
-
-                        Infolists\Components\TextEntry::make('created_at')
-                            ->label('زمان ثبت')
-                            ->formatStateUsing(fn($state) => $state ? \Morilog\Jalali\Jalalian::forge($state)->format('Y/m/d H:i') : '-'),
-                    ])
-                    ->columns(3)
-                    ->collapsible(),
-            ]);
+        return $infolist->schema(OrderResource\Workflow\OrderWorkflowPanel::schema());
     }
 
     public static function getRelations(): array

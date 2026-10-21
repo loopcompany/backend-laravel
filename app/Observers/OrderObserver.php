@@ -21,6 +21,11 @@ class OrderObserver
             $this->syncCancellation($order);
         }
 
+        // تغییر مستقیم وضعیت / تکنسین (فرم ویرایش، اپ‌ها) با مرحله‌ی فرآیند همگام و در تاریخچه ثبت می‌شود
+        if ($order->isDirty('status') || $order->isDirty('technician_id')) {
+            app(\App\Services\OrderWorkflowService::class)->syncLegacyChanges($order);
+        }
+
         // بررسی اینکه آیا date یا time تغییر کرده است
         if ($order->isDirty('date') || $order->isDirty('time')) {
             // اگر is_time_changed قبلاً 1 نبوده، آن را 1 می‌کنیم
@@ -161,6 +166,8 @@ class OrderObserver
 
     public function created(Order $order): void
     {
+        app(\App\Services\OrderWorkflowService::class)->onCreated($order);
+
         $user = $order->user;
 
         if (!$user || !$user->phone) {
@@ -197,6 +204,15 @@ class OrderObserver
     public function creating(Order $order): void
     {
         $this->syncCancellation($order);
+
+        // سفارش جدید مستقیم وارد مرحله‌ی بررسی ادمین می‌شود (ثبت = مرحله‌ی ۱ انجام‌شده)
+        $order->workflow_stage ??= match (true) {
+            in_array((int) $order->status, [3, 4, 5, 6], true) => \App\Models\OrderWorkflow::STAGE_CANCELLED,
+            (int) $order->status === 2 => \App\Models\OrderWorkflow::STAGE_CLOSED,
+            // ثبت تلفنی در پنل با انتخاب تکنسین
+            $order->technician_id !== null => \App\Models\OrderWorkflow::STAGE_ASSIGNMENT,
+            default => \App\Models\OrderWorkflow::STAGE_REVIEW,
+        };
     }
 
     /**

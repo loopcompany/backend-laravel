@@ -396,9 +396,13 @@ class OrderWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('مراحل سفارش #' . $order->id)
             ->assertSee('ویرایش اطلاعات سفارش')
-            ->callInfolistAction('actions_review', 'classify', ['service_type' => 'onsite_repair', 'customer_type' => 'individual'], infolistName: 'workflowInfolist')
+            ->callInfolistAction('.classifyAction', 'classify', ['service_type' => 'onsite_repair', 'customer_type' => 'individual'], infolistName: 'workflowInfolist')
             ->assertHasNoInfolistActionErrors()
-            ->callInfolistAction('actions_review', 'approve_review', [], infolistName: 'workflowInfolist')
+            ->assertRedirect(OrderResource::getUrl('edit', ['record' => $order]));
+
+        // پس از هر اقدام صفحه با مرحله‌ی جدید دوباره باز می‌شود
+        Livewire::test(OrderResource\Pages\EditOrder::class, ['record' => $order->id])
+            ->callInfolistAction('.approve_reviewAction', 'approve_review', [], infolistName: 'workflowInfolist')
             ->assertRedirect(OrderResource::getUrl('edit', ['record' => $order]));
 
         $this->assertSame(OrderWorkflow::STAGE_QUOTING, $order->fresh()->workflow_stage);

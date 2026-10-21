@@ -377,7 +377,7 @@ class OrderWorkflowPanel
             self::createQuoteAction(OrderQuote::KIND_INITIAL),
             self::sendQuoteAction(),
             self::decideQuoteAction(),
-            self::routeToLoopAction(),
+            self::routeToLoopAction('route_to_loop_from_quoting'),
         ]);
     }
 
@@ -466,9 +466,9 @@ class OrderWorkflowPanel
                 ]),
         ], [
             self::createQuoteAction(OrderQuote::KIND_REVISED),
-            self::sendQuoteAction(),
+            self::sendQuoteAction('send_requote'),
             self::discardQuoteAction(),
-            self::decideQuoteAction(),
+            self::decideQuoteAction('decide_requote'),
             self::resolveRequoteAction(),
         ]);
     }
@@ -765,9 +765,9 @@ class OrderWorkflowPanel
             });
     }
 
-    private static function routeToLoopAction(): Action
+    private static function routeToLoopAction(string $name = 'route_to_loop'): Action
     {
-        return self::reasonAction('route_to_loop', 'ارجاع مستقیم دستگاه به شرکت', 'heroicon-o-building-office', 'info',
+        return self::reasonAction($name, 'ارجاع مستقیم دستگاه به شرکت', 'heroicon-o-building-office', 'info',
             [OrderWorkflow::STAGE_REVIEW, OrderWorkflow::STAGE_QUOTING], 'دلیل (چرا انجام در محل امکان‌پذیر نیست)',
             fn (Order $r, string $note) => self::workflow()->routeToLoop($r, $note), 'سفارش به مسیر ارجاع دستگاه هدایت شد',
             'ماهیت درخواست نشان می‌دهد انجام خدمت در محل امکان‌پذیر نیست (بند ۳-۵).');
@@ -820,9 +820,9 @@ class OrderWorkflowPanel
             });
     }
 
-    private static function sendQuoteAction(): Action
+    private static function sendQuoteAction(string $name = 'send_quote'): Action
     {
-        return self::workflowAction('send_quote', 'تأیید و ارسال قیمت برای کاربر', 'heroicon-o-paper-airplane', 'success',
+        return self::workflowAction($name, 'تأیید و ارسال قیمت برای کاربر', 'heroicon-o-paper-airplane', 'success',
             fn (Order $r) => self::isStage($r, OrderWorkflow::STAGE_QUOTING, OrderWorkflow::STAGE_REQUOTE)
                 && self::workflow()->openQuote($r)?->status === OrderQuote::STATUS_PENDING_REVIEW)
             ->requiresConfirmation()
@@ -844,9 +844,9 @@ class OrderWorkflowPanel
             });
     }
 
-    private static function decideQuoteAction(): Action
+    private static function decideQuoteAction(string $name = 'decide_quote'): Action
     {
-        return self::workflowAction('decide_quote', 'ثبت پاسخ کاربر به قیمت', 'heroicon-o-chat-bubble-left-right', 'warning',
+        return self::workflowAction($name, 'ثبت پاسخ کاربر به قیمت', 'heroicon-o-chat-bubble-left-right', 'warning',
             fn (Order $r) => self::isStage($r, OrderWorkflow::STAGE_QUOTING, OrderWorkflow::STAGE_REQUOTE)
                 && self::workflow()->openQuote($r)?->status === OrderQuote::STATUS_SENT)
             ->modalHeading('ثبت پاسخ کاربر (تلفنی / پیام)')

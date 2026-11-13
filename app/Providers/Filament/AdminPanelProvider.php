@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 ),
                 Js::make('neshan-picker', asset('assets/js/neshan-picker.js')),
             ])
-            ->font('Vazirmatn', asset('assets/css/filament-font.css'))
+            ->font('Vazirmatn', asset('assets/css/filament-font.css') . '?v=20261113', provider: \Filament\FontProviders\LocalFontProvider::class)
             ->authGuard('admin')
             ->authPasswordBroker('admins')
             ->profile(\App\Filament\Pages\Auth\EditProfile::class)

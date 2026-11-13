@@ -10,7 +10,6 @@ use App\Traits\HasFilamentPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -72,10 +71,13 @@ class UserResource extends Resource
                             ->default('لوپ'),
                         Forms\Components\TextInput::make('code')
                             ->label('کدکاربری')
-                            ->required(fn(Get $get) => $get('is_special'))
-                            ->maxLength(191)
-                            ->disabled(fn(Get $get) => !$get('is_special'))
-                            ->dehydrated(),
+                            ->helperText('کد کاربران جدید طبق فرمول و پس از تکمیل شهر و منطقه به‌صورت ترتیبی صادر می‌شود.')
+                            ->disabled()
+                            ->dehydrated(false),
+                        Forms\Components\Select::make('registration_method')
+                            ->label('روش ثبت‌نام اولیه')
+                            ->options(\App\Services\RegistrationCodeService::METHODS)
+                            ->default(4)->required()->visibleOn('create')->dehydrated(fn (string $operation) => $operation === 'create'),
                         Forms\Components\Toggle::make('is_special')
                             ->label('اکانت ویژه')
                             ->reactive()

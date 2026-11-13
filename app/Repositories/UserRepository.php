@@ -18,7 +18,7 @@ class UserRepository
      */
     public function create(array $data): User
     {
-        return $this->model->create($data);
+        return \Illuminate\Support\Facades\DB::transaction(fn () => $this->model->create($data));
     }
 
     /**
@@ -136,27 +136,11 @@ class UserRepository
     }
     public function createUniquCodeForUsers($cityCode, $regionCode, $user, $startWith): string
     {
-        // prefix ثابت
-        $uniq_code = $cityCode . $regionCode . '0';
-
-        // m = مجموع startWith + id
-        $m = $startWith + $user->id;
-        $mStr = (string) $m;
-
-        // رقم اول startWith و m
-        $firstDigitMain = (int) ((string) $startWith)[0];
-        $firstDigit = (int) $mStr[0];
-
-        // اختلاف
-        $diff = $firstDigit - $firstDigitMain; 
-        // افزودن صفرهای اضافی
-        if ($diff > 0) {
-            $uniq_code .= str_repeat('0', $diff);
-        }
-        $uniq_code .= $firstDigitMain;
-        // افزودن بقیه ارقام m به جز رقم اول
-        $uniq_code .= substr($mStr, 1);
-
-        return $uniq_code;
+        // Compatibility entry point: never use an ID offset or a random suffix.
+        return app(\App\Services\RegistrationCodeService::class)->issue($user, [
+            'city_code' => str_pad(ltrim((string)$cityCode, '0'), 2, '0', STR_PAD_LEFT),
+            'region_code' => str_pad((string)$regionCode, 2, '0', STR_PAD_LEFT),
+            'method' => $user->registration_method ?? \App\Services\RegistrationCodeService::methodFromRequest(),
+        ]);
     }
 }

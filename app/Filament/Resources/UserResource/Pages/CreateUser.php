@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class CreateUser extends CreateRecord
 {
+    protected ?bool $hasDatabaseTransactions = true;
     protected static string $resource = UserResource::class;
 
     private ?string $generatedPassword = null;
@@ -24,6 +25,7 @@ class CreateUser extends CreateRecord
             unset($data['organization']);
         }
         $data['by_who'] = 'admin';
+        $data['registration_method'] = (int)($data['registration_method'] ?? 4);
 
         // تولید خودکار کد معرف با استفاده از الگوریتم مشابه ثبت‌نام کاربر
         $userRepository = app(UserRepository::class);
@@ -63,26 +65,8 @@ class CreateUser extends CreateRecord
                 ['user_id' => $this->record->id],
                 $data['organization']
             );
-            if ($this->record->account_type == 'company' && $this->record->is_special == 0) {
-
-                $code = $userRepository->createUniquCodeForUsers(21, $data['region_id'], $this->record, 7000000);
-                $this->record->update([
-                    'code' => $code,
-                ]);
-            } else if ($this->record->is_special == 0) {
-                $code = $userRepository->createUniquCodeForUsers(21, $data['region_id'], $this->record, 9000000);
-                $this->record->update([
-                    'code' => $code,
-                ]);
-
-            }
-        } else if ($this->record->is_special == 0) {
-
-            $code = $userRepository->createUniquCodeForUsers(21, $data['region_id'], $this->record, 5000);
-            $this->record->update([
-                'code' => $code,
-            ]);
         }
+        app(\App\Services\RegistrationCodeService::class)->issueForNewUser($this->record);
 
         // ارسال SMS با کد معرف و رمز عبور به کاربر
         if ($this->generatedPassword && $this->generatedReferralCode) {

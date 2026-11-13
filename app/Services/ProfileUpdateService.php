@@ -53,11 +53,8 @@ class ProfileUpdateService
             if (!$updatedUser) {
                 throw new Exception('خطا در به‌روزرسانی اطلاعات کاربر.');
             } 
-            if(isset($updateData['region']) && is_null($user->code)){
-                $code = $this->userRepository->createUniquCodeForUsers(21, $updateData['region'], $user, 5000);
-                $user->update(['code'=>$code]);
-                $this->smsService->sendUserCode($user->phone, $code);
-            }
+            // Location completion for new registrations is handled by UserObserver.
+            // Existing registration codes remain stable after profile edits.
 
             DB::commit();
 
@@ -67,6 +64,7 @@ class ProfileUpdateService
                 'message' => 'اطلاعات شما با موفقیت به‌روزرسانی شد.',
                 'user' => [
                     'id' => $updatedUser->id,
+                    'code' => $updatedUser->code,
                     'name' => $updatedUser->name,
                     'last_name' => $updatedUser->last_name,
                     'phone' => $updatedUser->phone,

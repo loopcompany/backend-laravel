@@ -20,6 +20,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'registration_method',
         'name',
         'last_name',
         'phone',
@@ -70,6 +71,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'registration_method' => 'integer',
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',

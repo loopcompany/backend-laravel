@@ -14,9 +14,8 @@ class UserObserver
      */
     public function creating(User $user): void
     {
-        // اگر کد از قبل تنظیم نشده بود، تولید خودکار
         if (empty($user->code)) {
-            // $user->code = UserCodeHelper::generateUserCode($user);
+            $user->registration_method ??= $user->by_who === 'admin' ? 4 : \App\Services\RegistrationCodeService::methodFromRequest();
         }
     }
 
@@ -41,7 +40,7 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        //
+        app(\App\Services\RegistrationCodeService::class)->issueForNewUser($user);
     }
 
     /**
@@ -49,6 +48,9 @@ class UserObserver
      */
     public function updated(User $user): void
     {
+        if ($user->wasChanged(['province_id','city_id','region_id','city','region'])) {
+            app(\App\Services\RegistrationCodeService::class)->issueForNewUser($user);
+        }
         // «تغییر رمز عبور» در فعالیت‌ها و هشدارهای امنیتی؛ همه‌ی مسیرها (پروفایل، بازیابی رمز و ...) را پوشش می‌دهد.
         // اولین تنظیم رمز (رمز قبلی خالی) و پاک شدن رمز هنگام حذف حساب، تغییر رمز حساب نمی‌شوند.
         if ($user->wasChanged('password') && $user->getOriginal('password') !== null && $user->password !== null) {

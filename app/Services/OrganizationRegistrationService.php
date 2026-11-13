@@ -76,14 +76,8 @@ class OrganizationRegistrationService
                 if (!$user) {
                     throw new Exception('Failed to create or update user');
                 }
-                $start_with = 7000000;
-                if ($user->account_type != 'company') {
-                    $start_with = 9000000;
-                }
-                $region = Region::find($dto->region_id);
-                $code = $this->userRepository->createUniquCodeForUsers(21, $region?->code, $user, $start_with);
-                $user->code = $code;
-                $user->save();
+                // New accounts receive the canonical code in UserObserver; legacy accounts keep theirs.
+                app(RegistrationCodeService::class)->issueForNewUser($user);
 
                 // ایجاد یا به‌روزرسانی Organization
                 $organization = $this->createOrUpdateOrganization($user->id, $dto, $isUpdate);
@@ -158,7 +152,6 @@ class OrganizationRegistrationService
      */
     private function createNewUser(OrganizationRegistrationDTO $dto): User
     {
-        \Log::info($dto->password);
         // دریافت نام city از city_id
         $cityName = $dto->city;
         if ($dto->city_id && !$cityName) {
@@ -178,6 +171,7 @@ class OrganizationRegistrationService
         }
 
         $userData = [
+            'registration_method' => RegistrationCodeService::methodFromRequest() ?? 3,
             'phone' => $dto->manager_mobile,
             'email' => $dto->organization_email,
             'password' => bcrypt($dto->password),
@@ -207,7 +201,6 @@ class OrganizationRegistrationService
      */
     private function updateExistingUser(User $existingUser, OrganizationRegistrationDTO $dto): User
     {
-        \Log::info($dto->password);
         // دریافت نام city از city_id
         $cityName = $dto->city;
         if ($dto->city_id && !$cityName) {
@@ -263,13 +256,7 @@ class OrganizationRegistrationService
     private function createOrUpdateOrganization(int $userId, OrganizationRegistrationDTO $dto, bool $isUpdate): Organization
     {
         $user = User::findOrFail($userId);
-        $start_with = 7000000;
-        if ($user->account_type != 'company') {
-            $start_with = 9000000;
-        }
-        $region = Region::find($dto->region_id);
-        // تولید کد سازمانی یونیک
-        $organizationCode = $this->userRepository->createUniquCodeForUsers(21, $region?->code, $user, $start_with);
+        $organizationCode = $user->code ?? ('ORG-' . $user->id);
 
         $organizationData = [
             'user_id' => $userId,

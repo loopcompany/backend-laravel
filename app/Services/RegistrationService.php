@@ -73,6 +73,7 @@ class RegistrationService
 
                     // Create user data
                     $userData = [
+                        'registration_method' => RegistrationCodeService::methodFromRequest() ?? 3,
                         'melicode' => $dto->melicode,
                         'phone' => $dto->phone,
                         'email' => $dto->email,

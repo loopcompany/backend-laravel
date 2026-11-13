@@ -24,6 +24,7 @@ class OrganizationRegistrationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'platform' => 'nullable|string|in:android,ios,web,desktop,electron,windows',
             // Profile Image (Optional)
             'profile_image' => [
                 'nullable',

@@ -24,6 +24,7 @@ class RegistrationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'platform' => 'nullable|string|in:android,ios,web,desktop,electron,windows',
             'melicode' => [
                 'required',
                 'string',

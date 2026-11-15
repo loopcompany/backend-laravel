@@ -116,6 +116,12 @@
         gap: 10px;
         margin-top: 20px;
     }
+    .loop-site-footer .loop-footer-trust > a,
+    .loop-site-footer .loop-footer-trust > img {
+        flex: 0 0 64px;
+        width: 64px;
+        height: 64px;
+    }
     .loop-site-footer .loop-footer-trust img {
         width: 64px;
         height: 64px;
@@ -178,7 +184,7 @@
                     <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
                         <img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa' alt='' style='cursor:pointer' code='JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
                     </a>
-                    <img src="{{ asset('assets/images/samandehi.png') }}" alt="نشان ساماندهی">
+                    <img src="{{ asset('assets/images/samandehi.png') }}" alt="نشان ساماندهی" width="64" height="64">
                     <img src="{{ asset('assets/images/logonama.png') }}" alt="لوگو نما">
                 </div>
             </div>

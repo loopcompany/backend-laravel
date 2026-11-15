@@ -2,7 +2,7 @@
     $headerPhone = $globalContacts->where('type', 'phone')->first();
     $primaryLinks = [
         ['label'=>'دانلود اپلیکیشن‌های هوشمند', 'url'=>route('web.home').'#apps'],
-        ['label'=>'دانلود نسخه نرم‌افزار ویندوز', 'url'=>route('web.home').'#windows-app'],
+        ['label'=>'دانلود نسخه ویندوز لوپ', 'url'=>route('web.home').'#windows-app'],
         ['label'=>'پنل کاربر', 'url'=>rtrim(config('app.user_panel_url'), '/')],
         ['label'=>'پنل تکنسین', 'url'=>rtrim(config('app.technician_panel_url'), '/')],
         ['label'=>'ثبت‌نام تکنسین', 'url'=>route('web.technician.register-form')],
@@ -20,7 +20,7 @@
         ['label'=>'راهنمای اپلیکیشن تکنسین', 'url'=>asset('assets/guid/tech.pdf')],
     ];
 @endphp
-<link rel="stylesheet" href="{{ asset('assets/css/loop-site-header.css') }}?v=20261114">
+<link rel="stylesheet" href="{{ asset('assets/css/loop-site-header.css') }}?v=20261115-2">
 <div class="loop-topbar">
     <div class="loop-topbar-inner">
         <nav class="loop-top-links" aria-label="دسترسی‌های سایت">
@@ -32,12 +32,7 @@
             @foreach ([$informationLinks[4], $informationLinks[2], $informationLinks[3]] as $link)<a href="{{ $link['url'] }}">{{ $link['desktop_label'] ?? $link['label'] }}</a>@endforeach
         </nav>
         <div class="loop-header-contact">
-            @if ($headerPhone)<a href="{{ $headerPhone->link }}" class="loop-header-phone"><span aria-hidden="true">☎</span> <bdi>{{ $headerPhone->name }}</bdi></a>@endif
-            @foreach ($globalSocials->take(4) as $social)
-                <a href="{{ $social->link }}" title="{{ $social->title }}" aria-label="{{ $social->title }}" target="_blank" rel="noopener noreferrer">
-                    @if ($social->icon)<img src="{{ asset('storage/'.$social->icon) }}" alt="" width="22" height="22">@else<span>{{ $social->title }}</span>@endif
-                </a>
-            @endforeach
+            @if ($headerPhone)<a href="{{ $headerPhone->link }}" class="loop-header-phone"><bdi>{{ $headerPhone->name }}</bdi></a>@endif
         </div>
     </div>
 </div>
@@ -45,7 +40,7 @@
     <div class="loop-header-inner">
         <a class="loop-header-logo" href="{{ route('web.home') }}" aria-label="صفحهٔ نخست لوپ"><img src="{{ asset('assets/images/logo.png') }}" alt="LOOP" width="115" height="54"></a>
         <nav class="loop-primary-links" aria-label="منوی اصلی">@foreach ($primaryLinks as $link)<a href="{{ $link['url'] }}">{{ $link['label'] }}</a>@endforeach</nav>
-        <button type="button" class="loop-menu-toggle" data-loop-menu-open aria-controls="loop-mobile-menu" aria-expanded="false" aria-label="باز کردن منوی سایت"><span aria-hidden="true">☰</span><span>منو</span></button>
+        <button type="button" class="loop-menu-toggle" data-loop-menu-open aria-controls="loop-mobile-menu" aria-expanded="false" aria-label="باز کردن منوی سایت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg></button>
     </div>
 </header>
 <div class="loop-mobile-drawer" id="loop-mobile-menu" hidden>
@@ -59,4 +54,4 @@
         <div class="loop-menu-visual"><img src="{{ asset('assets/new-style/mobile/hero-home.webp') }}" alt="هر اتصال، یک شروع" width="1023" height="1537" loading="lazy"></div>
     </div>
 </div>
-<script src="{{ asset('assets/js/loop-site-header.js') }}?v=20261114" defer></script>
+<script src="{{ asset('assets/js/loop-site-header.js') }}?v=20261115-2" defer></script>

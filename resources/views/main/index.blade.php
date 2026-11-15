@@ -543,8 +543,8 @@
   $webIcon = $appPlatforms[2]['icon'];
   $appPlatforms = [
     ['key'=>'android','label'=>'دانلود مستقیم','icon'=>$androidIcon],
-    ['key'=>'bazaar','label'=>'کافه‌بازار','icon'=>'<svg viewBox="0 0 24 24" fill="#81c842" aria-hidden="true"><path d="M5 7h14l1 15H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2" fill="none" stroke="#81c842" stroke-width="2"/></svg>'],
-    ['key'=>'myket','label'=>'مایکت','icon'=>'<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#0095d9"/><path d="M5 18v-7a3 3 0 0 1 6 0v7m0-7a3 3 0 0 1 6 0v7" fill="none" stroke="white" stroke-width="2"/></svg>'],
+    ['key'=>'bazaar','label'=>'کافه‌بازار','icon'=>'<img src="'.asset('assets/images/stores/cafebazaar.png').'" width="24" height="24" alt="" aria-hidden="true" loading="lazy">'],
+    ['key'=>'myket','label'=>'مایکت','icon'=>'<img src="'.asset('assets/images/stores/myket.png').'" width="24" height="24" alt="" aria-hidden="true" loading="lazy">'],
     ['key'=>'ios','label'=>'نسخه iOS','icon'=>$iosIcon],
     ['key'=>'ios-web','label'=>'وب‌اپلیکیشن لوپ (iOS)','icon'=>$webIcon],
     ['key'=>'web','label'=>'وب‌اپلیکیشن لوپ','icon'=>$webIcon],
@@ -1298,7 +1298,7 @@
     padding:clamp(5px,.6vw,8px) clamp(8px,1vw,14px); border-radius:10px;
     border:1px solid var(--navy-600); background:rgba(255,255,255,.02);
   }
-  .store-btn svg{width:clamp(17px,1.7vw,22px); height:clamp(17px,1.7vw,22px); flex:none; display:block;}
+  .store-btn svg,.store-btn img{width:clamp(17px,1.7vw,22px); height:clamp(17px,1.7vw,22px); flex:none; display:block; object-fit:contain;}
   .store-btn:hover{border-color:var(--gold-500); background:rgba(217,169,64,.08);}
   .store-btn .st-text{display:flex; flex-direction:column; line-height:1.3; white-space:nowrap;}
   .store-btn .st-text small{font-size:clamp(7.5px,.75vw,9px); color:var(--text-lo);}
@@ -1403,7 +1403,7 @@
       border-radius:7px;
       background:rgba(255,255,255,.025);
     }
-    .store-btn svg{width:15px; height:15px;}
+    .store-btn svg,.store-btn img{width:15px; height:15px;}
     .store-btn .st-text small{font-size:7.5px;}
     .store-btn .st-text strong{font-size:9px;}
 

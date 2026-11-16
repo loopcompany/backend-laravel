@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -27,6 +28,8 @@ class OrderQuote extends Model
     public const STATUS_SUPERSEDED = 'superseded';
     public const STATUS_DISCARDED = 'discarded';
     public const STATUS_RECORDED = 'recorded';
+    public const STATUS_EXPIRED = 'expired';
+    public const INITIAL_VALIDITY_HOURS = 48;
 
     public const STATUSES = [
         self::STATUS_PENDING_REVIEW => 'در انتظار بررسی پنل',
@@ -36,6 +39,7 @@ class OrderQuote extends Model
         self::STATUS_SUPERSEDED => 'جایگزین شده با نسخه‌ی جدید',
         self::STATUS_DISCARDED => 'رد شده توسط پنل',
         self::STATUS_RECORDED => 'ثبت شده',
+        self::STATUS_EXPIRED => 'مهلت تأیید پیش‌رسید تمام شده است',
     ];
 
     public const STATUS_COLORS = [
@@ -88,6 +92,23 @@ class OrderQuote extends Model
         return in_array($this->status, [self::STATUS_PENDING_REVIEW, self::STATUS_SENT], true);
     }
 
+    public function scopeAwaitingDecision(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_SENT)
+            ->where(fn (Builder $quote) => $quote->where('kind', '!=', self::KIND_INITIAL)
+                ->orWhere('sent_at', '>', now()->subHours(self::INITIAL_VALIDITY_HOURS)));
+    }
+
+    public function effectiveStatus(): string
+    {
+        if ($this->status === self::STATUS_SENT && $this->kind === self::KIND_INITIAL
+            && (!$this->sent_at || $this->sent_at->lte(now()->subHours(self::INITIAL_VALIDITY_HOURS)))) {
+            return self::STATUS_EXPIRED;
+        }
+
+        return $this->status;
+    }
+
     public function proposerName(): string
     {
         return match ($this->proposed_by_type) {
@@ -115,8 +136,11 @@ class OrderQuote extends Model
             'parts_description' => $this->parts_description,
             'change_reason' => $this->change_reason,
             'description' => $this->description,
-            'status' => $this->status,
-            'status_label' => self::STATUSES[$this->status] ?? $this->status,
+            'status' => $status = $this->effectiveStatus(),
+            'status_label' => self::STATUSES[$status] ?? $status,
+            'expires_at' => $this->kind === self::KIND_INITIAL
+                ? $this->sent_at?->copy()->addHours(self::INITIAL_VALIDITY_HOURS)->toIso8601String()
+                : null,
             'requires_user_approval' => $this->requires_user_approval,
             'sent_at' => $this->sent_at?->toIso8601String(),
             'decided_at' => $this->decided_at?->toIso8601String(),

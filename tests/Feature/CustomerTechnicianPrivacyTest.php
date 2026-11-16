@@ -184,7 +184,7 @@ class CustomerTechnicianPrivacyTest extends TestCase
         $this->assertSame('نصب ویندوز', $rows[$noReport->id]['category_title']);
     }
 
-    public function test_fault_report_only_accepts_the_users_own_order(): void
+    public function test_fault_report_rejects_another_users_order_and_a_closed_file(): void
     {
         $owner = $this->makeUser();
         $stranger = $this->makeUser();
@@ -198,7 +198,7 @@ class CustomerTechnicianPrivacyTest extends TestCase
         $this->postJson('/api/fault-reports', [
             'order_id' => $order->id, 'product_name' => 'پرینتر', 'technician_code' => '123',
             'paid_price' => '500000', 'description' => 'صدای غیرعادی',
-        ])->assertSuccessful();
-        $this->assertDatabaseHas('fault_reports', ['order_id' => $order->id, 'description' => 'صدای غیرعادی']);
+        ])->assertStatus(409)->assertJsonPath('error_code','ORDER_CLOSED_READ_ONLY');
+        $this->assertDatabaseMissing('fault_reports', ['order_id' => $order->id]);
     }
 }

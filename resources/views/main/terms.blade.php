@@ -27,6 +27,8 @@
                         <div class="section_title_text pt-3">
                             <p>لطفاً قوانین و مقررات زیر را به دقت مطالعه کنید. با استفاده از خدمات لوپ، شما این قوانین را
                                 می‌پذیرید.</p>
+                            <a class="btn btn-outline-primary" href="{{ asset('assets/guid/loop-service-terms.pdf') }}"
+                               target="_blank" rel="noopener">فایل شرایط و ضوابط استفاده از خدمات (PDF)</a>
                         </div>
                         <div class="em_bar">
                             <div class="em_bar_bg"></div>

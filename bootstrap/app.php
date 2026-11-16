@@ -12,7 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Set only in the isolated container deployment behind Traefik.
+        if (env('TRUST_REVERSE_PROXY', false)) {
+            $middleware->trustProxies(at: '*');
+        }
         $middleware->append(\App\Http\Middleware\RequestLoggingMiddleware::class);
+        $middleware->append(\App\Http\Middleware\FlushRealtimeChanges::class);
         // تنظیم redirect برای authentication
         $middleware->redirectUsersTo('/user/dashboard');
         $middleware->redirectGuestsTo(fn () => route('web.login'));
@@ -22,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\AnalyticsMiddleware::class,
             \App\Http\Middleware\SetSiteLocale::class,
         ]);
+
+        $middleware->api(append: [\App\Http\Middleware\EnsureClosedOrderReadOnly::class]);
 
         // Register custom middleware aliases
         $middleware->alias([

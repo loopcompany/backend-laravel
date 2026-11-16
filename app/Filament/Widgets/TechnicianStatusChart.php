@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 class TechnicianStatusChart extends ChartWidget
 {
+    protected static ?string $pollingInterval = null;
+
     protected static ?string $heading = 'وضعیت تکنسین‌ها';
     protected static ?int $sort = 4;
 

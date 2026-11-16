@@ -74,8 +74,25 @@ class ReferralCommissionResource extends Resource
                         ReferralCommission::STATUS_CANCELED => 'danger',
                         default => 'warning',
                     }),
+                Tables\Columns\TextColumn::make('calculation_note')->label('مبنای محاسبه')->wrap(),
                 Tables\Columns\TextColumn::make('created_at')->label('تاریخ ثبت')->jalaliDateTime('Y/m/d H:i')->sortable(),
                 Tables\Columns\TextColumn::make('settled_at')->label('تاریخ تسویه')->jalaliDateTime('Y/m/d H:i')->placeholder('-'),
+            ])
+            ->actions([
+                Tables\Actions\Action::make('manual')->label('تعیین پورسانت دستی')
+                    ->visible(fn ($record)=>!$record->settled_at && $record->referralCode?->policy_version && auth('admin')->user()?->can('edit-referral-withdrawals'))
+                    ->authorize(fn()=>auth('admin')->user()?->can('edit-referral-withdrawals') ?? false)
+                    ->form([\Filament\Forms\Components\TextInput::make('amount')->label('پورسانت نهایی (تومان)')->numeric()->integer()->minValue(0)->required()])
+                    ->action(function ($record,$data) {
+                        \Illuminate\Support\Facades\DB::transaction(function () use ($record,$data) {
+                            \App\Models\User::lockForUpdate()->findOrFail($record->user_id);
+                            $record=$record->fresh();
+                            abort_if($record->settled_at,422);
+                            // Preserve the consumed code; manual settlement is an audited commission override.
+                            $record->forceFill(['commission_amount'=>(int)$data['amount'],'calculation_note'=>'مبلغ دستی مدیریت'])->save();
+                            app(\App\Services\ReferralAgentService::class)->settleManual($record,(int)$data['amount']);
+                        });
+                    }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')->label('وضعیت')->options(ReferralCommission::STATUSES),

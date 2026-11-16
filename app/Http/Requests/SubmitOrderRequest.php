@@ -3,24 +3,25 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SubmitOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() instanceof \App\Models\User;
     }
 
     public function rules(): array
     {
         return [
-            'address_id' => 'required|integer|exists:user_addresses,id',
+            'address_id' => ['required', 'integer', Rule::exists('user_addresses', 'id')->where('user_id', $this->user()?->id)],
             'category_id' => 'required|integer|exists:categories,id',
             'total_price' => 'required|numeric|min:0',
             'is_urgent' => 'nullable|boolean',
             'is_fixed' => 'nullable|boolean',
             'image_path' => 'nullable|string',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:20000',
             'date' => 'required|date_format:Y-m-d',
             'time' => 'nullable|string',
             'female_count' => 'nullable|integer|min:0',
@@ -30,6 +31,8 @@ class SubmitOrderRequest extends FormRequest
             'promo_code' => 'nullable|string|max:50',
             'referral_code' => 'nullable|string|max:32',
             'steps' => 'nullable|array',
+            'delivery_mode' => 'nullable|array',
+            'delivery_mode.*' => ['required', Rule::in(['once_short','monthly_short','yearly_long','project'])],
             'file_paths' => 'nullable|array',
             'platform' => 'required|string',
             
@@ -75,7 +78,7 @@ class SubmitOrderRequest extends FormRequest
             'is_urgent.boolean' => 'فیلد فوری باید true یا false باشد.',
             'is_fixed.boolean' => 'فیلد ثابت باید true یا false باشد.',
             
-            'description.max' => 'توضیحات نباید بیش از 1000 کاراکتر باشد.',
+            'description.max' => 'توضیحات نباید بیش از ۲۰۰۰۰ کاراکتر باشد.',
             
             'date.required' => 'تاریخ الزامی است.',
             'date.date_format' => 'فرمت تاریخ صحیح نیست (Y-m-d).',

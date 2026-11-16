@@ -4,6 +4,7 @@
  * You can place your custom package configuration in here.
  */
 return [
+    'enabled' => (bool) env('SMSIR_ENABLED', true),
 
     /* Important Settings */
 

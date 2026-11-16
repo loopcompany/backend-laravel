@@ -13,6 +13,8 @@ use App\Http\Requests\UpdateTechnicianPersonalInfoRequest;
 use App\Http\Requests\UpdateTechnicianVehicleInfoRequest;
 use App\Http\Requests\UpdateTechnicianBankInfoRequest;
 use App\Http\Requests\UpdateTechnicianPasswordRequest;
+use App\Models\Order;
+use App\Models\Technician;
 use App\Services\OrderService;
 use App\Services\TechnicianService;
 use Illuminate\Http\JsonResponse;
@@ -134,6 +136,22 @@ class TechnicianProfileController extends Controller
     /**
      * دریافت لیست سفارشات تکنسین
      */
+    public function pendingAssignmentCount(Request $request): JsonResponse
+    {
+        $technician = $request->user('sanctum');
+        abort_unless($technician instanceof Technician, 403);
+
+        $count = Order::query()
+            ->where('technician_id', $technician->id)
+            ->whereIn('status', [0, 1])
+            ->whereNull('set_off_at')
+            ->where(fn ($query) => $query->whereHas('workflow', fn ($workflow) => $workflow->where('assignment_status', 'pending'))
+                ->orWhereDoesntHave('workflow'))
+            ->count();
+
+        return response()->json(['success' => true, 'data' => ['count' => $count]]);
+    }
+
     public function getMyOrders(Request $request): JsonResponse
     {
         $user = $request->user('sanctum');

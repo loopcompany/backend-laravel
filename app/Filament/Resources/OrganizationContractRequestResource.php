@@ -91,7 +91,6 @@ class OrganizationContractRequestResource extends Resource
 
                 Forms\Components\Textarea::make('need_docs')
                     ->label('مدارک مورد نیاز')
-                    ->required(fn(Forms\Get $get): bool => ($get('status') == 1 || $get('status') == 3))
                     ->visible(fn(Forms\Get $get): bool => ($get('status') == 1 || $get('status') == 3))
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('information')
@@ -115,7 +114,9 @@ class OrganizationContractRequestResource extends Resource
                     ->maxLength(191)
                     ->columnSpanFull(),
                 Forms\Components\FileUpload::make('contract_file_path')
-                    ->label('فایل قرارداد خام')
+                    ->label('پیش‌نویس اختصاصی توافق‌نامه برای ارسال به کاربر')
+                    ->directory('organization-contracts')->acceptedFileTypes(['application/pdf'])->maxSize(20480)
+                    ->required(fn (Forms\Get $get) => in_array((string)$get('status'),['1','3'],true))
                     ->visible(fn(Forms\Get $get): bool => ($get('status') == 1 || $get('status') == 3)),
                 Forms\Components\TextInput::make('title')
                     ->label('عنوان قرارداد')
@@ -123,10 +124,11 @@ class OrganizationContractRequestResource extends Resource
                     ->visible(fn(Forms\Get $get): bool => ($get('status') == 1 || $get('status') == 3))
                     ->maxLength(191),
                 Forms\Components\FileUpload::make('signed_contract_file_path')
-                    ->label('فایل قرارداد امضا شده')
+                    ->label('نسخهٔ نهایی پس از دریافت فیزیکی مهر و امضاشده')
+                    ->directory('organization-contracts')->acceptedFileTypes(['application/pdf'])->maxSize(20480)
+                    ->required(fn (Forms\Get $get) => (string)$get('status')==='3')
                     ->downloadable()
                     ->openable()
-                    ->disabledOn('edit')
                     ->visible(fn(Forms\Get $get): bool => ($get('status') == 1 || $get('status') == 3)),
             ]);
     }

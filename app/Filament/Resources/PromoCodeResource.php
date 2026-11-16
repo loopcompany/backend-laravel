@@ -18,9 +18,9 @@ class PromoCodeResource extends Resource
     protected static ?string $model = PromoCode::class;
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
     protected static ?string $navigationGroup = 'مدیریت تخفیف‌ها';
-    protected static ?string $navigationLabel = 'کدهای تخفیف جدید';
-    protected static ?string $modelLabel = 'کد تخفیف';
-    protected static ?string $pluralModelLabel = 'کدهای تخفیف جدید';
+    protected static ?string $navigationLabel = 'کدهای تشویقی';
+    protected static ?string $modelLabel = 'کد تشویقی';
+    protected static ?string $pluralModelLabel = 'کدهای تشویقی';
 
     protected static function getViewPermission(): string
     {
@@ -45,15 +45,16 @@ class PromoCodeResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('اطلاعات کد تخفیف')
+            Forms\Components\TextInput::make('category')->label('دسته‌بندی کد')->maxLength(100),
+            Forms\Components\Section::make('اطلاعات کد تشویقی')
                 ->schema([
                     Forms\Components\Placeholder::make('generated_code')
-                        ->label('کد تخفیف')
+                        ->label('کد تشویقی')
                         ->content(fn (?PromoCode $record): string => $record?->code ?? 'پس از ذخیره به‌صورت خودکار تولید می‌شود')
                         ->visibleOn('create'),
 
                     Forms\Components\TextInput::make('code')
-                        ->label('کد تخفیف')
+                        ->label('کد تشویقی')
                         ->disabled()
                         ->dehydrated(false)
                         ->visibleOn('edit')
@@ -87,6 +88,8 @@ class PromoCodeResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('category')->label('دسته‌بندی')->searchable(),
+                Tables\Columns\TextColumn::make('deliveries_count')->label('تعداد ارسال/ارتباط')->counts('deliveries'),
                 Tables\Columns\TextColumn::make('code')
                     ->label('کد')
                     ->searchable()
@@ -117,6 +120,10 @@ class PromoCodeResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_active')->label('وضعیت'),
             ])
             ->actions([
+                Tables\Actions\Action::make('send')->label('ارسال / ثبت ارتباط')->visible(fn ($record)=>static::canEdit($record))->authorize(fn ($record)=>static::canEdit($record))->form([
+                    Forms\Components\Select::make('user_id')->label('کاربر')->searchable()->required()->options(fn()=>\App\Models\User::limit(200)->pluck('name','id'))->getSearchResultsUsing(fn (string $search)=>\App\Models\User::where('name','like',"%$search%")->orWhere('code','like',"%$search%")->orWhere('email','like',"%$search%")->limit(50)->get()->mapWithKeys(fn ($u)=>[$u->id=>$u->name.' | '.$u->code])->all()),
+                    Forms\Components\Select::make('channel')->label('روش')->options(['sms'=>'پیامک','phone'=>'تلفنی','in_person'=>'حضوری'])->required(),
+                ])->action(fn ($record,$data)=>app(\App\Services\CodeDeliveryService::class)->issue($record,\App\Models\User::findOrFail($data['user_id']),auth('admin')->id(),$data['channel'],$record->category)),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -127,6 +134,8 @@ class PromoCodeResource extends Resource
             ])
             ->defaultSort('created_at', 'desc');
     }
+
+    public static function getRelations(): array { return [\App\Filament\RelationManagers\CodeDeliveriesRelationManager::class]; }
 
     public static function getPages(): array
     {

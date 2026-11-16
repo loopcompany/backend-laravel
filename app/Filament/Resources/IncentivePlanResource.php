@@ -46,6 +46,13 @@ class IncentivePlanResource extends Resource
         return 'delete-incentive-plans';
     }
 
+    public static function canDelete($record): bool
+    {
+        return (auth('admin')->user()?->can('delete-incentive-plans') ?? false) && !$record->requested_at && !$record->redeemed_at && (int)$record->status!==IncentivePlan::STATUS_USED;
+    }
+
+    public static function canDeleteAny(): bool { return false; }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -109,6 +116,10 @@ class IncentivePlanResource extends Resource
                             })
                             ->columnSpanFull(),
 
+                        Forms\Components\Select::make('benefit_type')->label('نوع مزیت')->options(IncentivePlan::BENEFITS)->default('wallet')->required()->live(),
+                        Forms\Components\TextInput::make('amount')->label('مبلغ (تومان)')->numeric()->integer()->minValue(1)->required(fn (Get $get)=>in_array($get('benefit_type'),['wallet','allowance','reward'],true))->visible(fn (Get $get)=>in_array($get('benefit_type'),['wallet','allowance','reward'],true)),
+                        Forms\Components\TextInput::make('benefit_location')->label('محل خرید / تحویل')->maxLength(255)->required(fn (Get $get)=>in_array($get('benefit_type'),['purchase_discount','company_item'],true)),
+                        Forms\Components\TextInput::make('benefit_code')->label('کد استفاده / حواله')->maxLength(255),
                         Forms\Components\Textarea::make('description')
                             ->label('توضیحات طرح')
                             ->required()
@@ -136,6 +147,9 @@ class IncentivePlanResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('benefit_type')->label('نوع مزیت')->formatStateUsing(fn ($state)=>IncentivePlan::BENEFITS[$state] ?? $state),
+                Tables\Columns\TextColumn::make('requested_at')->label('زمان درخواست استفاده')->jalaliDateTime(),
+                Tables\Columns\TextColumn::make('redeemed_at')->label('زمان انجام')->jalaliDateTime(),
                 Tables\Columns\TextColumn::make('id')
                     ->label('شناسه')
                     ->sortable()
@@ -229,6 +243,7 @@ class IncentivePlanResource extends Resource
                     ->placeholder('همه تکنسین‌ها'),
             ])
             ->actions([
+                Tables\Actions\Action::make('fulfill')->label('تأیید تحویل / استفاده')->visible(fn ($record)=>static::canEdit($record) && $record->requested_at && !$record->redeemed_at && in_array($record->benefit_type,['purchase_discount','company_item'],true))->authorize(fn ($record)=>static::canEdit($record))->requiresConfirmation()->action(fn ($record)=>app(\App\Services\TechnicianIncentiveService::class)->fulfill($record->id,auth('admin')->id())),
                 Tables\Actions\ViewAction::make()->label('مشاهده'),
                 Tables\Actions\EditAction::make()->label('ویرایش'),
                 Tables\Actions\DeleteAction::make()->label('حذف'),
@@ -246,7 +261,8 @@ class IncentivePlanResource extends Resource
                         ->action(function (IncentivePlan $record) {
                             $record->update(['status' => IncentivePlan::STATUS_USED]);
                         })
-                        ->visible(fn (IncentivePlan $record) => $record->status !== IncentivePlan::STATUS_USED)
+                        ->authorize(fn (IncentivePlan $record)=>static::canEdit($record) && $record->benefit_type==='legacy')
+                        ->visible(fn (IncentivePlan $record) => static::canEdit($record) && $record->benefit_type==='legacy' && $record->status !== IncentivePlan::STATUS_USED)
                         ->successNotificationTitle('وضعیت با موفقیت به "استفاده شده" تغییر یافت'),
 
                     Tables\Actions\Action::make('mark_active')
@@ -261,7 +277,8 @@ class IncentivePlanResource extends Resource
                         ->action(function (IncentivePlan $record) {
                             $record->update(['status' => IncentivePlan::STATUS_PENDING]);
                         })
-                        ->visible(fn (IncentivePlan $record) => $record->status !== IncentivePlan::STATUS_PENDING)
+                        ->authorize(fn (IncentivePlan $record)=>static::canEdit($record) && !$record->requested_at && !$record->redeemed_at)
+                        ->visible(fn (IncentivePlan $record) => static::canEdit($record) && !$record->requested_at && !$record->redeemed_at && $record->status !== IncentivePlan::STATUS_PENDING)
                         ->successNotificationTitle('وضعیت با موفقیت به "فعال" تغییر یافت'),
 
                     Tables\Actions\DeleteAction::make()->label('حذف'),
@@ -270,6 +287,7 @@ class IncentivePlanResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('mark_used')
+                        ->authorize(fn()=>auth('admin')->user()?->can('edit-incentive-plans') ?? false)
                         ->label('علامت‌گذاری به عنوان استفاده شده')
                         ->icon('heroicon-o-check-circle')
                         ->color('info')
@@ -279,7 +297,10 @@ class IncentivePlanResource extends Resource
                         ->modalSubmitActionLabel('بله، تغییر دهید')
                         ->modalCancelActionLabel('انصراف')
                         ->action(function ($records) {
-                            $records->each->update(['status' => IncentivePlan::STATUS_USED]);
+                            \Illuminate\Support\Facades\DB::transaction(function () use ($records) {
+                                if ($records->contains(fn ($record)=>$record->benefit_type!=='legacy')) throw \Illuminate\Validation\ValidationException::withMessages(['status'=>'مزیت‌های جدید باید از مسیر استفاده و تحویل مصرف شوند.']);
+                                $records->each->update(['status' => IncentivePlan::STATUS_USED]);
+                            });
                         })
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('وضعیت طرح‌های انتخابی با موفقیت تغییر یافت'),

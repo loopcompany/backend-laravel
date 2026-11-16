@@ -368,11 +368,12 @@ class OrderRepository
      */
     public function setSetOffAt(int $orderId): bool
     {
-        return Order::where('id', $orderId)
-            ->update([
-                'set_off_at' => now(),
-                'status' => 1, // in progress
-            ]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($orderId) {
+            $order = Order::lockForUpdate()->findOrFail($orderId);
+            app(\App\Services\OrderWorkflowService::class)->ensureCustomerVisitApproved($order);
+            if ($order->set_off_at || !$order->technician_id || in_array((int) $order->status, [2, 3, 4, 5], true)) return false;
+            return $order->update(['set_off_at' => now(), 'status' => 1]);
+        });
     }
 
     /**
@@ -494,11 +495,12 @@ class OrderRepository
     /**
      * یافتن سفارش با شرط کاربر
      */
-    public function findUserOrder(int $userId, int $orderId): ?Order
+    public function findUserOrder(int $userId, int $orderId, bool $lock = false): ?Order
     {
         return Order::with(['technician', 'user'])
             ->where('user_id', $userId)
             ->where('id', $orderId)
+            ->when($lock, fn ($query) => $query->lockForUpdate())
             ->first();
     }
 

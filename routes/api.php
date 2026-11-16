@@ -1,5 +1,12 @@
 <?php
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/realtime/config', [\App\Http\Controllers\RealtimeController::class, 'config']);
+    Route::get('/organization/agreements', [\App\Http\Controllers\OrganizationAgreementController::class, 'index']);
+    Route::post('/organization/agreements', [\App\Http\Controllers\OrganizationAgreementController::class, 'store']);
+    Route::post('/realtime/auth', [\App\Http\Controllers\RealtimeController::class, 'authorizeChannel'])->middleware('throttle:120,1');
+});
+
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AdminReportViolationController;
 use App\Http\Controllers\ArchiveImageController;
@@ -343,6 +350,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
         // Reviews (نظرات)
         Route::prefix('reviews')->group(function () {
+            Route::post('/dismiss', [ReviewController::class, 'dismiss'])->name('api.reviews.dismiss');
             Route::post('/', [ReviewController::class, 'submitReview'])->name('api.reviews.submit');
             Route::get('/my-reviews', [ReviewController::class, 'getMyReviews'])->name('api.reviews.my-reviews');
         });
@@ -361,6 +369,8 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
         Route::prefix('orders')->group(function () {
             Route::get('/', [OrderController::class, 'getUserOrders'])->name('api.orders.index');
             Route::get('/summary', [OrderController::class, 'getUserOrdersSummary'])->name('api.orders.summary');
+            Route::get('/pending-estimate', [OrderWorkflowController::class, 'pendingEstimate'])
+                ->middleware(\App\Http\Middleware\EnsureUserAccount::class)->name('api.orders.pending-estimate');
             Route::post('/detail', [OrderController::class, 'getOrderDetail'])->name('api.orders.detail');
             Route::get('/{orderId}', [OrderController::class, 'showOrder'])->whereNumber('orderId')->name('api.orders.show');
             Route::post('/upload', [OrderController::class, 'orderUpload'])->name('api.orders.upload');
@@ -375,7 +385,10 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             Route::post('/{orderId}/decision', [OrderController::class, 'userOrderDecision'])->name('api.orders.decision');
             // فرآیند سفارش: مرحله و نسخه‌های قیمت، تأیید / رد قیمت ارسال‌شده
             Route::get('/{orderId}/workflow', [OrderWorkflowController::class, 'userShow'])->whereNumber('orderId')->name('api.orders.workflow');
-            Route::post('/{orderId}/quote/decision', [OrderWorkflowController::class, 'userQuoteDecision'])->whereNumber('orderId')->name('api.orders.quote.decision');
+            Route::post('/{orderId}/visit/decision', [OrderWorkflowController::class, 'userVisitDecision'])
+                ->middleware(\App\Http\Middleware\EnsureUserAccount::class)->whereNumber('orderId')->name('api.orders.visit.decision');
+            Route::post('/{orderId}/quote/decision', [OrderWorkflowController::class, 'userQuoteDecision'])
+                ->middleware(\App\Http\Middleware\EnsureUserAccount::class)->whereNumber('orderId')->name('api.orders.quote.decision');
             Route::post('/{orderId}/return-followup', [OrderController::class, 'userReturnFollowup'])->name('api.orders.return-followup');
             Route::post('/{orderId}/final-description', [OrderController::class, 'setUserFinalDescription'])->name('api.orders.final-description');
             Route::post('/{orderId}/in-place-description', [OrderController::class, 'setUserInPlaceDescription'])->name('api.orders.in-place-description');
@@ -420,6 +433,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
 
             // Orders
             Route::get('/orders', [TechnicianProfileController::class, 'getMyOrders'])->name('api.technician.orders');
+            Route::get('/orders/pending-assignment-count', [TechnicianProfileController::class, 'pendingAssignmentCount'])->name('api.technician.orders.pending-assignment-count');
             Route::get('/orders/{orderId}/detail', [TechnicianProfileController::class, 'getOrderDetail'])->name('api.technician.orders.detail');
             Route::get('/orders/{order}/field-service', [FieldServiceController::class, 'technicianIndex'])->name('api.technician.field-service.index');
             Route::post('/orders/{order}/field-service/start', [FieldServiceController::class, 'start'])->name('api.technician.field-service.start');
@@ -531,6 +545,7 @@ Route::group(['middleware' => SetLocaleFromApi::class], function () {
             // Incentive Plans (طرح‌های تشویقی تکنسین)
             Route::prefix('incentive-plans')->group(function () {
                 Route::get('/', [TechnicianIncentivePlanController::class, 'index'])->name('api.technician.incentive-plans.index');
+                Route::post('/{id}/redeem', [TechnicianIncentivePlanController::class, 'redeem'])->name('api.technician.incentive-plans.redeem');
                 Route::get('/{id}', [TechnicianIncentivePlanController::class, 'show'])->name('api.technician.incentive-plans.show');
             });
 

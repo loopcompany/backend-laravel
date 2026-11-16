@@ -100,8 +100,9 @@ class OrderWorkflow extends Model
     ];
 
     public const ASSIGNMENT_STATUSES = [
+        'reschedule_requested' => 'درخواست هماهنگی مجدد توسط کاربر',
         'pending' => 'در انتظار تأیید تکنسین',
-        'accepted' => 'تأیید شده توسط تکنسین',
+        'accepted' => 'ارجاع قطعی به تکنسین',
         'rejected' => 'رد شده توسط تکنسین',
     ];
 
@@ -141,10 +142,11 @@ class OrderWorkflow extends Model
     ];
 
     protected $fillable = [
+        'customer_visit_status', 'customer_visit_decided_at', 'customer_visit_note', 'manager_assigned_by',
         'order_id',
         'service_type', 'customer_type', 'requester_name', 'requester_phone', 'contract_reference',
         'review_status', 'review_note', 'reviewed_at', 'reviewed_by', 'route_to_loop_reason',
-        'assignment_status', 'assigned_at', 'assignment_responded_at', 'assignment_note', 'assignment_reject_reason',
+        'assignment_status', 'assigned_at', 'assignment_viewed_at', 'assignment_responded_at', 'assignment_note', 'assignment_reject_reason',
         'visit_outcome', 'visit_outcome_note', 'visit_outcome_at',
         'service_actions', 'service_parts_used', 'service_result',
         'transfer_method', 'transfer_reason', 'transfer_device_condition', 'transfer_accessories',
@@ -155,9 +157,11 @@ class OrderWorkflow extends Model
     ];
 
     protected $casts = [
+        'customer_visit_decided_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'assigned_at' => 'datetime',
         'assignment_responded_at' => 'datetime',
+        'assignment_viewed_at' => 'datetime',
         'visit_outcome_at' => 'datetime',
         'transfer_started_at' => 'datetime',
         'transfer_received_at' => 'datetime',

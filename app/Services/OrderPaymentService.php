@@ -28,9 +28,10 @@ class OrderPaymentService
             DB::beginTransaction();
 
             // 1. پیدا کردن سفارش
-            $order = $this->orderRepo->findUserOrder($dto->userId, $dto->orderId);
+            $order = $this->orderRepo->findUserOrder($dto->userId, $dto->orderId, lock: true);
 
             if (!$order) {
+                DB::rollBack();
                 return [
                     'success' => false,
                     'message' => 'سفارش یافت نشد!',
@@ -45,6 +46,7 @@ class OrderPaymentService
 
             // 2. بررسی اینکه سفارش قبلاً پرداخت نشده باشد
             if ($order->payment_status == 1) {
+                DB::rollBack();
                 return [
                     'success' => false,
                     'message' => 'این سفارش قبلاً پرداخت شده است.',
@@ -90,6 +92,7 @@ class OrderPaymentService
             // محاسبه تخفیف از discount_uses
 
             if ($totalPrice <= 0) {
+                DB::rollBack();
                 return [
                     'success' => false,
                     'message' => 'قیمت سفارش نامعتبر است.',
@@ -99,6 +102,7 @@ class OrderPaymentService
 
             // 4. بررسی موجودی کافی
             if (!$this->walletRepo->hasEnoughBalance($dto->userId, $totalPrice)) {
+                DB::rollBack();
                 return [
                     'success' => false,
                     'message' => 'موجودی کیف پول کافی نیست.',
@@ -120,7 +124,9 @@ class OrderPaymentService
             }
 
             // 6. به‌روزرسانی وضعیت پرداخت سفارش و ثبت مبلغ تخفیف
-            $this->orderRepo->updatePaymentStatus($dto->orderId, 1, $pay_type);
+            if (!$this->orderRepo->updatePaymentStatus($dto->orderId, 1, $pay_type)) {
+                throw new \RuntimeException('Order payment status could not be updated.');
+            }
             $order->refresh();
             $order->markPaidInApp();
             $order->save();

@@ -20,6 +20,23 @@ class OrderWorkflowController extends Controller
     {
     }
 
+    public function pendingEstimate(Request $request): JsonResponse
+    {
+        $quote = OrderQuote::query()
+            ->where('kind', OrderQuote::KIND_INITIAL)
+            ->awaitingDecision()
+            ->whereHas('order', fn ($query) => $query->where('user_id', $request->user()->id)
+                ->whereIn('status', [0, 1]))
+            ->latest('sent_at')
+            ->orderByDesc('id')
+            ->first(['id', 'order_id']);
+
+        return response()->json(['success' => true, 'data' => $quote ? [
+            'quote_id' => $quote->id,
+            'order_id' => $quote->order_id,
+        ] : null]);
+    }
+
     /** وضعیت فرآیند و نسخه‌های قیمت سفارش کاربر. */
     public function userShow(Request $request, int $orderId): JsonResponse
     {
@@ -34,12 +51,13 @@ class OrderWorkflowController extends Controller
         $data = $request->validate([
             'decision' => ['required', Rule::in(['accept', 'reject'])],
             'note' => ['nullable', 'string', 'max:1000', 'required_if:decision,reject'],
+            'quote_id' => ['sometimes', 'required', 'integer'],
         ]);
 
         $order = Order::where('user_id', $request->user()->id)->findOrFail($orderId);
         $quote = $this->workflow->openQuote($order);
 
-        if (!$quote || $quote->status !== OrderQuote::STATUS_SENT) {
+        if (!$quote || $quote->status !== OrderQuote::STATUS_SENT || (isset($data['quote_id']) && (int) $data['quote_id'] !== $quote->id)) {
             return $this->error('قیمتی در انتظار تأیید شما نیست.', 'QUOTE_NOT_PENDING', 409);
         }
 
@@ -50,7 +68,18 @@ class OrderWorkflowController extends Controller
         }, $data['decision'] === 'accept' ? 'قیمت تأیید شد.' : 'رد قیمت ثبت شد.');
     }
 
-    /** ۵-۴ / ۵-۵ — تأیید یا رد مأموریت توسط تکنسین. */
+    public function userVisitDecision(Request $request, int $orderId): JsonResponse
+    {
+        $data=$request->validate(['decision'=>['required',Rule::in(['accept','recoordinate','cancel'])],
+            'note'=>['nullable','string','max:1000','required_unless:decision,accept']]);
+        $order=Order::where('user_id',$request->user()->id)->findOrFail($orderId);
+        return $this->run(function () use ($order,$data) {
+            $this->workflow->decideCustomerVisit($order,$data['decision'],$data['note']??null);
+            return $this->workflow->customerPayload($order->fresh());
+        },'تصمیم مراجعه ثبت شد.');
+    }
+
+    /** مأموریت ارجاع‌شده برای تکنسین اجباری است. */
     public function technicianAssignment(Request $request, int $orderId): JsonResponse
     {
         $data = $request->validate([

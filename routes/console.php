@@ -13,3 +13,11 @@ Schedule::command('accounts:process-deletions')->hourly()->withoutOverlapping();
 
 // به‌روزرسانی ماهانه‌ی دیتابیس GeoIP («موقعیت تقریبی» دستگاه‌ها در امنیت حساب)
 Schedule::command('geoip:update')->monthlyOn(5, '04:00')->withoutOverlapping();
+
+Schedule::call(fn () => app(\App\Services\OrderWorkflowService::class)->remindPendingInitialQuotes())
+    ->name('order-quote-reminders')
+    ->hourly()
+    ->withoutOverlapping();
+
+Schedule::call(fn () => app(\App\Services\OrderWorkflowService::class)->expirePendingInitialQuotes())
+    ->name('expire-order-quotes')->everyMinute()->withoutOverlapping();

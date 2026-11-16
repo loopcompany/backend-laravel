@@ -13,7 +13,7 @@ class TechnicianRegistrationRouteTest extends TestCase
     {
         $this->get('/technician/register')
             ->assertOk()
-            ->assertSee('ثبت نام تکنسین')
+            ->assertSee('ثبت‌نام تکنسین')
             ->assertDontSee('تکنسین یافت نشد');
     }
 }

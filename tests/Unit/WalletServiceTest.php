@@ -103,14 +103,10 @@ class WalletServiceTest extends TestCase
 
         // ثبت تراکنش ناموفق
         $referenceId = 'FAILED_' . time();
-        $failedResult = $this->walletService->recordFailedCharge(
-            $user->id,
-            $amount,
-            $referenceId
-        );
-
-        $this->assertFalse($failedResult['success']);
-        $this->assertEquals('تراکنش ناموفق بود.', $failedResult['message']);
+        UserTransaction::whereKey($pendingTransactionId)->update(['referenceId'=>$referenceId]);
+        $this->walletService->recordFailedCharge($pendingTransactionId,'wrong-bank-reference');
+        $this->assertSame(0,(int)UserTransaction::findOrFail($pendingTransactionId)->status);
+        $this->walletService->recordFailedCharge($pendingTransactionId,$referenceId);
 
         // بررسی: نباید تراکنش جدید ایجاد شده باشد
         $transactionCountAfter = UserTransaction::where('user_id', $user->id)->count();

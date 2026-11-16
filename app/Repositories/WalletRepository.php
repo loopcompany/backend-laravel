@@ -12,14 +12,7 @@ class WalletRepository
      */
     public function increaseWallet(int $userId, float $amount): bool
     {
-        $user = User::find($userId);
-
-        if (!$user) {
-            return false;
-        }
-
-        $user->wallet += $amount;
-        return $user->save();
+        return User::whereKey($userId)->increment('wallet', $amount) === 1;
     }
 
     /**
@@ -90,9 +83,18 @@ class WalletRepository
     /**
      * پیدا کردن تراکنش با شناسه
      */
-    public function findTransactionById(int $transactionId): ?UserTransaction
+    public function findTransactionById(int $transactionId, bool $lock = false): ?UserTransaction
     {
-        return UserTransaction::find($transactionId);
+        return UserTransaction::query()->when($lock, fn ($query) => $query->lockForUpdate())->find($transactionId);
+    }
+
+    public function failPendingCharge(int $transactionId, string $trackId): bool
+    {
+        return UserTransaction::whereKey($transactionId)
+            ->where('type', 1)
+            ->where('status', 0)
+            ->where('referenceId', $trackId)
+            ->update(['status' => -200]) === 1;
     }
 
     /**
@@ -145,7 +147,7 @@ class WalletRepository
      */
     public function deductForPayment(int $userId, int $orderId, float $amount, string $pay_type): array
     {
-        $user = User::find($userId);
+        $user = User::query()->lockForUpdate()->find($userId);
 
         if (!$user) {
             return [

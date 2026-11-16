@@ -13,6 +13,19 @@ class ReviewController extends Controller
         protected ReviewService $reviewService
     ) {}
 
+    public function dismiss(Request $request): JsonResponse
+    {
+        $actor=$request->user();
+        abort_unless($actor instanceof \App\Models\User,403);
+        $data=$request->validate(['order_id'=>'required|integer']);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data,$actor) {
+            $order=\App\Models\Order::where('user_id',$actor->id)->lockForUpdate()->findOrFail($data['order_id']);
+            abort_unless((int)$order->status===2,422,'این گزینه برای پرونده مختومه است.');
+            if (!$order->review_dismissed_at) $order->forceFill(['review_dismissed_at'=>now()])->save();
+            return response()->json(['success'=>true,'message'=>'نظر و امتیاز اختیاری است؛ یادآوری این پرونده بسته شد.']);
+        });
+    }
+
     /**
      * ثبت نظر برای یک سفارش
      * 
@@ -22,6 +35,7 @@ class ReviewController extends Controller
     public function submitReview(SubmitReviewRequest $request): JsonResponse
     {
         $user = $request->user();
+        abort_unless($user instanceof \App\Models\User,403);
         $validated = $request->validated();
 
         $result = $this->reviewService->submitReview($user->id, $validated);

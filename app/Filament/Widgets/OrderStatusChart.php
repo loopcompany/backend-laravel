@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 class OrderStatusChart extends ChartWidget
 {
+    protected static ?string $pollingInterval = null;
+
     protected static ?string $heading = 'توزیع وضعیت سفارشات';
 
     protected static ?int $sort = 4;

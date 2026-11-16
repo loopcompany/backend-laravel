@@ -44,13 +44,15 @@ class AdminResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return auth('admin')->user()?->can('manage-admins') ?? false;
+        return (auth('admin')->user()?->can('manage-admins') ?? false) && \App\Services\AdminDelegation::editableAdmin($record);
     }
 
     public static function canDelete($record): bool
     {
-        return auth('admin')->user()?->can('manage-admins') ?? false;
+        return (auth('admin')->user()?->can('manage-admins') ?? false) && \App\Services\AdminDelegation::editableAdmin($record);
     }
+
+    public static function canDeleteAny(): bool { return false; }
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -106,10 +108,12 @@ class AdminResource extends Resource
                             ->label('فعال')
                             ->default(true),
                         Forms\Components\CheckboxList::make('roles')
+                            ->disabled(fn()=>!\App\Services\AdminDelegation::can('assign-roles'))
+                            ->rule(fn()=>function ($attribute,$value,$fail) { if (\App\Services\AdminDelegation::can('assign-roles') && !\App\Services\AdminDelegation::checkIds((array)$value,\App\Services\AdminDelegation::roleIds())) $fail('واگذاری سمت خارج از اختیارات شما مجاز نیست.'); })
                             ->label('سمت‌ها')
                             ->relationship('roles', 'name')
                             ->options(function () {
-                                return Role::where('guard_name', 'admin')
+                                return Role::where('guard_name', 'admin')->whereIn('id',\App\Services\AdminDelegation::roleIds())
                                     ->get()
                                     ->mapWithKeys(function ($role) {
                                         return [$role->id => $role->name];

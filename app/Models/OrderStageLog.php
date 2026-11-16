@@ -20,6 +20,11 @@ class OrderStageLog extends Model
     ];
 
     public const ACTIONS = [
+        'customer_visit_accepted'=>'تأیید مراجعه توسط کاربر',
+        'customer_visit_recoordinate'=>'درخواست هماهنگی مجدد مراجعه',
+        'customer_visit_cancelled'=>'لغو مراجعه توسط کاربر',
+        'payment_accounting_approved'=>'تأیید وصول وجه توسط حسابداری',
+        'payment_accounting_rejected'=>'رد بررسی حسابداری',
         'created' => 'ثبت سفارش',
         'classified' => 'تعیین دسته‌ی درخواست و نوع کاربر',
         'review_incomplete' => 'بازگشت برای تکمیل اطلاعات',

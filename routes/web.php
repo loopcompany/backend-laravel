@@ -1,5 +1,8 @@
 <?php
 
+Route::post('/realtime/admin/auth', [\App\Http\Controllers\RealtimeController::class, 'authorizeChannel'])
+    ->middleware(['auth:admin', 'throttle:120,1']);
+
 use App\Http\Controllers\Api\Admin\DigitalBusinessCardEditorController;
 use App\Http\Controllers\LoopLearnRegistrationController;
 use App\Http\Controllers\DigitalBusinessCardController;

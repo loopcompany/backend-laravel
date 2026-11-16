@@ -231,8 +231,7 @@ class LoginActivityResource extends Resource
             ])
             ->emptyStateHeading('فعالیتی ثبت نشده است')
             ->emptyStateDescription('هنوز هیچ فعالیت ورود یا خروجی ثبت نشده است.')
-            ->emptyStateIcon('heroicon-o-arrow-right-on-rectangle')
-            ->poll('30s'); // رفرش خودکار هر 30 ثانیه
+            ->emptyStateIcon('heroicon-o-arrow-right-on-rectangle');
     }
 
     public static function getRelations(): array

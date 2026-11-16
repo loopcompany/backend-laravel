@@ -16,6 +16,8 @@ class PublicDigitalBusinessCardTest extends TestCase
     public function test_public_card_page_is_accessible_to_guests_and_renders_content(): void
     {
         $card = DigitalBusinessCard::create([
+            'slug' => 'public-card',
+            'image_background'=>'/test-background.jpg',
             'title' => 'کارت عمومی',
             'des' => 'توضیح عمومی',
             'header_text_color' => '#ffffff',
@@ -40,11 +42,11 @@ class PublicDigitalBusinessCardTest extends TestCase
             'color' => '#0f172a',
         ]);
 
-        $response = $this->get(route('public.cards.show', $card));
+        $response = $this->get(route('public.cards.show', $card->slug));
 
         $response->assertOk();
         $response->assertSee('کارت عمومی', false);
         $response->assertSee('متن عمومی', false);
-        $response->assertSee("font-family: 'IRANSansFont', sans-serif;", false);
+        $response->assertSee("font-family: 'IRANSansFont', sans-serif;");
     }
 }

@@ -7,6 +7,8 @@ use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
 class MonthlyRevenueChart extends ChartWidget
 {
+    protected static ?string $pollingInterval = null;
+
     protected static ?string $heading = 'درآمد ماهانه (۱۲ ماه اخیر)';
 
     protected static ?int $sort = 5;

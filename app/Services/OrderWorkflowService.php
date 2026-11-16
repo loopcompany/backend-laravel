@@ -79,7 +79,7 @@ class OrderWorkflowService
     public function customerQuote(Order $order, ?string $kind = null): ?OrderQuote
     {
         return $order->quotes()
-            ->whereIn('status', [OrderQuote::STATUS_SENT, OrderQuote::STATUS_ACCEPTED, OrderQuote::STATUS_REJECTED])
+            ->whereIn('status', [OrderQuote::STATUS_SENT, OrderQuote::STATUS_ACCEPTED, OrderQuote::STATUS_REJECTED, OrderQuote::STATUS_EXPIRED])
             ->whereIn('kind', $kind ? [$kind] : [OrderQuote::KIND_INITIAL, OrderQuote::KIND_REVISED])
             ->reorder('version', 'desc')
             ->first();
@@ -89,7 +89,8 @@ class OrderWorkflowService
     public function openQuote(Order $order): ?OrderQuote
     {
         return $order->quotes()
-            ->whereIn('status', [OrderQuote::STATUS_PENDING_REVIEW, OrderQuote::STATUS_SENT])
+            ->where(fn ($quote) => $quote->where('status', OrderQuote::STATUS_PENDING_REVIEW)
+                ->orWhere(fn ($sent) => $sent->awaitingDecision()))
             ->reorder('version', 'desc')
             ->first();
     }
@@ -167,6 +168,7 @@ class OrderWorkflowService
         ]);
 
         $this->moveTo($order, OrderWorkflow::STAGE_QUOTING, 'review_approved', $note);
+        $this->notify($order->user, 'بررسی درخواست سفارش', 'کاربر گرامی، با سلام و احترام؛ درخواست سفارش شما مورد بررسی کارشناسان لوپ قرار گرفت.', $order, 'order_review_approved');
     }
 
     /** ۳-۵ — از ابتدا مشخص است که انجام در محل ممکن نیست. */
@@ -332,44 +334,50 @@ class OrderWorkflowService
     {
         $actor ??= $this->actor();
 
-        if ($quote->status !== OrderQuote::STATUS_SENT) {
+        if ($quote->effectiveStatus() !== OrderQuote::STATUS_SENT) {
             throw new OrderWorkflowException('این نسخه‌ی قیمت در انتظار تصمیم کاربر نیست.', 'QUOTE_NOT_PENDING');
         }
         if (!$accepted) {
             $this->expectFilled($note, 'علت رد قیمت');
         }
 
-        $order = $quote->order;
-        $quote->update([
-            'status' => $accepted ? OrderQuote::STATUS_ACCEPTED : OrderQuote::STATUS_REJECTED,
-            'decided_at' => now(),
-            'decided_by_type' => $actor['type'] === 'user' ? 'user' : 'admin',
-            'decided_by_id' => $actor['id'],
-            'decision_note' => $note,
-        ]);
-
-        $onBehalf = $actor['type'] === 'admin' ? ' (ثبت توسط پنل از طرف کاربر)' : '';
-        $label = OrderQuote::KINDS[$quote->kind] . ' نسخه ' . $quote->version;
-
-        if (!$accepted) {
-            // ۴-۷ — سفارش در انتظار تعیین تکلیف می‌ماند؛ ۷-۶ — سفارش برای تعیین تکلیف به پنل برمی‌گردد
-            $this->log($order, null, null, 'quote_rejected', $label . ' رد شد' . $onBehalf . ' — ' . $note, ['quote_id' => $quote->id], $actor);
-            if ($quote->kind === OrderQuote::KIND_REVISED) {
-                $this->notify($order->technician, 'رد قیمت جدید', 'کاربر قیمت جدید سفارش ' . $order->id . ' را تأیید نکرد. خدمات اضافه را انجام ندهید.', $order, 'order_requote_rejected');
+        DB::transaction(function () use ($quote, $accepted, $note, $actor) {
+            $order = $quote->order;
+            $decision = [
+                'status' => $accepted ? OrderQuote::STATUS_ACCEPTED : OrderQuote::STATUS_REJECTED,
+                'decided_at' => now(),
+                'decided_by_type' => $actor['type'] === 'user' ? 'user' : 'admin',
+                'decided_by_id' => $actor['id'],
+                'decision_note' => $note,
+            ];
+            if (!OrderQuote::whereKey($quote->id)->awaitingDecision()->update($decision)) {
+                throw new OrderWorkflowException('این نسخه‌ی قیمت در انتظار تصمیم کاربر نیست.', 'QUOTE_NOT_PENDING');
             }
 
-            return;
-        }
+            $onBehalf = $actor['type'] === 'admin' ? ' (ثبت توسط پنل از طرف کاربر)' : '';
+            $label = OrderQuote::KINDS[$quote->kind] . ' نسخه ' . $quote->version;
 
-        if ($quote->kind === OrderQuote::KIND_INITIAL) {
-            $this->moveTo($order, OrderWorkflow::STAGE_ASSIGNMENT, 'quote_accepted', $label . ' تأیید شد' . $onBehalf . ($note ? ' — ' . $note : ''), ['quote_id' => $quote->id], [
-                'user_initial_accept' => $order->user_initial_accept ?? now(),
-            ], $actor);
-        } else {
-            // ۷-۵ — سفارش با قیمت و شرایط جدید ادامه می‌یابد
-            $this->moveTo($order, OrderWorkflow::STAGE_ONSITE_SERVICE, 'quote_accepted', $label . ' تأیید شد' . $onBehalf . ($note ? ' — ' . $note : ''), ['quote_id' => $quote->id], [], $actor);
-            $this->notify($order->technician, 'تأیید قیمت جدید', 'کاربر قیمت جدید سفارش ' . $order->id . ' را تأیید کرد.', $order, 'order_requote_accepted');
-        }
+            if (!$accepted) {
+                // ۴-۷ — سفارش در انتظار تعیین تکلیف می‌ماند؛ ۷-۶ — سفارش برای تعیین تکلیف به پنل برمی‌گردد
+                $this->log($order, null, null, 'quote_rejected', $label . ' رد شد' . $onBehalf . ' — ' . $note, ['quote_id' => $quote->id], $actor);
+                if ($quote->kind === OrderQuote::KIND_REVISED) {
+                    $this->notify($order->technician, 'رد قیمت جدید', 'کاربر قیمت جدید سفارش ' . $order->id . ' را تأیید نکرد. خدمات اضافه را انجام ندهید.', $order, 'order_requote_rejected');
+                }
+
+                return;
+            }
+
+            if ($quote->kind === OrderQuote::KIND_INITIAL) {
+                $this->moveTo($order, OrderWorkflow::STAGE_ASSIGNMENT, 'quote_accepted', $label . ' تأیید شد' . $onBehalf . ($note ? ' — ' . $note : ''), ['quote_id' => $quote->id], [
+                    'user_initial_accept' => $order->user_initial_accept ?? now(),
+                ], $actor);
+            } else {
+                // ۷-۵ — سفارش با قیمت و شرایط جدید ادامه می‌یابد
+                $this->moveTo($order, OrderWorkflow::STAGE_ONSITE_SERVICE, 'quote_accepted', $label . ' تأیید شد' . $onBehalf . ($note ? ' — ' . $note : ''), ['quote_id' => $quote->id], [], $actor);
+                $this->notify($order->technician, 'تأیید قیمت جدید', 'کاربر قیمت جدید سفارش ' . $order->id . ' را تأیید کرد.', $order, 'order_requote_accepted');
+            }
+        });
+        $quote->refresh();
     }
 
     /** ۷-۷ — پس از رد قیمت جدید، پنل مسیر ادامه را تعیین می‌کند (لغو از اقدام «لغو سفارش»). */
@@ -392,13 +400,25 @@ class OrderWorkflowService
 
     public function assignTechnician(Order $order, int $technicianId, ?string $note = null, ?string $date = null, ?string $time = null): void
     {
-        $this->expectStage($order, [OrderWorkflow::STAGE_ASSIGNMENT]);
+        DB::transaction(function () use ($order,$technicianId,$note,$date,$time) {
+            $locked=Order::lockForUpdate()->findOrFail($order->id);
+            $this->assignTechnicianLocked($locked,$technicianId,$note,$date,$time);
+            $order->refresh();
+        });
+    }
+
+    private function assignTechnicianLocked(Order $order, int $technicianId, ?string $note, ?string $date, ?string $time): void
+    {
+        $this->expectStage($order, [OrderWorkflow::STAGE_ASSIGNMENT, OrderWorkflow::STAGE_VISIT]);
+        if ($order->set_off_at || $order->started_at) throw new OrderWorkflowException('تغییر مأموریت پس از اعزام از این مسیر مجاز نیست.');
+        app(OrderAccountingService::class)->assertCanAssign($order, auth('admin')->user());
         $workflow = $this->details($order);
 
         // ۳-۳ — تا تکمیل اطلاعات، تخصیص نهایی انجام نمی‌شود
         if ($workflow->review_status !== 'approved') {
             throw new OrderWorkflowException('اطلاعات سفارش هنوز تأیید نشده است.');
         }
+        $this->ensureCustomerApprovedPrice($order);
         if ($workflow->assignment_status === 'accepted' && (int) $order->technician_id === $technicianId) {
             throw new OrderWorkflowException('این تکنسین قبلاً مأموریت را تأیید کرده است.');
         }
@@ -407,15 +427,20 @@ class OrderWorkflowService
         $previous = $order->technician_id;
 
         $workflow->update([
-            'assignment_status' => 'pending',
+            'assignment_status' => 'accepted',
+            'customer_visit_status' => 'pending',
+            'customer_visit_decided_at' => null,
+            'customer_visit_note' => null,
+            'manager_assigned_by' => auth('admin')->id(),
             'assigned_at' => now(),
+            'assignment_viewed_at' => null,
             'assignment_responded_at' => null,
             'assignment_note' => $note,
             'assignment_reject_reason' => null,
             'field_result' => null,
         ]);
 
-        $this->moveTo($order, OrderWorkflow::STAGE_ASSIGNMENT, 'technician_assigned', 'تخصیص به ' . $technician->name . ($note ? ' — ' . $note : ''), [
+        $this->moveTo($order, OrderWorkflow::STAGE_VISIT, 'technician_assigned', 'ارجاع قطعی به ' . $technician->name . ($note ? ' — ' . $note : ''), [
             'technician_id' => $technician->id,
             'previous_technician_id' => $previous,
         ], [
@@ -432,6 +457,8 @@ class OrderWorkflowService
     /** ۵-۴ / ۵-۵ — پاسخ تکنسین به مأموریت (از اپ تکنسین یا ثبت توسط پنل). */
     public function technicianResponse(Order $order, bool $accepted, ?string $reason = null, ?array $actor = null): void
     {
+        if (!$accepted) throw new OrderWorkflowException('پذیرش مأموریت ارجاع‌شده الزامی است؛ مشکل مأموریت را به مدیریت گزارش کنید.', 'MANDATORY_ASSIGNMENT');
+        if ($this->details($order)->assignment_status === 'accepted') return;
         $actor ??= $this->actor();
         $this->expectStage($order, [OrderWorkflow::STAGE_ASSIGNMENT]);
         $workflow = $this->details($order);
@@ -467,6 +494,9 @@ class OrderWorkflowService
      */
     public function technicianWithdraw(Order $order, string $reason, ?array $actor = null): void
     {
+        if (request()?->user() instanceof Technician || ($actor['type'] ?? $this->actor()['type']) === 'technician') {
+            throw new OrderWorkflowException('تکنسین مجاز به رد یا لغو مأموریت ارجاع‌شده نیست؛ به مدیریت گزارش دهید.', 'MANDATORY_ASSIGNMENT');
+        }
         $actor ??= $this->actor();
         $this->expectFilled($reason, 'علت عدم امکان انجام مأموریت');
 
@@ -512,10 +542,48 @@ class OrderWorkflowService
         }
     }
 
+    public function decideCustomerVisit(Order $order, string $decision, ?string $note = null): void
+    {
+        DB::transaction(function () use ($order,$decision,$note) {
+            $locked=Order::lockForUpdate()->findOrFail($order->id);
+            $this->expectStage($locked,[OrderWorkflow::STAGE_VISIT]);
+            $workflow=$this->details($locked);
+            if (!$this->acceptedQuote($locked) || !$locked->technician_id || $workflow->customer_visit_status !== 'pending' || $locked->set_off_at) {
+                throw new OrderWorkflowException('مراجعه‌ای در انتظار تصمیم شما نیست.', 'VISIT_NOT_PENDING');
+            }
+            if (!in_array($decision,['accept','recoordinate','cancel'],true)) throw new OrderWorkflowException('تصمیم مراجعه نامعتبر است.');
+            if ($decision!=='accept') $this->expectFilled($note,'علت درخواست');
+            $workflow->update(['customer_visit_status'=>$decision==='accept'?'accepted':$decision,
+                'customer_visit_decided_at'=>now(),'customer_visit_note'=>$note]);
+            if ($decision==='accept') {
+                $this->log($locked,null,null,'customer_visit_accepted','مراجعه توسط کاربر تأیید شد'.($note?' — '.$note:''));
+            } elseif ($decision==='recoordinate') {
+                $workflow->update(['assignment_status'=>'reschedule_requested']);
+                $this->moveTo($locked,OrderWorkflow::STAGE_ASSIGNMENT,'customer_visit_recoordinate','درخواست هماهنگی مجدد مراجعه — '.$note,[],['date'=>null,'time'=>null]);
+            } else {
+                $workflow->update(['cancel_reason_type'=>'user_request','cancel_reason'=>$note,
+                    'cancel_financial_note'=>'لغو پیش از اعزام؛ بررسی عودت وجوه دریافتی توسط حسابداری.',
+                    'field_result'=>'cancelled_by_user','device_return_required'=>false,'field_closed_at'=>now()]);
+                $this->moveTo($locked,OrderWorkflow::STAGE_CANCELLED,'customer_visit_cancelled','لغو مراجعه و سفارش توسط کاربر — '.$note,[],['status'=>3,'user_cancellation_reason'=>$note]);
+            }
+            $order->refresh();
+        });
+    }
+
+    public function ensureCustomerVisitApproved(Order $order): void
+    {
+        // A null value identifies a mission that pre-dates the clarified process.
+        $status=$this->details($order)->customer_visit_status;
+        if ($status !== null && $status !== 'accepted') {
+            throw new OrderWorkflowException('ابتدا کاربر باید مراجعهٔ زمان‌بندی‌شده را تأیید کند.', 'CUSTOMER_VISIT_APPROVAL_REQUIRED');
+        }
+    }
+
     // ───────────────────────────── ۶ — مراجعه ─────────────────────────────
 
     public function recordSetOff(Order $order): void
     {
+        $this->ensureCustomerVisitApproved($order);
         $this->expectStage($order, [OrderWorkflow::STAGE_VISIT]);
         if ($order->set_off_at) {
             throw new OrderWorkflowException('زمان حرکت قبلاً ثبت شده است.');
@@ -526,6 +594,7 @@ class OrderWorkflowService
 
     public function recordArrival(Order $order): void
     {
+        $this->ensureCustomerVisitApproved($order);
         $this->expectStage($order, [OrderWorkflow::STAGE_VISIT]);
         if (!$order->set_off_at) {
             throw new OrderWorkflowException('ابتدا زمان حرکت تکنسین را ثبت کنید.');
@@ -540,6 +609,7 @@ class OrderWorkflowService
     /** ۶-۴ / ۶-۵ — نتیجه‌ی بررسی اولیه‌ی تکنسین در محل. */
     public function recordVisitOutcome(Order $order, string $outcome, ?string $note = null, ?array $actor = null): void
     {
+        $this->ensureCustomerVisitApproved($order);
         $actor ??= $this->actor();
         $this->expectStage($order, [OrderWorkflow::STAGE_VISIT]);
         $this->expectOption($outcome, OrderWorkflow::VISIT_OUTCOMES, 'نتیجه‌ی بررسی', required: true);
@@ -590,6 +660,7 @@ class OrderWorkflowService
     /** ۸-۱ — شروع خدمت فقط با قیمت و شرایط تأییدشده‌ی کاربر. */
     public function startService(Order $order): void
     {
+        $this->ensureCustomerVisitApproved($order);
         $this->expectStage($order, [OrderWorkflow::STAGE_ONSITE_SERVICE]);
         if ($order->started_at) {
             throw new OrderWorkflowException('شروع خدمت قبلاً ثبت شده است.');
@@ -775,6 +846,9 @@ class OrderWorkflowService
         if ((int) $order->payment_status !== 1) {
             $blockers[] = 'سفارش تسویه نشده';
         }
+        if (app(OrderAccountingService::class)->payments($order)->contains(fn ($payment) => $payment->accounting_status !== 'approved')) {
+            $blockers[] = 'وصول پرداخت‌های شرکت به تأیید حسابداری نرسیده';
+        }
         if ($workflow->field_result === 'transferred_to_loop' && $order->delivery_status !== 'delivered') {
             $blockers[] = 'دستگاه هنوز به کاربر تحویل نهایی نشده';
         }
@@ -874,11 +948,11 @@ class OrderWorkflowService
             $workflow = $this->details($order);
 
             if ($order->technician_id) {
-                $workflow->update(['assignment_status' => 'pending', 'assigned_at' => now(), 'assignment_responded_at' => null, 'assignment_reject_reason' => null]);
+                $workflow->update(['assignment_status' => 'accepted', 'customer_visit_status'=>$this->acceptedQuote($order)?'pending':null, 'assigned_at' => now(), 'assignment_viewed_at' => null, 'assignment_responded_at' => null, 'assignment_reject_reason' => null]);
                 if (in_array($order->workflow_stage, [null, OrderWorkflow::STAGE_REVIEW, OrderWorkflow::STAGE_QUOTING], true)) {
                     $workflow->update(['review_status' => 'approved', 'reviewed_at' => $workflow->reviewed_at ?? now()]);
                 }
-                $order->workflow_stage = OrderWorkflow::STAGE_ASSIGNMENT;
+                $order->workflow_stage = OrderWorkflow::STAGE_VISIT;
                 $note = 'تخصیص به ' . (Technician::find($order->technician_id)?->name ?? '-');
             } else {
                 $workflow->update(['assignment_status' => null]);
@@ -898,6 +972,7 @@ class OrderWorkflowService
         if ($this->stage($order) === OrderWorkflow::STAGE_ASSIGNMENT && $workflow->assignment_status === 'pending') {
             $workflow->update(['assignment_status' => 'accepted', 'assignment_responded_at' => now()]);
             $this->moveTo($order, OrderWorkflow::STAGE_VISIT, 'technician_accepted', 'تأیید ضمنی با ثبت حرکت از اپ تکنسین');
+            $this->notify($order->user, 'به‌روزرسانی سفارش', self::USER_MESSAGE, $order, 'order_technician_accepted');
         }
 
         $this->log($order, null, null, 'set_off', 'حرکت تکنسین به سمت محل (اپ تکنسین)');
@@ -974,11 +1049,16 @@ class OrderWorkflowService
     {
         $workflow = $this->details($order);
         $quotes = $order->quotes()
-            ->whereIn('status', [OrderQuote::STATUS_SENT, OrderQuote::STATUS_ACCEPTED, OrderQuote::STATUS_REJECTED, OrderQuote::STATUS_RECORDED])
+            ->whereIn('status', [OrderQuote::STATUS_SENT, OrderQuote::STATUS_ACCEPTED, OrderQuote::STATUS_REJECTED, OrderQuote::STATUS_EXPIRED, OrderQuote::STATUS_RECORDED])
             ->get();
         $current = $this->customerQuote($order);
 
         return [
+            'visit_status' => $workflow->customer_visit_status,
+            'visit_note' => $workflow->customer_visit_note,
+            'visit_date' => $order->date,
+            'visit_time' => $order->time,
+            'awaiting_visit_decision' => $this->stage($order) === OrderWorkflow::STAGE_VISIT && $order->technician_id && $workflow->customer_visit_status === 'pending',
             'stage' => $this->stage($order),
             'stage_label' => OrderWorkflow::stageLabel($this->stage($order)),
             'service_type' => $workflow->service_type,
@@ -986,7 +1066,7 @@ class OrderWorkflowService
             'review_status' => $workflow->review_status,
             'review_note' => $workflow->review_status === 'incomplete' ? $workflow->review_note : null,
             'current_quote' => $current?->toApiArray(),
-            'awaiting_quote_decision' => $current?->status === OrderQuote::STATUS_SENT,
+            'awaiting_quote_decision' => $current?->effectiveStatus() === OrderQuote::STATUS_SENT,
             'quotes' => $quotes->map->toApiArray()->values()->all(),
             'transfer' => $workflow->transfer_started_at ? [
                 'method' => $workflow->transfer_method,
@@ -1001,6 +1081,49 @@ class OrderWorkflowService
         ];
     }
 
+    public function remindPendingInitialQuotes(): void
+    {
+        if (!config('firebase.enabled')) {
+            return;
+        }
+
+        OrderQuote::query()
+            ->where('kind', OrderQuote::KIND_INITIAL)
+            ->awaitingDecision()
+            ->whereNull('reminded_at')
+            ->where('sent_at', '<=', now()->subDay())
+            ->whereHas('order', fn ($order) => $order->whereIn('status', [0, 1]))
+            ->with('order.user')
+            ->chunkById(100, function ($quotes) {
+                foreach ($quotes as $quote) {
+                    if (OrderQuote::whereKey($quote->id)->awaitingDecision()->whereNull('reminded_at')->update(['reminded_at' => now()])) {
+                        $this->notify($quote->order->user, 'یادآوری تأیید پیش‌رسید',
+                            'پیش‌رسید سفارش شما منتظر پاسخ است. لطفاً پیش از پایان مهلت آن را بررسی کنید.',
+                            $quote->order, 'order_quote_reminder');
+                    }
+                }
+            });
+    }
+
+    public function expirePendingInitialQuotes(): void
+    {
+        OrderQuote::where('kind', OrderQuote::KIND_INITIAL)
+            ->where('status', OrderQuote::STATUS_SENT)
+            ->where('sent_at', '<=', now()->subHours(OrderQuote::INITIAL_VALIDITY_HOURS))
+            ->chunkById(100, function ($quotes) {
+                foreach ($quotes as $quote) {
+                    DB::transaction(function () use ($quote) {
+                        $current = OrderQuote::whereKey($quote->id)->lockForUpdate()->first();
+                        if ($current?->status === OrderQuote::STATUS_SENT
+                            && $current->kind === OrderQuote::KIND_INITIAL
+                            && $current->sent_at?->lte(now()->subHours(OrderQuote::INITIAL_VALIDITY_HOURS))) {
+                            $current->update(['status' => OrderQuote::STATUS_EXPIRED]);
+                        }
+                    });
+                }
+            });
+    }
+
     /** ۵-۳ — اطلاعات مأموریت برای تکنسین. */
     public function technicianPayload(Order $order): array
     {
@@ -1008,6 +1131,7 @@ class OrderWorkflowService
         $quote = $this->acceptedQuote($order) ?? $this->customerQuote($order);
 
         return [
+            'customer_visit_status' => $workflow->customer_visit_status,
             'stage' => $this->stage($order),
             'stage_label' => OrderWorkflow::stageLabel($this->stage($order)),
             'service_type' => $workflow->service_type,
@@ -1022,6 +1146,18 @@ class OrderWorkflowService
                 ? (int) floor($accepted->total * (100 + $limit) / 100)
                 : null,
         ];
+    }
+
+    public function recordTechnicianView(Order $order, int $technicianId): void
+    {
+        $changed = OrderWorkflow::where('order_id', $order->id)
+            ->whereNotNull('assigned_at')
+            ->whereNull('assignment_viewed_at')
+            ->whereHas('order', fn ($assigned) => $assigned->where('technician_id', $technicianId))
+            ->update(['assignment_viewed_at' => now()]);
+        if ($changed) {
+            app(RealtimePublisher::class)->changed('admin.orders', ['orders-counts']);
+        }
     }
 
     // ───────────────────────────── داخلی ─────────────────────────────
@@ -1144,7 +1280,13 @@ class OrderWorkflowService
             return;
         }
 
-        $this->notify($order->user, 'اعلام قیمت سفارش', self::USER_MESSAGE, $order, 'order_quote_sent');
+        if ($quote->kind !== OrderQuote::KIND_INITIAL) {
+            $this->notify($order->user, 'اعلام قیمت سفارش', self::USER_MESSAGE, $order, 'order_quote_sent');
+
+            return;
+        }
+
+        $this->notify($order->user, 'آماده شدن پیش‌رسید سفارش', 'کاربر گرامی، با سلام و احترام؛ پیش‌رسید برآورد اولیه سفارش شما آماده است. برای مشاهده جزئیات، وارد اپلیکیشن شوید. لوپ LOOP', $order, 'order_quote_sent');
     }
 
     private function notify(?object $notifiable, string $title, string $body, Order $order, string $type): void

@@ -129,12 +129,11 @@ class Organization extends Model
 
     /**
      * چک کردن دسترسی کامل سازمان
-     * سازمان زمانی دسترسی کامل دارد که هم پروفایل و هم قرارداد تایید شده باشد
+     * ورود به خدمات عادی به تأیید پروفایل نیاز دارد؛ توافق‌نامه در ثبت سفارش دوره‌ای بررسی می‌شود.
      */
     public function hasCompleteAccess(): bool
     {
         return $this->profile_status === 'approved' &&
-               $this->contract_status === 'approved' &&
                $this->suspended_at === null;
     }
 

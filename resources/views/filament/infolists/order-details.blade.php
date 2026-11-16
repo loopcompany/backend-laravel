@@ -4,6 +4,9 @@
 @endphp
 
 <div class="space-y-4">
+    @if(filled($order->des))
+        <div class="whitespace-pre-line rounded-lg border p-3" style="overflow-wrap:anywhere">{{ $order->des }}</div>
+    @endif
     @if($groupedDetails->isEmpty())
         <div class="text-center text-gray-500 py-8">
             <p>هیچ جزئیاتی برای این سفارش ثبت نشده است.</p>
@@ -74,12 +77,6 @@
                                         {{ $detail->value }}
                                     </span>
                                 </div>
-                                @if($detail->user_descriptions)
-                                <p class="text-gray-900 dark:text-gray-100 font-semibold">
-                                    <span>توضیحات: </span>
-                                    {{ $detail->user_descriptions ?? '-' }}
-                                </p>
-                                @endif
                             @break
 
                             @default
@@ -87,6 +84,11 @@
                                     {{ $detail->value }}
                                 </div>
                         @endswitch
+                        @if(filled($detail->user_descriptions))
+                            <p class="whitespace-pre-line text-sm text-gray-700 dark:text-gray-200">
+                                توضیحات: {{ $detail->user_descriptions }}
+                            </p>
+                        @endif
                         @endif
                     @endforeach
                 </div>

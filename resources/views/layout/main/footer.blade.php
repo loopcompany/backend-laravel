@@ -185,7 +185,13 @@
                         <img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa' alt='' style='cursor:pointer' code='JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
                     </a>
                     <img src="{{ asset('assets/images/samandehi.png') }}" alt="نشان ساماندهی" width="64" height="64">
-                    <img src="{{ asset('assets/images/logonama.png') }}" alt="لوگو نما">
+                    <a href="https://ecunion.ir/verify/clpiran.com?token=73466486ae842901896d"
+                       target="_blank" rel="noopener noreferrer"
+                       onclick="window.open(this.href, '_blank', 'popup,noopener,noreferrer,scrollbars=yes,width=580,height=600,top=30'); return false;">
+                        <img class="loop-union-badge" src="{{ asset('assets/images/ecunion-verification.svg') }}"
+                             alt="استعلام عضویت در اتحادیه کشوری کسب‌وکارهای مجازی"
+                             width="96" height="144" loading="lazy">
+                    </a>
                 </div>
             </div>
 

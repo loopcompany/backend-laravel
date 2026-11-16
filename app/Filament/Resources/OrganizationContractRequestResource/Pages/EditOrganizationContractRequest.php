@@ -16,6 +16,8 @@ class EditOrganizationContractRequest extends EditRecord
     private string|int|null $oldStatus = null;
     private bool $statusChanged = false;
     private bool $needDocsChanged = false;
+    private bool $draftChanged = false;
+    private bool $finalChanged = false;
 
     protected function getHeaderActions(): array
     {
@@ -26,6 +28,8 @@ class EditOrganizationContractRequest extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->draftChanged=filled($data['contract_file_path']??null) && ($data['contract_file_path']??null)!==$this->record->contract_file_path;
+        $this->finalChanged=filled($data['signed_contract_file_path']??null) && ($data['signed_contract_file_path']??null)!==$this->record->signed_contract_file_path;
         $this->oldStatus = $this->record->status;
         $this->statusChanged = array_key_exists('status', $data)
             && (string) $this->oldStatus !== (string) $data['status'];
@@ -46,6 +50,16 @@ class EditOrganizationContractRequest extends EditRecord
     {
         // بررسی تغییر وضعیت به "انجام شده" (2)
         $this->record->refresh();
+        if ($this->draftChanged) {
+            $this->record->update(['uploaded_by_admin_at'=>now()]);
+            if ($this->record->user?->phone) Helper::send_sms($this->record->user->phone, 283705, ['NAME'], [$this->record->organization?->organization_name]);
+            $this->sendAgreementDocumentNotice(false);
+        }
+        if ((string)$this->record->status==='3' && filled($this->record->signed_contract_file_path) && ($this->finalChanged || $this->statusChanged)) {
+            $this->record->update(['final_published_at'=>now()]);
+            $this->record->organization?->update(['contract_status'=>'approved']);
+            $this->sendAgreementDocumentNotice(true);
+        }
         // اگر uploaded_by_admin_at خالی باشه، الان ست کن
         if (!$this->record->uploaded_by_admin_at && !is_null($this->record->contract_file_path)) {
 
@@ -91,7 +105,7 @@ class EditOrganizationContractRequest extends EditRecord
                 default => null,
             };
 
-            if ($notification) {
+            if ($notification && !($this->draftChanged && $status===1) && !($status===3 && ($this->finalChanged || $this->statusChanged))) {
                 $this->sendPush(
                     $notification[0],
                     $notification[1],
@@ -105,6 +119,14 @@ class EditOrganizationContractRequest extends EditRecord
             }
         }
 
+    }
+
+    private function sendAgreementDocumentNotice(bool $final): void
+    {
+        $title=$final?'نسخهٔ نهایی توافق‌نامه آماده است':'توافق‌نامهٔ جدید برای شما ارسال شده است';
+        $body=$final?'نسخهٔ نهایی دریافت‌شده توسط شرکت برای مشاهده و ذخیره در دسترس شماست.':'توافق‌نامهٔ همکاری شما ارسال شد؛ آن را چاپ و پس از مهر شرکت و امضای مدیرعامل، نسخهٔ فیزیکی را برای شرکت لوپ ارسال کنید.';
+        $this->record->user?->notify(new \Filament\Notifications\DatabaseNotification(['title'=>$title,'body'=>$body,'status'=>'success','format'=>'filament']));
+        $this->sendPush($title,$body,['type'=>'organization_agreement_ready','screen'=>'OrganizationContract','contract_request_id'=>$this->record->id]);
     }
 
     private function sendPush(string $title, string $body, array $data): void

@@ -10,7 +10,7 @@ class TechnicianPasswordSMSTest extends TestCase
     /**
      * تست رفع باگ: کد پرسنلی و رمز عبور باید با ترتیب صحیح ارسال شوند
      * 
-     * قالب SMS 923719:
+     * قالب SMS 812565:
      * کد پرسنلی: #CODE# 
      * رمز عبور شما: #PASS#
      * 
@@ -22,7 +22,7 @@ class TechnicianPasswordSMSTest extends TestCase
     {
         // این تست فقط برای مستندسازی و یادآوری ترتیب صحیح است
         $correctOrder = [
-            'template_id' => '923719',
+            'template_id' => '812565',
             'parameters' => [
                 'names' => ['CODE', 'PASS'],
                 'values' => ['کد_پرسنلی', 'رمز_عبور']
@@ -30,7 +30,7 @@ class TechnicianPasswordSMSTest extends TestCase
             'message_format' => 'کد پرسنلی: #CODE# و رمز عبور شما: #PASS# می باشد.'
         ];
 
-        $this->assertEquals('923719', $correctOrder['template_id']);
+        $this->assertEquals('812565', $correctOrder['template_id']);
         $this->assertEquals(['CODE', 'PASS'], $correctOrder['parameters']['names']);
         
         // اطمینان از اینکه اولین پارامتر CODE (کد پرسنلی) است
@@ -59,7 +59,7 @@ class TechnicianPasswordSMSTest extends TestCase
         $this->assertStringContainsString('[$technician->referral_code, $password]', $content);
         
         // بررسی وجود template ID صحیح
-        $this->assertStringContainsString("'923719'", $content);
+        $this->assertMatchesRegularExpression('/(?<![0-9])812565(?![0-9])/', $content);
         
         // اطمینان از عدم وجود ترتیب اشتباه قدیمی ['PASS', 'CODE']
         $this->assertStringNotContainsString("['PASS', 'CODE']", $content);

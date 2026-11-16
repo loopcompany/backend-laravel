@@ -38,6 +38,10 @@ class PdfDocumentResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\FileUpload::make('organization_assessment')->label('فرم سنجش و ارزیابی سازمانی')
+                    ->directory('pdf')->acceptedFileTypes(['application/pdf'])->downloadable()->openable(),
+                Forms\Components\FileUpload::make('organization_agreement_draft')->label('پیش‌نویس شرایط عمومی توافق‌نامه')
+                    ->directory('pdf')->acceptedFileTypes(['application/pdf'])->downloadable()->openable(),
                 Forms\Components\FileUpload::make('user')
                     ->directory('pdf')
                     ->downloadable()

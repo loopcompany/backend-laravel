@@ -6,7 +6,7 @@ use Tests\TestCase;
 
 class GregorianToJalaliTest extends TestCase
 {
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_converts_gregorian_date_to_jalali()
     {
         // Test case 1: 2000-01-01 (میلادی) = 1378/10/11 (شمسی)
@@ -14,7 +14,7 @@ class GregorianToJalaliTest extends TestCase
         $this->assertEquals('1378/10/11', $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_converts_with_custom_format()
     {
         // Test with different format
@@ -22,7 +22,7 @@ class GregorianToJalaliTest extends TestCase
         $this->assertEquals('1378-10-11', $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_leap_year()
     {
         // Leap year test: 2000-02-29
@@ -30,7 +30,7 @@ class GregorianToJalaliTest extends TestCase
         $this->assertEquals('1378/12/10', $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_converts_recent_date()
     {
         // Test with a recent date: 2025-01-01
@@ -38,7 +38,7 @@ class GregorianToJalaliTest extends TestCase
         $this->assertEquals('1403/10/12', $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_invalid_date_gracefully()
     {
         // Should return original string on error
@@ -47,7 +47,7 @@ class GregorianToJalaliTest extends TestCase
         $this->assertEquals('invalid-date', $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_converts_birthdate_format()
     {
         // Example birthdate: 1990-05-15 (میلادی) = 1369/02/25 (شمسی)
@@ -55,7 +55,7 @@ class GregorianToJalaliTest extends TestCase
         $this->assertEquals('1369/02/25', $result);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_converts_with_slash_format()
     {
         // Default format uses slash

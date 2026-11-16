@@ -68,16 +68,11 @@ class CreateUser extends CreateRecord
         }
         app(\App\Services\RegistrationCodeService::class)->issueForNewUser($this->record);
 
-        // ارسال SMS با کد معرف و رمز عبور به کاربر
+        // قالب پیامک موجود فقط رمز عبور را ارسال می‌کند.
         if ($this->generatedPassword && $this->generatedReferralCode) {
             try {
                 $smsService = app(SmsService::class);
 
-                // ارسال SMS با استفاده از قالب موجود sendSecurePassword
-                // در این SMS هم رمز عبور و هم کد معرف ارسال می‌شود
-                $message = "کد معرف: {$this->generatedReferralCode}\nرمز عبور: {$this->generatedPassword}";
-
-                // استفاده از قالب SMS موجود برای ارسال رمز عبور
                 $smsSent = $smsService->sendSecurePassword(
                     $this->record->phone,
                     $this->generatedPassword
@@ -94,7 +89,7 @@ class CreateUser extends CreateRecord
                     \Filament\Notifications\Notification::make()
                         ->success()
                         ->title('کاربر با موفقیت ایجاد شد')
-                        ->body("کد معرف: {$this->generatedReferralCode} و رمز عبور به شماره {$this->record->phone} ارسال شد.")
+                        ->body("رمز عبور به شماره {$this->record->phone} ارسال شد. کد معرف {$this->generatedReferralCode} را جداگانه به کاربر اعلام کنید.")
                         ->send();
                 } else {
                     Log::error('Admin created user - SMS send failed', [

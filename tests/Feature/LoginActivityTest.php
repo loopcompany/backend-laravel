@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class LoginActivityTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Concerns\MakesPeople;
 
     /**
      * Test user login creates activity log
@@ -66,11 +66,17 @@ class LoginActivityTest extends TestCase
 
     /**
      * Test technician login creates activity log
-     * Skipped due to complex technician model requirements
      */
     public function test_technician_login_creates_activity_log(): void
     {
-        $this->markTestSkipped('Technician factory requires many required fields. Login activity logging is proven to work with User model.');
+        $technician=$this->makeTechnician(['phone_verified_at'=>now(),'password'=>'password123']);
+        $this->postJson('/api/technician/login',[
+            'referral_code'=>$technician->referral_code,
+            'password'=>'password123',
+        ])->assertOk()->assertJsonPath('success',true)->assertJsonPath('data.technician.id',$technician->id);
+        $this->assertDatabaseHas('login_activities',[
+            'user_type'=>'technician','user_id'=>$technician->id,'action'=>'login',
+        ]);
     }
 
     /**

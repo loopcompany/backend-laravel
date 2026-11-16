@@ -26,6 +26,7 @@ class ReferralCommission extends Model
     ];
 
     protected $fillable = [
+        'calculation_note', 'manual_override_amount',
         'user_id',
         'referral_code_id',
         'order_id',
@@ -37,7 +38,7 @@ class ReferralCommission extends Model
     ];
 
     protected $casts = [
-        'order_amount' => 'integer',
+        'order_amount' => 'integer', 'manual_override_amount'=>'integer',
         'commission_percent' => 'integer',
         'commission_amount' => 'integer',
         'settled_at' => 'datetime',
@@ -66,6 +67,7 @@ class ReferralCommission extends Model
             'order_amount' => $this->order_amount,
             'commission_percent' => $this->commission_percent,
             'commission_amount' => $this->commission_amount,
+            'calculation_note' => $this->calculation_note,
             'status' => $this->status,
             'status_label' => self::STATUSES[$this->status] ?? $this->status,
             'created_at' => $this->created_at?->toIso8601String(),

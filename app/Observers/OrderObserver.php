@@ -17,6 +17,17 @@ class OrderObserver
      */
     public function updating(Order $order): void
     {
+        $actor=auth('sanctum')->user();
+        if ((int)$order->getOriginal('status')===2 && ($actor instanceof \App\Models\User || $actor instanceof \App\Models\Technician) && array_diff(array_keys($order->getDirty()),['updated_at','review_dismissed_at','is_rate'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['order'=>'پرونده مختومه است و قابل ویرایش نیست.']);
+        }
+        if ($order->isDirty('technician_id') && $order->technician_id) {
+            app(\App\Services\OrderAccountingService::class)->assertCanAssign($order,auth('admin')->user());
+            if (in_array($order->workflow_stage,[\App\Models\OrderWorkflow::STAGE_REVIEW,\App\Models\OrderWorkflow::STAGE_QUOTING],true)
+                && !app(\App\Services\OrderWorkflowService::class)->acceptedQuote($order)) {
+                throw new \App\Services\OrderWorkflowException('ابتدا قیمت باید توسط کاربر تأیید شود.','CUSTOMER_PRICE_APPROVAL_REQUIRED');
+            }
+        }
         if ($order->isDirty('status')) {
             $this->syncCancellation($order);
         }
@@ -28,6 +39,10 @@ class OrderObserver
 
         // بررسی اینکه آیا date یا time تغییر کرده است
         if ($order->isDirty('date') || $order->isDirty('time')) {
+            $workflow = $order->workflow;
+            if (!$order->set_off_at && $workflow?->customer_visit_status === 'accepted') {
+                $workflow->update(['customer_visit_status' => 'pending', 'customer_visit_decided_at' => null, 'customer_visit_note' => null]);
+            }
             // اگر is_time_changed قبلاً 1 نبوده، آن را 1 می‌کنیم
             if ($order->is_time_changed != 1) {
                 $order->is_time_changed = 1;

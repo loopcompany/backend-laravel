@@ -93,7 +93,11 @@ class EmploymentFileResource extends Resource
             ->icon('heroicon-o-user')
             ->schema([
                 Forms\Components\Select::make('person_type')->label('نوع')->options(O::PERSON_TYPES)->required()->default('staff'),
-                Forms\Components\TextInput::make('personnel_code')->label('شناسه پرسنل / تکنسین / مدیر')->maxLength(30)->unique(ignoreRecord: true),
+                Forms\Components\TextInput::make('personnel_code')
+                    ->label('شناسه پرسنل / تکنسین / مدیر')
+                    ->helperText('کد جدید از اقدام «صدور کد ثبت‌نام» در فهرست پرونده‌ها صادر می‌شود.')
+                    ->disabled()
+                    ->dehydrated(false),
                 Forms\Components\TextInput::make('full_name')->label('نام و نام خانوادگی')->required()->maxLength(191),
                 Forms\Components\TextInput::make('general.identity.father_name')->label('نام پدر'),
                 Forms\Components\TextInput::make('national_code')->label('کد ملی')->regex('/^[0-9]{10}$/'),
@@ -314,6 +318,7 @@ class EmploymentFileResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                \App\Filament\Actions\IssueRegistrationCode::make(fn (EmploymentFile $record) => static::canEdit($record)),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ]);

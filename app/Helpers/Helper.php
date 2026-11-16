@@ -64,6 +64,7 @@ class Helper
 
     public static function send_sms($phone, $templateId, $names, $values)
     {
+        if (!config('smsir.enabled', true)) return true;
         try {
             Log::info('Starting SMS send process', [
                 'phone' => $phone,

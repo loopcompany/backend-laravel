@@ -62,6 +62,7 @@ class CreateIncentivePlan extends CreateRecord
                 $record = IncentivePlan::query()->create([
                     'technician_id' => $technicianId,
                     'description' => $data['description'],
+                    'benefit_type'=>$data['benefit_type'] ?? 'legacy', 'amount'=>$data['amount'] ?? null, 'benefit_location'=>$data['benefit_location'] ?? null, 'benefit_code'=>$data['benefit_code'] ?? null,
                     'end_at' => $data['end_at'] ?? null,
                     'status' => $data['status'] ?? IncentivePlan::STATUS_PENDING,
                 ]);

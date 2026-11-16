@@ -1,23 +1,19 @@
 <?php
-
 namespace App\Filament\Resources\ReferralCodeResource\Pages;
-
 use App\Filament\Resources\ReferralCodeResource;
-use Filament\Notifications\Notification;
+use App\Models\ReferralCode;
 use Filament\Resources\Pages\CreateRecord;
-
 class CreateReferralCode extends CreateRecord
 {
     protected static string $resource = ReferralCodeResource::class;
-
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return array_merge($data,['policy_version'=>ReferralCode::CURRENT_POLICY,'issued_by_admin_id'=>auth('admin')->id(),'multi_use'=>false,'status'=>ReferralCode::STATUS_ACTIVE]);
+    }
     protected function afterCreate(): void
     {
-        $this->record->load('user');
-
-        Notification::make()
-            ->title('کد معرف ایجاد شد')
-            ->body("کد {$this->record->code} برای کاربر {$this->record->user?->phone} ایجاد شد.")
-            ->success()
-            ->send();
+        $user=$this->record->user;
+        $user->forceFill(['is_referral_agent'=>true])->save();
+        app(\App\Services\CodeDeliveryService::class)->issue($this->record,$user,auth('admin')->id());
     }
 }

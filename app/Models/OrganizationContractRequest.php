@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class OrganizationContractRequest extends Model
 {
     protected $fillable = [
+        'delivery_modes', 'previous_request_id', 'final_published_at',
         'organization_id',
         'user_id',
         'status',
@@ -22,6 +23,7 @@ class OrganizationContractRequest extends Model
         'uploaded_at',
         'reject_contract_reason'
     ];
+    protected $casts = ['delivery_modes'=>'array','final_published_at'=>'datetime','uploaded_by_admin_at'=>'datetime'];
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

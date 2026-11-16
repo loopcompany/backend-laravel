@@ -64,25 +64,15 @@ class OrderCancelSourceAndDeliveryConfirmTest extends TestCase
     }
 
     /** فرآیند سفارش بند ۵-۵: انصراف تکنسین سفارش را لغو نمی‌کند؛ برای تخصیص مجدد به پنل برمی‌گردد. */
-    public function test_technician_cancel_returns_order_to_panel_instead_of_cancelling(): void
+    public function test_technician_cannot_cancel_a_mandatory_assignment(): void
     {
-        $technician = $this->makeTechnician();
-        $order = $this->makeOrder($this->makeUser(), ['technician_id' => $technician->id, 'status' => 1]);
+        $technician=$this->makeTechnician();
+        $order=$this->makeOrder($this->makeUser(),['technician_id'=>$technician->id,'status'=>1]);
         Sanctum::actingAs($technician);
-
-        $this->postJson("/api/technician/orders/{$order->id}/cancel", ['technician_cancel_reason' => 'خرابی خودرو'])
-            ->assertOk()
-            ->assertJsonPath('data.returned_to_panel', true);
-
-        $order->refresh();
-        $this->assertSame(0, (int) $order->status);
-        $this->assertNull($order->cancelled_by);
-        $this->assertNull($order->technician_id);
-        $this->assertSame('خرابی خودرو', $order->technician_cancel_reason);
-        $this->assertSame('assignment', $order->workflow_stage);
-
-        $orders = collect($this->getJson('/api/technician/orders')->assertOk()->json('data.orders') ?? $this->getJson('/api/technician/orders')->json('data'));
-        $this->assertNull($orders->firstWhere('id', $order->id));
+        $this->postJson("/api/technician/orders/{$order->id}/cancel",['technician_cancel_reason'=>'خرابی خودرو'])->assertStatus(400)->assertJsonPath('error_code','MANDATORY_ASSIGNMENT');
+        $this->assertSame(1,(int)$order->fresh()->status);
+        $this->assertSame($technician->id,$order->fresh()->technician_id);
+        $this->assertNull($order->fresh()->cancelled_at);
     }
 
     public function test_reject_decision_path_sets_user_source(): void

@@ -721,6 +721,7 @@ class TechnicianOrderReportService
                 ];
             }
 
+            app(OrderWorkflowService::class)->ensureCustomerVisitApproved($order);
             // ثبت زمان حرکت
             $updated = $this->orderRepository->setSetOffAt($orderId);
 

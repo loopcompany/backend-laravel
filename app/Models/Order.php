@@ -28,6 +28,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
+        'delivery_modes',
         'user_id',
         'user_address_id',
         'category_id',
@@ -153,6 +154,8 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'review_dismissed_at'=>'datetime',
+        'delivery_modes' => 'array',
         'set_off_at' => 'datetime',
         'arrived_at' => 'datetime',
         'started_at' => 'datetime',

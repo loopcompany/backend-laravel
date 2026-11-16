@@ -19,6 +19,8 @@ class AdminRoleService
     {
         try {
             $permissions = [
+                'review-order-payments' => 'بررسی وصول پرداخت‌ها توسط حسابداری',
+                'assign-paid-orders' => 'ارجاع سفارش‌های پرداخت‌شده توسط مدیر تکنسین',
                 'access-admin-panel' => 'دسترسی به پنل ادمین',
                 'view-dashboard' => 'مشاهده داشبورد',
                 'manage-admins' => 'مدیریت ادمین‌ها',

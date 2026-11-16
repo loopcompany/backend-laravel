@@ -16,6 +16,7 @@ class ReferralCodeController extends Controller
         ]);
 
         $user = $request->user();
+        abort_unless($user instanceof \App\Models\User,403);
         $code = ReferralCode::normalize($validated['code']);
 
         return DB::transaction(function () use ($code, $user): JsonResponse {
@@ -40,6 +41,12 @@ class ReferralCodeController extends Controller
                     'message' => 'این کد به کاربر معتبری اختصاص داده نشده است.',
                     'error_code' => 'REFERRAL_CODE_OWNER_NOT_FOUND',
                 ]);
+            }
+
+            if ($managedCode->policy_version) {
+                $valid = (int)$managedCode->user_id === (int)$user->id && in_array($managedCode->status, ReferralCode::usableStatuses(),true) && !$managedCode->used_order_id;
+                return response()->json(['success'=>$valid,'valid'=>$valid,'message'=>$valid ? 'کد معرف معتبر است؛ پس از ثبت سفارش مصرف می‌شود.' : 'کد برای این حساب قابل استفاده نیست یا قبلاً مصرف شده است.',
+                    'data'=>$valid ? ['code'=>$managedCode->code,'discount_percent'=>0,'source'=>'managed_referral_code'] : null]);
             }
 
             // کد مأمور خرید چندبارمصرف است: مصرف نمی‌شود، فقط باید فعال باشد و متعلق به خود کاربر نباشد

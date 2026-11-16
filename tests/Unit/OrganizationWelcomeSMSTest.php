@@ -41,7 +41,7 @@ class OrganizationWelcomeSMSTest extends TestCase
         );
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_sends_welcome_sms_when_organization_phone_is_verified()
     {
         // Arrange: Create organization user
@@ -81,7 +81,7 @@ class OrganizationWelcomeSMSTest extends TestCase
         $this->assertNotNull($user->phone_verified_at);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_does_not_send_welcome_sms_for_individual_users()
     {
         // Arrange: Create individual user
@@ -111,7 +111,7 @@ class OrganizationWelcomeSMSTest extends TestCase
         $this->assertTrue($result['password_generated']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_handles_failed_welcome_sms_gracefully()
     {
         // Arrange: Create organization user
@@ -152,7 +152,7 @@ class OrganizationWelcomeSMSTest extends TestCase
         $this->assertNotNull($user->phone_verified_at);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function welcome_sms_includes_correct_organization_details()
     {
         // Arrange

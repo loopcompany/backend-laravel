@@ -11,6 +11,8 @@
     $jdt = fn ($v) => $v ? Jalalian::forge($v)->format('Y/m/d H:i') : '-';
 @endphp
 
+@include('partials.order-request-notes', ['order' => $order])
+
 <style>
     .oq-wrap { overflow-x: auto; }
     .oq-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 760px; }

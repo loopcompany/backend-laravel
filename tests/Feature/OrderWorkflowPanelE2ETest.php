@@ -24,6 +24,7 @@ use Tests\TestCase;
  * سناریوهای کامل فرآیند سفارش از دید اپراتور پنل: هر قدم مثل کلیک روی دکمه در صفحه‌ی ویرایش سفارش
  * (باز کردن مودال، پر کردن فرم، ثبت) و پاسخ‌های اپ کاربر / تکنسین از API.
  */
+#[\PHPUnit\Framework\Attributes\Group('panel-e2e')]
 class OrderWorkflowPanelE2ETest extends TestCase
 {
     use RefreshDatabase, MakesPeople;
@@ -47,6 +48,7 @@ class OrderWorkflowPanelE2ETest extends TestCase
 
     private function asAdmin(): void
     {
+        $this->app['auth']->forgetGuards();
         $this->actingAs($this->admin, 'admin');
         $this->app['auth']->shouldUse('admin');
     }
@@ -123,6 +125,12 @@ class OrderWorkflowPanelE2ETest extends TestCase
         Sanctum::actingAs($technician);
     }
 
+    private function confirmVisit(Order $order): void
+    {
+        $this->asUserApp($order);
+        $this->postJson("/api/orders/{$order->id}/visit/decision",['decision'=>'accept'])->assertOk();
+    }
+
     private function newOrder(array $userOverrides = [], array $orderOverrides = []): Order
     {
         $technicianCategory = $this->makeCategory();
@@ -174,15 +182,13 @@ class OrderWorkflowPanelE2ETest extends TestCase
         $this->postJson("/api/orders/{$order->id}/quote/decision", ['decision' => 'accept'])->assertOk();
         $this->assertSame(OrderWorkflow::STAGE_ASSIGNMENT, $this->stage($order));
 
-        // ۵ — تخصیص: رد تکنسین الف، تخصیص به ب، تأیید از اپ
-        $this->click($order, 'assign_technician', ['technician_id' => $techA->id, 'note' => 'ابزار لحیم همراه باشد']);
-        $this->assertButtons($order, ['technician_response'], []);
-        $this->click($order, 'technician_response', ['decision' => 'reject', 'reason' => 'در این بازه مأموریت دیگری دارم']);
-        $this->assertNull($order->fresh()->technician_id);
-        $this->click($order, 'assign_technician', ['technician_id' => $techB->id]);
+        // Assignment is mandatory; the customer confirms the visit separately after approving price.
+        $this->click($order,'assign_technician',['technician_id'=>$techB->id,'note'=>'ابزار لحیم همراه باشد']);
+        $this->assertSame('accepted',$order->fresh()->workflow->assignment_status);
         $this->asTechnicianApp($techB);
-        $this->postJson("/api/technician/orders/{$order->id}/assignment", ['decision' => 'accept'])->assertOk();
-        $this->assertSame(OrderWorkflow::STAGE_VISIT, $this->stage($order));
+        $this->postJson("/api/technician/orders/{$order->id}/assignment",['decision'=>'reject','reason'=>'مأموریت دیگر'])->assertUnprocessable();
+        $this->assertSame($techB->id,$order->fresh()->technician_id);
+        $this->confirmVisit($order);
 
         // ۶ — مراجعه
         $this->assertButtons($order, ['record_set_off', 'visit_outcome'], ['record_arrival']);
@@ -224,6 +230,9 @@ class OrderWorkflowPanelE2ETest extends TestCase
         Livewire::test(ListOrders::class)
             ->callTableAction('record_offline_payment', $order, ['payment_method' => 'card_to_card', 'payment_channel' => 'in_person', 'amount' => 800000])
             ->assertHasNoTableActionErrors();
+        $this->click($order, 'close_file', [], expectError: true); // Card-to-card receipts require accounting approval.
+        $payment=\App\Models\UserTransaction::where('order_id',$order->id)->where('status',100)->latest('id')->firstOrFail();
+        app(\App\Services\OrderAccountingService::class)->review($payment,true,'وصول وجه تأیید شد',$this->admin);
         $this->click($order, 'close_file');
 
         $order->refresh();
@@ -301,7 +310,9 @@ class OrderWorkflowPanelE2ETest extends TestCase
         $this->click($order2, 'create_quote_initial', ['service_fee' => 300000, 'estimated_duration' => '۱ ساعت', 'visit_date' => now()->addDay()->toDateString(), 'visit_time' => '10 - 12', 'requires_user_approval' => false, 'send' => true]);
         $this->assertSame(OrderWorkflow::STAGE_ASSIGNMENT, $this->stage($order2), 'بدون نیاز به تأیید کاربر مستقیم به تخصیص');
         $this->click($order2, 'assign_technician', ['technician_id' => $tech->id]);
-        $this->click($order2, 'technician_response', ['decision' => 'accept']);
+        $this->confirmVisit($order2);
+        $this->click($order2, 'record_set_off');
+        $this->click($order2, 'record_arrival');
         $this->click($order2, 'visit_outcome', ['outcome' => 'user_declined', 'note' => 'کاربر هزینه‌ی کارشناسی را نپذیرفت']);
         $this->page($order2)->assertSee('کاربر با ادامه‌ی خدمت موافقت نکرده است');
         $this->assertButtons($order2, [], ['visit_outcome']);
@@ -319,14 +330,17 @@ class OrderWorkflowPanelE2ETest extends TestCase
         $this->click($order, 'decide_quote', ['decision' => 'accept', 'note' => 'تأیید تلفنی']);
         $this->click($order, 'assign_technician', ['technician_id' => $tech->id]);
 
+        $this->confirmVisit($order);
         $this->asTechnicianApp($tech);
         $this->postJson("/api/technician/orders/{$order->id}/set-off")->assertOk();
-        $this->postJson("/api/technician/orders/{$order->id}/cancel", ['technician_cancel_reason' => 'تصادف در مسیر'])->assertOk();
+        $this->postJson("/api/technician/orders/{$order->id}/cancel", ['technician_cancel_reason' => 'تصادف در مسیر'])->assertStatus(400);
+        $this->click($order, 'record_arrival');
+        $this->click($order, 'visit_outcome', ['outcome'=>'mission_failed','note'=>'تصادف در مسیر، گزارش و هماهنگی مدیریت']);
         $this->assertSame(OrderWorkflow::STAGE_ASSIGNMENT, $this->stage($order));
         $this->page($order)->assertSee('مأموریت ناموفق');
 
         $this->click($order, 'assign_technician', ['technician_id' => $tech->id, 'date' => now()->addDays(2)->toDateString(), 'time' => '14 - 16']);
-        $this->click($order, 'technician_response', ['decision' => 'accept']);
+        $this->confirmVisit($order);
         $this->click($order, 'record_set_off');
         $this->click($order, 'record_arrival');
         $this->click($order, 'visit_outcome', ['outcome' => 'mission_failed', 'note' => 'کاربر در محل حضور نداشت']);
@@ -366,7 +380,7 @@ class OrderWorkflowPanelE2ETest extends TestCase
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
         $this->assertSame($tech->id, $ready->fresh()->technician_id);
-        $this->assertSame('pending', $ready->fresh()->workflow->assignment_status);
+        $this->assertSame('accepted', $ready->fresh()->workflow->assignment_status);
 
         $this->asAdmin();
         Livewire::test(ListOrders::class)

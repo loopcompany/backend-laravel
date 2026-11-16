@@ -101,6 +101,47 @@ class OrderWorkflowTest extends TestCase
         $this->assertThrows(fn () => $this->workflow->assignTechnician($order, $technician->id), OrderWorkflowException::class, 'مجاز نیست');
     }
 
+    public function test_initial_quote_expires_at_48_hours_without_losing_its_history(): void
+    {
+        $user = $this->makeUser();
+        $order = $this->makeOrder($user);
+        $this->workflow->classify($order, ['service_type' => 'onsite_repair', 'customer_type' => 'individual']);
+        $this->workflow->approveReview($order);
+        $quote = $this->workflow->createQuote($order, OrderQuote::KIND_INITIAL, ['service_fee' => 500000]);
+        Sanctum::actingAs($user);
+
+        $this->travelTo($quote->sent_at->copy()->addHours(48)->subSecond());
+        $this->getJson('/api/orders/pending-estimate')->assertOk()->assertJsonPath('data.quote_id', $quote->id);
+
+        $this->travelTo($quote->sent_at->copy()->addHours(48));
+        $this->getJson('/api/orders/pending-estimate')->assertOk()->assertJsonPath('data', null);
+        $this->postJson("/api/orders/{$order->id}/quote/decision", ['decision' => 'accept'])->assertStatus(409);
+        $this->assertNull($order->fresh()->user_initial_accept);
+        $this->assertSame(OrderQuote::STATUS_EXPIRED, $this->workflow->customerPayload($order->fresh())['current_quote']['status']);
+        $this->assertDatabaseHas('order_quotes', ['id' => $quote->id, 'status' => OrderQuote::STATUS_SENT]);
+    }
+
+    public function test_assignment_view_is_recorded_once_and_only_for_the_assigned_technician(): void
+    {
+        $order = $this->orderReadyForAssignment();
+        $assigned = $this->makeTechnician();
+        $other = $this->makeTechnician();
+        $this->workflow->assignTechnician($order, $assigned->id);
+
+        $this->workflow->recordTechnicianView($order, $other->id);
+        $this->assertNull($order->fresh()->workflow->assignment_viewed_at);
+
+        $this->workflow->recordTechnicianView($order, $assigned->id);
+        $firstView = $order->fresh()->workflow->assignment_viewed_at;
+        $this->assertNotNull($firstView);
+        $this->travel(5)->minutes();
+        $this->workflow->recordTechnicianView($order, $assigned->id);
+        $this->assertEquals($firstView, $order->fresh()->workflow->assignment_viewed_at);
+
+        $this->workflow->assignTechnician($order->fresh(), $other->id);
+        $this->assertNull($order->fresh()->workflow->assignment_viewed_at);
+    }
+
     public function test_initial_quote_rejection_keeps_order_on_hold_and_new_version_supersedes(): void
     {
         $user = $this->makeUser();
@@ -147,15 +188,17 @@ class OrderWorkflowTest extends TestCase
         $order->refresh();
         $this->assertSame($technician->id, $order->technician_id);
         $this->assertSame(1, (int) $order->status);
-        $this->assertSame('pending', $order->workflow->assignment_status);
+        $this->assertSame('accepted', $order->workflow->assignment_status);
 
         // ۵-۴ — تأیید مأموریت از اپ تکنسین
         Sanctum::actingAs($technician);
         $this->getJson("/api/technician/orders/{$order->id}/detail")->assertOk()
-            ->assertJsonPath('workflow.assignment_status', 'pending')
+            ->assertJsonPath('workflow.assignment_status', 'accepted')
             ->assertJsonPath('workflow.assignment_note', 'هویه همراه داشته باشد');
         $this->postJson("/api/technician/orders/{$order->id}/assignment", ['decision' => 'accept'])->assertOk();
         $this->assertSame(OrderWorkflow::STAGE_VISIT, $order->fresh()->workflow_stage);
+
+        $this->workflow->decideCustomerVisit($order->fresh(), 'accept');
 
         // ۶ — نتیجه: نیاز به قیمت جدید؛ ۷-۱ پیشنهاد تکنسین
         $this->postJson("/api/technician/orders/{$order->id}/visit-outcome", ['outcome' => 'needs_requote'])->assertStatus(422);
@@ -202,22 +245,15 @@ class OrderWorkflowTest extends TestCase
         $this->assertTrue($order->stageLogs()->where('action', 'file_closed')->exists());
     }
 
-    public function test_technician_rejection_returns_order_for_reassignment(): void
+    public function test_technician_cannot_reject_mandatory_assignment(): void
     {
         $order = $this->orderReadyForAssignment();
         $technician = $this->makeTechnician();
         $this->workflow->assignTechnician($order, $technician->id);
-
         Sanctum::actingAs($technician);
-        $this->postJson("/api/technician/orders/{$order->id}/assignment", ['decision' => 'reject'])->assertStatus(422);
-        $this->postJson("/api/technician/orders/{$order->id}/assignment", ['decision' => 'reject', 'reason' => 'خارج از محدوده'])->assertOk();
-
-        $order->refresh();
-        $this->assertNull($order->technician_id);
-        $this->assertSame(0, (int) $order->status);
-        $this->assertSame(OrderWorkflow::STAGE_ASSIGNMENT, $order->workflow_stage);
-        $this->assertSame('rejected', $order->workflow->assignment_status);
-        $this->assertSame('technician', $order->stageLogs()->where('action', 'technician_rejected')->first()->actor_type);
+        $this->postJson("/api/technician/orders/{$order->id}/assignment", ['decision'=>'reject', 'reason'=>'خارج از محدوده'])->assertStatus(422);
+        $this->assertSame($technician->id, $order->fresh()->technician_id);
+        $this->assertSame('accepted', $order->fresh()->workflow->assignment_status);
     }
 
     public function test_failed_mission_goes_back_to_assignment_for_recoordination(): void
@@ -226,6 +262,7 @@ class OrderWorkflowTest extends TestCase
         $technician = $this->makeTechnician();
         $this->workflow->assignTechnician($order, $technician->id);
         $this->workflow->technicianResponse($order->fresh(), true);
+        $this->workflow->decideCustomerVisit($order->fresh(), 'accept');
         $this->workflow->recordSetOff($order->fresh());
         $this->workflow->recordArrival($order->fresh());
 
@@ -305,6 +342,7 @@ class OrderWorkflowTest extends TestCase
         $order = $this->orderReadyForAssignment();
         $technician = $this->makeTechnician();
         $this->workflow->assignTechnician($order, $technician->id);
+        $this->workflow->decideCustomerVisit($order->fresh(), 'accept');
         Sanctum::actingAs($technician);
         $this->postJson("/api/technician/orders/{$order->id}/set-off")->assertOk();
         $this->assertSame(OrderWorkflow::STAGE_VISIT, $order->fresh()->workflow_stage, 'حرکت = تأیید ضمنی مأموریت');
@@ -315,30 +353,19 @@ class OrderWorkflowTest extends TestCase
         $this->assertSame('done_onsite', $order->workflow->field_result);
     }
 
-    public function test_technician_withdraw_after_set_off_is_failed_mission_needing_recoordination(): void
+    public function test_technician_cannot_withdraw_after_set_off(): void
     {
-        $order = $this->orderReadyForAssignment();
-        $order2 = $this->orderReadyForAssignment();
-        $technician = $this->makeTechnician();
-        $this->workflow->assignTechnician($order, $technician->id);
-        $this->workflow->assignTechnician($order2, $technician->id);
-
+        $order=$this->orderReadyForAssignment();
+        $technician=$this->makeTechnician();
+        $this->workflow->assignTechnician($order,$technician->id);
+        $this->workflow->decideCustomerVisit($order->fresh(),'accept');
         Sanctum::actingAs($technician);
         $this->postJson("/api/technician/orders/{$order->id}/set-off")->assertOk();
-        $this->postJson("/api/technician/orders/{$order->id}/cancel", ['technician_cancel_reason' => 'کاربر پاسخ نمی‌دهد'])->assertOk();
-
-        $order->refresh();
-        $this->assertSame(OrderWorkflow::STAGE_ASSIGNMENT, $order->workflow_stage);
-        $this->assertSame(0, (int) $order->status);
-        $this->assertNull($order->technician_id);
-        $this->assertNull($order->set_off_at);
-        $this->assertSame('mission_failed', $order->workflow->visit_outcome);
-        $this->assertSame('failed_needs_recoordination', $order->workflow->field_result);
-
-        // پس از شروع خدمت انصراف ممکن نیست
-        $order2->refresh()->forceFill(['started_at' => now()])->saveQuietly();
-        $this->postJson("/api/technician/orders/{$order2->id}/cancel", ['technician_cancel_reason' => 'x'])->assertStatus(409);
-        $this->assertSame($technician->id, $order2->fresh()->technician_id);
+        $response=$this->postJson("/api/technician/orders/{$order->id}/cancel",['technician_cancel_reason'=>'کاربر پاسخ نمی‌دهد']);
+        $this->assertFalse($response->isSuccessful(),$response->getContent());
+        $this->assertSame($technician->id,$order->fresh()->technician_id);
+        $this->assertNotNull($order->fresh()->set_off_at);
+        $this->assertSame(OrderWorkflow::STAGE_VISIT,$order->fresh()->workflow_stage);
     }
 
     public function test_technician_pricing_authority_sends_requote_directly_within_limit(): void
@@ -347,6 +374,7 @@ class OrderWorkflowTest extends TestCase
         $order = $this->orderReadyForAssignment();
         $this->workflow->assignTechnician($order, $technician->id);
         $this->workflow->technicianResponse($order->fresh(), true);
+        $this->workflow->decideCustomerVisit($order->fresh(), 'accept');
         $this->workflow->recordVisitOutcome($order->fresh(), 'needs_requote', 'نیاز به قطعه');
         Sanctum::actingAs($technician);
 

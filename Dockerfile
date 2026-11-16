@@ -45,6 +45,7 @@ RUN apt-get update \
         libjpeg62-turbo-dev \
         libpng-dev \
         libzip-dev \
+        poppler-utils \
         supervisor \
         unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \

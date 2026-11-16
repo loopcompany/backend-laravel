@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PromoCode extends Model
 {
     protected $fillable = [
+        'category',
         'code',
         'discount_percent',
         'is_active',
@@ -19,6 +20,8 @@ class PromoCode extends Model
         'is_active' => 'boolean',
         'expires_at' => 'datetime',
     ];
+
+    public function deliveries() { return $this->hasMany(CodeDelivery::class,'code_id')->where('code_type',self::class); }
 
     public function usages(): HasMany
     {

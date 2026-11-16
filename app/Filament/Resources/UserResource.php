@@ -566,6 +566,7 @@ class UserResource extends Resource
 
             ])
             ->actions([
+                \App\Filament\Actions\IssueRegistrationCode::make(fn (User $record) => static::canEdit($record)),
                 // مأمور خرید: کد معرف چندبارمصرف + درصد پورسانت (کیف پول مأمور خرید در اپ)
                 Tables\Actions\Action::make('referral_agent')
                     ->label(fn(User $record) => $record->is_referral_agent ? 'مأمور خرید ✓' : 'مأمور خرید')

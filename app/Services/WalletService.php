@@ -159,64 +159,13 @@ class WalletService
     /**
      * ثبت تراکنش ناموفق
      */
-    public function recordFailedCharge(int $userId, float $amount, string $referenceId, ?string $linkingUrl = null): array
+    public function recordFailedCharge(int $transactionId, string $trackId): void
     {
-        try {
-            // پیدا کردن تراکنش pending
-            $pendingTransaction = $this->walletRepo->findLatestPendingTransaction();
-
-            if ($pendingTransaction && $pendingTransaction->user_id == $userId) {
-                // به‌روزرسانی تراکنش pending به ناموفق
-                $this->walletRepo->updateTransactionStatus(
-                    $pendingTransaction->id,
-                    -200, // ناموفق
-                    $referenceId
-                );
-
-                ProjectLogger::write(ProjectLogger::PAYMENTS, 'warning', 'wallet.charge.failed', [
-                    'user_id' => $userId,
-                    'amount' => $amount,
-                    'reference_id' => $referenceId,
-                    'transaction_id' => $pendingTransaction->id
-                ]);
-            } else {
-                // اگر تراکنش pending پیدا نشد، یک تراکنش ناموفق جدید ثبت کن
-                $transaction = $this->walletRepo->createTransaction([
-                    'user_id' => $userId,
-                    'price' => $amount,
-                    'referenceId' => $referenceId,
-                    'type' => 1, // شارژ کیف پول
-                    'status' => -200, // ناموفق
-                    'description' => 'شارژ ناموفق کیف پول',
-                    'linking_url' => $linkingUrl,
-                ]);
-
-                ProjectLogger::write(ProjectLogger::PAYMENTS, 'warning', 'wallet.charge.failed.new_transaction', [
-                    'user_id' => $userId,
-                    'amount' => $amount,
-                    'reference_id' => $referenceId,
-                    'transaction_id' => $transaction->id
-                ]);
-            }
-
-            return [
-                'success' => false,
-                'message' => 'تراکنش ناموفق بود.',
-                'error_code' => 'TRANSACTION_FAILED'
-            ];
-
-        } catch (\Exception $e) {
-            ProjectLogger::write(ProjectLogger::PAYMENTS, 'error', 'wallet.charge.failure_record.failed', [
-                'user_id' => $userId,
-                'amount' => $amount,
-                'error' => $e->getMessage()
+        if ($this->walletRepo->failPendingCharge($transactionId, $trackId)) {
+            ProjectLogger::write(ProjectLogger::PAYMENTS, 'warning', 'wallet.charge.failed', [
+                'transaction_id' => $transactionId,
+                'reference_id' => $trackId,
             ]);
-
-            return [
-                'success' => false,
-                'message' => 'خطا در ثبت تراکنش',
-                'error_code' => 'RECORD_ERROR'
-            ];
         }
     }
 
@@ -298,18 +247,19 @@ class WalletService
         try {
             DB::beginTransaction();
 
-            $transaction = $this->walletRepo->findTransactionById($transactionId);
+            $transaction = $this->walletRepo->findTransactionById($transactionId, lock: true);
 
-            if (!$transaction || $transaction->status != 0) {
+            if (!$transaction || (int) $transaction->type !== 1 || (int) $transaction->status !== 0) {
                 DB::rollBack();
                 return ['success' => false, 'message' => 'تراکنش نامعتبر است.'];
             }
 
             // افزایش موجودی
-            $this->walletRepo->increaseWallet($transaction->user_id, (float) $transaction->price);
-
-            // به‌روزرسانی تراکنش به موفق (100)
-            $this->walletRepo->updateTransactionStatus($transaction->id, 100, $referenceId);
+            if (!$this->walletRepo->increaseWallet($transaction->user_id, (float) $transaction->price)
+                || !$this->walletRepo->updateTransactionStatus($transaction->id, 100, $referenceId)) {
+                DB::rollBack();
+                return ['success' => false, 'message' => 'خطا در ثبت شارژ کیف پول.'];
+            }
 
             DB::commit();
 

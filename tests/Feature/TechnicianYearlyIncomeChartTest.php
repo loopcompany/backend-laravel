@@ -11,21 +11,21 @@ use Tests\TestCase;
 
 class TechnicianYearlyIncomeChartTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Concerns\MakesPeople;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_returns_yearly_income_chart_with_correct_structure()
     {
         // Arrange: Create technician
-        $technician = Technician::factory()->create([
+        $technician = $this->makeTechnician([
             'wallet' => 50000,
         ]);
 
         // Create some transactions for different months
-        $order = Order::factory()->create();
+        $order = $this->makeOrder($this->makeUser());
         
         // فروردین 1403
-        TechnicianTransaction::create([
+        TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => $order->id,
             'price' => 10000,
@@ -36,7 +36,7 @@ class TechnicianYearlyIncomeChartTest extends TestCase
         ]);
 
         // اردیبهشت 1403
-        TechnicianTransaction::create([
+        TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => $order->id,
             'price' => 15000,
@@ -47,7 +47,7 @@ class TechnicianYearlyIncomeChartTest extends TestCase
         ]);
 
         // Authenticate
-        Sanctum::actingAs($technician, ['*'], 'technician');
+        Sanctum::actingAs($technician);
 
         // Act
         $response = $this->getJson('/api/technician/transactions/yearly-income-chart?year=1403');
@@ -102,14 +102,14 @@ class TechnicianYearlyIncomeChartTest extends TestCase
         $this->assertEquals(25000, $response->json('data.yearly_summary.total_income'));
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_filters_only_successful_transactions()
     {
-        $technician = Technician::factory()->create();
-        $order = Order::factory()->create();
+        $technician = $this->makeTechnician();
+        $order = $this->makeOrder($this->makeUser());
 
         // موفق
-        TechnicianTransaction::create([
+        TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => $order->id,
             'price' => 10000,
@@ -120,7 +120,7 @@ class TechnicianYearlyIncomeChartTest extends TestCase
         ]);
 
         // ناموفق - نباید شمرده بشه
-        TechnicianTransaction::create([
+        TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => $order->id,
             'price' => 5000,
@@ -130,7 +130,7 @@ class TechnicianYearlyIncomeChartTest extends TestCase
             'created_at' => '2024-03-22',
         ]);
 
-        Sanctum::actingAs($technician, ['*'], 'technician');
+        Sanctum::actingAs($technician);
 
         $response = $this->getJson('/api/technician/transactions/yearly-income-chart?year=1403');
 
@@ -141,14 +141,14 @@ class TechnicianYearlyIncomeChartTest extends TestCase
         $this->assertEquals(10000, $farvardin['total_income']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_only_includes_type_1_transactions()
     {
-        $technician = Technician::factory()->create();
-        $order = Order::factory()->create();
+        $technician = $this->makeTechnician();
+        $order = $this->makeOrder($this->makeUser());
 
         // Type 1 - واریز از سفارش
-        TechnicianTransaction::create([
+        TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => $order->id,
             'price' => 10000,
@@ -159,7 +159,7 @@ class TechnicianYearlyIncomeChartTest extends TestCase
         ]);
 
         // Type 2 - برداشت - نباید شمرده بشه
-        TechnicianTransaction::create([
+        TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => $order->id,
             'price' => 3000,
@@ -169,7 +169,7 @@ class TechnicianYearlyIncomeChartTest extends TestCase
             'created_at' => '2024-03-22',
         ]);
 
-        Sanctum::actingAs($technician, ['*'], 'technician');
+        Sanctum::actingAs($technician);
 
         $response = $this->getJson('/api/technician/transactions/yearly-income-chart?year=1403');
 

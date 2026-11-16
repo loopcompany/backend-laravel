@@ -28,31 +28,18 @@ class RoleResource extends Resource
 
     protected static ?string $pluralModelLabel = 'سمت‌ها';
 
-    // فقط سوپر ادمین سمت‌ها را مدیریت کند
-    public static function canViewAny(): bool
-    {
-        return auth('admin')->user()?->hasRole('super-admin') ?? false;
-    }
+    protected static function getViewPermission(): string { return 'view-roles'; }
+    protected static function getCreatePermission(): string { return 'create-roles'; }
+    protected static function getEditPermission(): string { return 'edit-roles'; }
+    protected static function getDeletePermission(): string { return 'delete-roles'; }
+    public static function canViewAny(): bool { return \App\Services\AdminDelegation::can('view-roles'); }
+    public static function canCreate(): bool { return \App\Services\AdminDelegation::can('create-roles'); }
+    public static function canEdit($record): bool { return \App\Services\AdminDelegation::can('edit-roles') && \App\Services\AdminDelegation::editable($record); }
+    public static function canDelete($record): bool { return \App\Services\AdminDelegation::can('delete-roles') && \App\Services\AdminDelegation::editable($record) && $record->name!=='super-admin'; }
+    public static function canDeleteAny(): bool { return false; }
+    public static function shouldRegisterNavigation(): bool { return static::canViewAny(); }
 
-    public static function canCreate(): bool
-    {
-        return auth('admin')->user()?->hasRole('super-admin') ?? false;
-    }
-
-    public static function canEdit($record): bool
-    {
-        return auth('admin')->user()?->hasRole('super-admin') ?? false;
-    }
-
-    public static function canDelete($record): bool
-    {
-        return auth('admin')->user()?->hasRole('super-admin') ?? false;
-    }
-
-    public static function shouldRegisterNavigation(): bool
-    {
-        return static::canViewAny();
-    }
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder { return parent::getEloquentQuery()->where('guard_name','admin'); }
 
     public static function form(Form $form): Form
     {
@@ -62,15 +49,13 @@ class RoleResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label('نام سمت')
+                            ->rule(fn()=>function ($attribute,$value,$fail) { if ($value==='super-admin' && !\App\Services\AdminDelegation::root()) $fail('سمت سوپرادمین محفوظ است.'); })
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
                         Forms\Components\Select::make('guard_name')
-                            ->label('نوع گارد')
-                            ->options([
-                                'admin' => 'Admin',
-                                'web' => 'Web',
-                            ])
+                            ->label('نوع کاربری')
+                            ->options(['admin'=>'ادمین'])->disabled()->dehydrated()
                             ->default('admin')
                             ->required(),
                     ])->columns(2),
@@ -80,9 +65,11 @@ class RoleResource extends Resource
                         Forms\Components\CheckboxList::make('permissions')
                             ->label('انتخاب مجوزها')
                             ->relationship('permissions', 'name')
-                            ->options(Permission::where('guard_name', 'admin')->pluck('fa_name', 'id'))
+                            ->options(fn()=>Permission::whereIn('id',\App\Services\AdminDelegation::permissionIds())->get()->mapWithKeys(fn($permission)=>[$permission->id=>$permission->fa_name ?: $permission->name]))
+                            ->disabled(fn()=>!\App\Services\AdminDelegation::can('assign-permissions'))
+                            ->rule(fn()=>function ($attribute,$value,$fail) { if (\App\Services\AdminDelegation::can('assign-permissions') && !\App\Services\AdminDelegation::checkIds((array)$value,\App\Services\AdminDelegation::permissionIds())) $fail('واگذاری مجوز خارج از اختیارات شما مجاز نیست.'); })
                             ->searchable()
-                             
+                            ->bulkToggleable()
                             ->columns(3),
                     ]),
             ]);
@@ -103,7 +90,7 @@ class RoleResource extends Resource
                         'primary' => 'moderator',
                     ]),
                 Tables\Columns\TextColumn::make('guard_name')
-                    ->label('نوع گارد')
+                    ->label('نوع کاربری')
                     ->badge()
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('permissions_count')
@@ -124,7 +111,7 @@ class RoleResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('guard_name')
-                    ->label('نوع گارد')
+                    ->label('نوع کاربری')
                     ->options([
                         'admin' => 'Admin',
                         'web' => 'Web',

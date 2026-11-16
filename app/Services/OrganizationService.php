@@ -349,23 +349,13 @@ class OrganizationService
     {
         $steps = [];
 
-        // اگر قرارداد آپلود نشده
-        if ($organization->isContractNotUploaded()) {
-            $steps[] = 'upload_contract';
-        }
-
-        // اگر قرارداد رد شده
-        if ($organization->isContractRejected()) {
-            $steps[] = 'reupload_contract';
-        }
-
         // اگر پروفایل رد شده
         if ($organization->isProfileRejected()) {
             $steps[] = 'update_profile';
         }
 
         // اگر هر کدام pending هستند
-        if ($organization->isProfilePending() || $organization->isContractPending()) {
+        if ($organization->isProfilePending()) {
             $steps[] = 'wait_for_approval';
         }
 
@@ -392,18 +382,8 @@ class OrganizationService
             return 'پروفایل شما رد شده است. لطفا اطلاعات خود را اصلاح کنید.';
         }
 
-        // اگر قرارداد رد شده
-        if ($organization->isContractRejected()) {
-            return 'قرارداد شما رد شده است. لطفا مجددا قرارداد را آپلود کنید.';
-        }
-
-        // اگر قرارداد آپلود نشده
-        if ($organization->isContractNotUploaded()) {
-            return 'لطفا قرارداد امضا شده را آپلود کنید.';
-        }
-
         // اگر در حال بررسی هستند
-        if ($organization->isProfilePending() || $organization->isContractPending()) {
+        if ($organization->isProfilePending()) {
             return 'اطلاعات شما در حال بررسی توسط ادمین است. لطفا منتظر بمانید.';
         }
 

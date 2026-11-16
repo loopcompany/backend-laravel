@@ -8,6 +8,24 @@ use Illuminate\Support\Facades\Log;
 
 class SmsService
 {
+    /** Send the separately issued code; never reuse a password or user-ID template. */
+    public function sendManagedCode(string $phone, string $code, string $label): bool
+    {
+        if (!config('smsir.enabled')) return false;
+        $line = config('smsir.line-number');
+        $key = config('smsir.api-key');
+        if (!$line || !is_numeric($line) || !$key || $key === 'Your api key') return false;
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders(['X-API-KEY'=>$key])->timeout(15)->post('https://api.sms.ir/v1/send/bulk', [
+                'lineNumber'=>(int)$line, 'messageText'=>"کاربر گرامی لوپ؛ {$label} شما: {$code}", 'mobiles'=>[$phone], 'sendDateTime'=>null,
+            ]);
+            return $response->successful() && (int)$response->json('status') === 1;
+        } catch (\Throwable $e) {
+            Log::warning('Managed code SMS failed', ['exception_type'=>$e::class]);
+            return false;
+        }
+    }
+
     /**
      * Generate a 6-digit verification code
      */
@@ -77,6 +95,7 @@ class SmsService
      */
     private function sendSmsCode(string $phone, string $code, string $type = 'verification', ?string $hashApp = ''): bool
     {
+        if (!config('smsir.enabled', true)) return true;
         try {
             // Get template ID and parameters based on type
             $templateId = match ($type) {
@@ -150,6 +169,7 @@ class SmsService
      */
     private function sendSmsWithTemplate(string $phone, int $templateId, array $parameters): bool
     {
+        if (!config('smsir.enabled', true)) return true;
         try {
             $apiKey = config('smsir.api-key');
 

@@ -691,6 +691,8 @@ class OrderController extends Controller
             $pay_type = 'prepay';
         }
 
+        $amount = (int) $amount; // همان مبلغ تومانی که در فاکتور درگاه ارسال می‌شود.
+
         // بررسی حداقل مبلغ
         if ($amount < 1000) {
             return response()->json([
@@ -715,6 +717,7 @@ class OrderController extends Controller
                 'user_id' => $user->id,
                 'price' => $amount,
                 'type' => 2, // پرداخت سفارش از طریق درگاه
+                'order_payment_kind' => $pay_type,
                 'payment_method' => 'in_app',
                 'payment_channel' => 'app',
                 'status' => 0, // در انتظار
@@ -843,7 +846,7 @@ class OrderController extends Controller
 
             // پرداخت ناموفق از سمت درگاه
             if ($success != '1' && $success !== 'true') {
-                $this->walletRepo->updateTransactionStatus($transaction->id, -200, $trackId);
+                UserTransaction::whereKey($transaction->id)->where('status', 0)->update(['status' => -200]);
 
                 Log::warning('پرداخت سفارش ناموفق', [
                     'order_id' => $orderId,
@@ -877,23 +880,22 @@ class OrderController extends Controller
             DB::beginTransaction();
 
             try {
-                $pay_type = 'order';
+                $transaction = UserTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+                if ((int) $transaction->status === 100) {
+                    DB::commit();
+                    return redirect()->route('redirect', ['linkingUri' => $transaction->linking_url, 'status' => 'OK']);
+                }
+                $order = Order::query()->lockForUpdate()->findOrFail($orderId);
+                // تراکنش‌های قدیمی نوع پرداخت را در توضیحی که هنگام ساخت لینک ثبت شده نگه می‌دارند.
+                $pay_type = $transaction->order_payment_kind
+                    ?? (str_starts_with((string) $transaction->description, 'پیش پرداخت سفارش شماره ') ? 'prepay' : 'order');
 
                 // Load discountUse برای محاسبه تخفیف
                 $order->load('discountUse.discount_code.club');
 
                 // محاسبه مبلغ قبل از تخفیف
-                if (
-                    !is_null($order->loop_cost_estimate) && $order->loop_cost_estimate > 0 &&
-                    !is_null($order->prepayment) && $order->prepayment > 0 &&
-                    $order->prepayment_payment_status == 0
-                ) {
-                    $totalBeforeDiscount = $order->loop_cost_estimate * $order->prepayment / 100;
-                    $pay_type = 'prepay';
-                } else {
-                    $basePrice = $order->technician_price ?? $order->pakar_price ?? 0;
-                    $totalBeforeDiscount = $basePrice + ($order->extra_price ?? 0);
-                }
+                $basePrice = $order->technician_price ?? $order->pakar_price ?? 0;
+                $totalBeforeDiscount = $basePrice + ($order->extra_price ?? 0);
 
                 $discountAmount = 0;
                 $promoDiscountAmount = 0;
@@ -918,7 +920,7 @@ class OrderController extends Controller
                 // به‌روزرسانی وضعیت پرداخت سفارش
                 if ($pay_type == 'prepay') {
                     $order->prepayment_payment_status = 1;
-                    $order->user_accept_date = Carbon::now();
+                    $order->user_accept_date ??= Carbon::now();
                 } else {
                     $order->payment_status = 1;
                 }

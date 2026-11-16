@@ -25,9 +25,9 @@ class DigitalBusinessCardEditorTest extends TestCase
     {
         parent::setUp();
 
-        Permission::create(['name' => 'create-digital-business-cards', 'guard_name' => 'admin']);
-        Permission::create(['name' => 'view-digital-business-cards', 'guard_name' => 'admin']);
-        Permission::create(['name' => 'edit-digital-business-cards', 'guard_name' => 'admin']);
+        Permission::firstOrCreate(['name' => 'create-digital-business-cards', 'guard_name' => 'admin']);
+        Permission::firstOrCreate(['name' => 'view-digital-business-cards', 'guard_name' => 'admin']);
+        Permission::firstOrCreate(['name' => 'edit-digital-business-cards', 'guard_name' => 'admin']);
     }
 
     private function createAdmin(array $permissions = []): Admin
@@ -199,6 +199,7 @@ class DigitalBusinessCardEditorTest extends TestCase
         ]);
 
         $payload = [
+            'slug' => 'my-card',
             'title' => 'My Card',
             'des' => 'Description',
             'logo' => '/uploads/logo.png',
@@ -381,6 +382,7 @@ class DigitalBusinessCardEditorTest extends TestCase
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
 
         $response = $this->actingAs($admin, 'admin')->post('/admin/cards', [
+            'slug' => 'new-card',
             'title' => 'New card',
             'des' => 'Created from admin',
             'logo' => UploadedFile::fake()->image('logo.jpg'),

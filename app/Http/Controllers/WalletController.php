@@ -103,7 +103,7 @@ class WalletController extends Controller
 
             // اگر پرداخت ناموفق بود
             if ($success != '1') {
-                $this->walletService->recordFailedCharge($transaction->user_id, (float) $transaction->price, $trackId, $transaction->linking_url);
+                $this->walletService->recordFailedCharge($transaction->id, $trackId);
                 return redirect()->route('redirect', ['linkingUri' => $transaction->linking_url, 'status' => 'NOK'])->with('message', 'پرداخت ناموفق بود.');
             }
 

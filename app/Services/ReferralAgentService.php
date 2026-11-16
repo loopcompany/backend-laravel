@@ -37,6 +37,7 @@ class ReferralAgentService
 
         $code = ReferralCode::with('user')->find($order->referral_code_id);
         $agent = $code?->user;
+        if ($code?->policy_version) return $this->syncManaged($order,$code);
 
         if (!$agent || !$agent->is_referral_agent || (int) $agent->id === (int) $order->user_id) {
             return null;
@@ -65,6 +66,40 @@ class ReferralAgentService
         return $commission;
     }
 
+    public function settleManual(ReferralCommission $commission, int $amount): void
+    {
+        DB::transaction(function () use ($commission,$amount) {
+            User::lockForUpdate()->findOrFail($commission->user_id);
+            $commission=ReferralCommission::lockForUpdate()->findOrFail($commission->id);
+            if ($commission->settled_at || !$commission->referralCode?->policy_version || $amount < 0) abort(422);
+            $commission->update(['manual_override_amount'=>$amount,'commission_amount'=>$amount,'calculation_note'=>'مبلغ دستی مدیریت']);
+            $this->syncForOrder($commission->order);
+        });
+    }
+
+    private function syncManaged(Order $order, ReferralCode $code): ?ReferralCommission
+    {
+        return DB::transaction(function () use ($order,$code) {
+            // Same user lock as withdraw(): settlement cannot change a balance mid-withdrawal.
+            $owner = User::lockForUpdate()->find($code->user_id);
+            if (!$owner || (int)$owner->id !== (int)$order->user_id || (int)$code->used_order_id !== (int)$order->id) return null;
+            $commission = ReferralCommission::firstOrNew(['order_id'=>$order->id]);
+            // Freeze credited amounts; later edits cannot silently remove spendable money.
+            if ($commission->settled_at) return $commission;
+            $service = max(0,(int)($order->technician_price ?? $order->pakar_price ?? 0));
+            $goods = max(0,(int)$order->extra_price);
+            $procurement = $order->procurement()->first();
+            if ($procurement) $goods += (int)$procurement->total_amount;
+            $amount = $commission->manual_override_amount !== null ? $commission->manual_override_amount : ($code->commission_mode === 'manual' ? $code->manual_commission_amount : app(ReferralCommissionTable::class)->calculate($service,$goods));
+            $closed = (int)$order->status === 2 && (int)$order->payment_status === 1 && $order->finished_at && (!$procurement || $procurement->remaining_paid_at);
+            $status = in_array((int)$order->status,self::CANCELED_ORDER_STATUSES,true) ? ReferralCommission::STATUS_CANCELED : (($closed && $amount !== null) ? ReferralCommission::STATUS_AVAILABLE : ReferralCommission::STATUS_PENDING);
+            $commission->fill(['user_id'=>$owner->id,'referral_code_id'=>$code->id,'order_amount'=>$service+$goods,'commission_percent'=>0,
+                'commission_amount'=>$amount ?? 0,'status'=>$status,'settled_at'=>$status === ReferralCommission::STATUS_AVAILABLE ? now() : null,
+                'calculation_note'=>$amount === null ? 'مبلغ در جدول نیست؛ تعیین پورسانت دستی توسط مدیریت لازم است.' : (($commission->manual_override_amount !== null || $code->commission_mode === 'manual') ? 'مبلغ دستی مدیریت' : 'ردیف دقیق جدول کارفرما')])->save();
+            return $commission;
+        });
+    }
+
     /** هم‌گام‌سازی پورسانت‌های در انتظار یک مأمور (برای تغییر وضعیت‌هایی که از query builder ثبت شده‌اند). */
     public function refreshPending(User $agent): void
     {
@@ -90,6 +125,7 @@ class ReferralAgentService
             'is_agent' => true,
             'referral_code' => $code?->code,
             'commission_percent' => (int) ($code?->commission_percent ?? 0),
+            'commission_mode' => $code?->policy_version ? $code->commission_mode : 'percent',
             'available_balance' => $balances['available'],
             'pending_balance' => $balances['pending'],
             'total_earned' => $balances['earned'],
@@ -214,7 +250,7 @@ class ReferralAgentService
 
     public function agentCode(User $user): ?ReferralCode
     {
-        return ReferralCode::query()->where('user_id', $user->id)->where('multi_use', true)->orderBy('id')->first();
+        return ReferralCode::query()->where('user_id', $user->id)->where(fn ($q)=>$q->where('multi_use',true)->orWhere('policy_version',ReferralCode::CURRENT_POLICY))->orderByDesc('id')->first();
     }
 
     public static function normalizeSheba(?string $sheba): ?string

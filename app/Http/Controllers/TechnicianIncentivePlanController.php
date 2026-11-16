@@ -1,161 +1,45 @@
 <?php
-
 namespace App\Http\Controllers;
-
-use App\Models\IncentivePlan;
-use App\Models\Technician;
+use App\Models\{IncentivePlan,Technician};
+use App\Services\TechnicianIncentiveService;
 use Illuminate\Http\Request;
-
 class TechnicianIncentivePlanController extends Controller
 {
-    /**
-     * دریافت لیست طرح‌های تشویقی تکنسین
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
+    private function technician(Request $request): Technician
+    {
+        $actor=$request->user();
+        abort_unless($actor instanceof Technician,403);
+        return $actor;
+    }
+    private function data(IncentivePlan $plan): array
+    {
+        $expired=$plan->status !== IncentivePlan::STATUS_USED && $plan->end_at && $plan->end_at->lte(now());
+        return array_merge($plan->only(['id','description','status','benefit_type','amount','benefit_location','requested_at','redeemed_at','created_at','updated_at','end_at']),[
+            'benefit_label'=>$plan->benefit_type === 'legacy' ? 'طرح تشویقی' : (IncentivePlan::BENEFITS[$plan->benefit_type] ?? 'طرح تشویقی'),
+            'benefit_code'=>$plan->requested_at ? $plan->benefit_code : null,
+            'status_label'=>$expired ? 'Expired' : $plan->status_label,
+            'can_request'=>!$expired && $plan->status === IncentivePlan::STATUS_PENDING && !$plan->requested_at && $plan->benefit_type !== 'legacy',
+        ]);
+    }
     public function index(Request $request)
     {
-        try {
-            // دریافت تکنسین لاگین شده
-            $technician = auth('sanctum')->user();
-            
-            // بررسی احراز هویت
-            if (!$technician instanceof Technician) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'کاربر احراز هویت نشده است.',
-                ], 401);
-            }
-
-            // فیلتر بر اساس وضعیت (اختیاری)
-            $status = $request->query('status');
-
-            // دریافت طرح‌های تشویقی تکنسین
-            $query = IncentivePlan::where('technician_id', $technician->id)
-                ->orderBy('created_at', 'desc');
-
-            // اعمال فیلتر وضعیت (در صورت وجود)
-            if ($status !== null && in_array($status, [0, 1, '0', '1'])) {
-                $query->where('status', (int)$status);
-            }
-
-            $plans = $query->get()->map(function ($plan) {
-                $isExpired = $plan->end_at && now()->isAfter($plan->end_at);
-                
-                return [
-                    'id' => $plan->id,
-                    'description' => $plan->description,
-                    'end_at' => $plan->end_at?->format('Y-m-d H:i:s'),
-                    'status' => $plan->status,
-                    'status_label' => $isExpired ? 'Expired' : $this->getStatusLabel($plan->status),
-                    'created_at' => $plan->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $plan->updated_at->format('Y-m-d H:i:s'),
-                ];
-            });
-
-            // آمار طرح‌ها
-            $statistics = [
-                'total' => IncentivePlan::where('technician_id', $technician->id)->count(),
-                'active' => IncentivePlan::where('technician_id', $technician->id)
-                    ->where('status', IncentivePlan::STATUS_PENDING)
-                    ->where(function($q) {
-                        $q->whereNull('end_at')->orWhere('end_at', '>', now());
-                    })
-                    ->count(),
-                'used' => IncentivePlan::where('technician_id', $technician->id)
-                    ->where('status', IncentivePlan::STATUS_USED)->count(),
-                'expired' => IncentivePlan::where('technician_id', $technician->id)
-                    ->whereNotNull('end_at')
-                    ->where('end_at', '<', now())->count(),
-            ];
-
-            return response()->json([
-                'success' => true,
-                'message' => 'لیست طرح‌های تشویقی با موفقیت دریافت شد.',
-                'data' => $plans,
-                'statistics' => $statistics,
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'خطا در دریافت لیست طرح‌های تشویقی.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        $technician=$this->technician($request);
+        $query=IncentivePlan::where('technician_id',$technician->id)->latest('id');
+        if ($request->filled('status')) $query->where('status',$request->validate(['status'=>'integer|in:0,1,2'])['status']);
+        $plans=$query->get();
+        return response()->json(['success'=>true,'data'=>$plans->map(fn ($p)=>$this->data($p)), 'statistics'=>[
+            'total'=>$plans->count(),'active'=>$plans->filter(fn ($p)=>$p->status===0 && (!$p->end_at || $p->end_at->gt(now())))->count(),
+            'used'=>$plans->where('status',1)->count(),'expired'=>$plans->filter(fn ($p)=>$p->status!==1 && $p->end_at && $p->end_at->lte(now()))->count(),
+        ]]);
     }
-
-    /**
-     * نمایش جزئیات یک طرح تشویقی خاص
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function show(Request $request, int $id)
+    public function show(Request $request,int $id)
     {
-        try {
-            // دریافت تکنسین لاگین شده
-            $technician = auth('sanctum')->user();
-            
-            // بررسی احراز هویت
-            if (!$technician instanceof Technician) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'کاربر احراز هویت نشده است.',
-                ], 401);
-            }
-
-            // جستجوی طرح با بررسی مالکیت
-            $plan = IncentivePlan::where('id', $id)
-                ->where('technician_id', $technician->id)
-                ->first();
-
-            if (!$plan) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'طرح تشویقی مورد نظر یافت نشد.',
-                ], 404);
-            }
-
-            $isExpired = $plan->end_at && now()->isAfter($plan->end_at);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'جزئیات طرح تشویقی با موفقیت دریافت شد.',
-                'data' => [
-                    'id' => $plan->id,
-                    'description' => $plan->description,
-                    'end_at' => $plan->end_at?->format('Y-m-d H:i:s'),
-                    'status' => $plan->status,
-                    'status_label' => $isExpired ? 'Expired' : $this->getStatusLabel($plan->status),
-                    'created_at' => $plan->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $plan->updated_at->format('Y-m-d H:i:s'),
-                ],
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'خطا در دریافت جزئیات طرح تشویقی.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        $plan=IncentivePlan::where('technician_id',$this->technician($request)->id)->findOrFail($id);
+        return response()->json(['success'=>true,'data'=>$this->data($plan)]);
     }
-
-    /**
-     * دریافت برچسب وضعیت به فارسی
-     * 
-     * @param int $status
-     * @return string
-     */
-    private function getStatusLabel(int $status): string
+    public function redeem(Request $request,int $id,TechnicianIncentiveService $service)
     {
-        return match($status) {
-            IncentivePlan::STATUS_PENDING => 'Active',
-            IncentivePlan::STATUS_USED => 'Used',
-            default => 'Unknown',
-        };
+        $plan=$service->request($this->technician($request),$id);
+        return response()->json(['success'=>true,'message'=>$plan->redeemed_at ? 'مزیت به کیف پول واریز شد.' : 'درخواست استفاده برای مدیریت ثبت شد.','data'=>$this->data($plan)]);
     }
 }

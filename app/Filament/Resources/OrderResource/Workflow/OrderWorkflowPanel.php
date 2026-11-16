@@ -306,7 +306,8 @@ class OrderWorkflowPanel
                             ->columnSpanFull(),
                         Infolists\Components\TextEntry::make('procurement_items')
                             ->label('تامین کالا و تجهیزات')
-                            ->state(fn (Order $record) => self::procurementSummary($record))
+                            ->state(fn (Order $record) => explode("\n", self::procurementSummary($record)))
+                            ->listWithLineBreaks()
                             ->visible(fn (Order $record) => !empty($record->procurement_items))
                             ->columnSpanFull(),
                     ]),
@@ -399,6 +400,7 @@ class OrderWorkflowPanel
                     self::badge('workflow.assignment_status', 'وضعیت مأموریت', OrderWorkflow::ASSIGNMENT_STATUSES, ['pending' => 'warning', 'accepted' => 'success', 'rejected' => 'danger']),
                     Infolists\Components\TextEntry::make('workflow.assigned_at')->label('زمان تخصیص')->formatStateUsing(fn ($state) => self::jdt($state))->placeholder('-'),
                     Infolists\Components\TextEntry::make('workflow.assignment_responded_at')->label('زمان پاسخ تکنسین')->formatStateUsing(fn ($state) => self::jdt($state))->placeholder('-'),
+                    Infolists\Components\TextEntry::make('workflow.assignment_viewed_at')->label('زمان اولین مشاهده توسط تکنسین')->formatStateUsing(fn ($state) => self::jdt($state))->placeholder('-'),
                     Infolists\Components\TextEntry::make('schedule')
                         ->label('زمان مراجعه')
                         ->state(fn (Order $record) => trim(self::jd($record->date) . ' — ' . $record->time, ' —')),
@@ -412,7 +414,6 @@ class OrderWorkflowPanel
                 ->columns(3),
         ], [
             self::assignTechnicianAction(),
-            self::technicianResponseAction(),
         ]);
     }
 
@@ -422,6 +423,8 @@ class OrderWorkflowPanel
             Infolists\Components\Section::make('مراجعه‌ی تکنسین به محل کاربر')
                 ->description('تطبیق هویت سفارش، مشخصات دستگاه و درخواست کاربر با اطلاعات سامانه و ارزیابی امکان انجام خدمت در محل (بند ۶).')
                 ->schema([
+                    self::badge('workflow.customer_visit_status', 'تصمیم کاربر درباره مراجعه', ['pending'=>'در انتظار تأیید','accepted'=>'تأیید شده','recoordinate'=>'درخواست هماهنگی مجدد','cancel'=>'لغو سفارش'], ['pending'=>'warning','accepted'=>'success','cancel'=>'danger']),
+                    Infolists\Components\TextEntry::make('workflow.customer_visit_note')->label('توضیحات کاربر برای مراجعه')->placeholder('-')->columnSpanFull(),
                     Infolists\Components\TextEntry::make('technician.name')->label('تکنسین')->placeholder('-'),
                     Infolists\Components\TextEntry::make('set_off_at')->label('زمان حرکت')->formatStateUsing(fn ($state) => self::jdt($state))->placeholder('-'),
                     Infolists\Components\TextEntry::make('arrived_at')->label('زمان رسیدن')->formatStateUsing(fn ($state) => self::jdt($state))->placeholder('-'),
@@ -890,7 +893,7 @@ class OrderWorkflowPanel
     private static function assignTechnicianAction(): Action
     {
         return self::workflowAction('assign_technician', fn (Order $r) => $r->technician_id ? 'تخصیص مجدد تکنسین' : 'تخصیص تکنسین', 'heroicon-o-user-plus', 'primary',
-            fn (Order $r) => self::isStage($r, OrderWorkflow::STAGE_ASSIGNMENT) && $r->workflow?->assignment_status !== 'accepted')
+            fn (Order $r) => self::isStage($r, OrderWorkflow::STAGE_ASSIGNMENT, OrderWorkflow::STAGE_VISIT) && !$r->set_off_at && !$r->started_at)
             ->modalWidth('2xl')
             ->modalDescription(fn (Order $record) => $record->workflow?->review_status !== 'approved' ? 'اطلاعات سفارش هنوز تأیید نشده است.' : 'تکنسین‌های میدانی اول، سپس هم‌منطقه با کاربر، روشن و با کمترین سفارش فعال؛ تخصص هر تکنسین در فهرست آمده است.')
             ->fillForm(fn (Order $record) => ['technician_id' => $record->technician_id, 'date' => $record->date, 'time' => $record->time])
@@ -1232,8 +1235,31 @@ class OrderWorkflowPanel
     private static function procurementSummary(Order $record): string
     {
         return collect($record->procurement_items ?? [])
-            ->map(fn ($item) => is_array($item) ? trim(($item['title'] ?? $item['name'] ?? '') . ' × ' . ($item['quantity'] ?? $item['count'] ?? 1)) : (string) $item)
-            ->implode('، ');
+            ->map(function ($item) {
+                if (!is_array($item)) {
+                    return (string) $item;
+                }
+
+                $counts = [];
+                if (($item['new_count'] ?? 0) > 0) {
+                    $counts[] = 'نو: ' . $item['new_count'];
+                }
+                if (($item['used_count'] ?? 0) > 0) {
+                    $counts[] = 'کارکرده: ' . $item['used_count'];
+                }
+                if ($counts === [] && isset($item['quantity'])) {
+                    $counts[] = 'تعداد: ' . $item['quantity'];
+                } elseif ($counts === [] && isset($item['count'])) {
+                    $counts[] = 'تعداد: ' . $item['count'];
+                }
+
+                return implode(' — ', array_filter([
+                    $item['title'] ?? $item['name'] ?? $item['item_id'] ?? 'کالا',
+                    implode(' / ', $counts),
+                    $item['description'] ?? null,
+                ], fn ($value) => filled($value)));
+            })
+            ->implode("\n");
     }
 
     private static function badge(string $name, string $label, array $labels, array $colors): Infolists\Components\TextEntry

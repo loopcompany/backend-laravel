@@ -19,7 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
-    // use HasFilamentPermissions;
+    use HasFilamentPermissions;
+    protected static function getDeletePermission(): string { return 'delete-orders'; }
     protected static ?string $model = Order::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
@@ -708,7 +709,7 @@ class OrderResource extends Resource
                             ->options(fn (Order $record) => OrderResource\Workflow\OrderWorkflowPanel::technicianOptions($record))
                             ->searchable()
                             ->required()
-                            ->helperText('میدانی، هم‌منطقه، روشن و کم‌سفارش‌تر اول؛ تخصص هر تکنسین در فهرست آمده. تکنسین باید مأموریت را تأیید کند.'),
+                            ->helperText('ارجاع برای تکنسین قطعی است؛ حرکت پس از تأیید مراجعه توسط کاربر مجاز می‌شود.'),
                         Forms\Components\Textarea::make('note')
                             ->label('توضیحات مأموریت')
                             ->rows(2)
@@ -724,7 +725,7 @@ class OrderResource extends Resource
 
                         \Filament\Notifications\Notification::make()
                             ->title('تکنسین اختصاص یافت')
-                            ->body('پیامک اطلاع‌رسانی به تکنسین ارسال شد؛ منتظر تأیید تکنسین.')
+                            ->body('مأموریت به‌صورت قطعی ارجاع شد؛ مراجعه منتظر تصمیم کاربر است.')
                             ->success()
                             ->send();
                     })

@@ -53,10 +53,13 @@ class ChatRepository
      */
     public function closeChat(int $userId, int $technicianId): int
     {
-        return Chat::where([
+        $count = Chat::where([
             'user_id' => $userId,
-            'technician_id' => $technicianId
+            'technician_id' => $technicianId,
+            'is_closed' => 0,
         ])->update(['is_closed' => 1]);
+        if ($count) $this->changed($userId, $technicianId);
+        return $count;
     }
 
     /**
@@ -72,12 +75,14 @@ class ChatRepository
      */
     public function markMessagesAsRead(int $userId, int $technicianId): int
     {
-        return Chat::where([
+        $count = Chat::where([
             'user_id' => $userId,
             'technician_id' => $technicianId,
             'is_read' => 0,
             'is_user' => 0 // فقط پیام‌های تکنسین
         ])->update(['is_read' => 1]);
+        if ($count) $this->changed($userId, $technicianId);
+        return $count;
     }
 
     /**
@@ -138,11 +143,21 @@ class ChatRepository
      */
     public function markMessagesAsReadByTechnician(int $technicianId, int $userId): int
     {
-        return Chat::where([
+        $count = Chat::where([
             'technician_id' => $technicianId,
             'user_id' => $userId,
             'is_read' => 0,
             'is_user' => 1 // فقط پیام‌های کاربر
         ])->update(['is_read' => 1]);
+        if ($count) $this->changed($userId, $technicianId);
+        return $count;
+    }
+
+    private function changed(int $userId, int $technicianId): void
+    {
+        $publisher = app(\App\Services\RealtimePublisher::class);
+        $publisher->changed('users.' . $userId, ['chat', 'chat-counts']);
+        $publisher->changed('technicians.' . $technicianId, ['chat', 'chat-counts']);
+        $publisher->changed('admin.chat', ['chat']);
     }
 }

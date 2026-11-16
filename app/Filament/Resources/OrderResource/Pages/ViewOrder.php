@@ -30,6 +30,10 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-printer')
                 ->url(fn (): string => route('admin.orders.label', ['order' => $this->record->getKey()]))
                 ->openUrlInNewTab(),
+            Actions\Action::make('download_label_jpeg')
+                ->label('دانلود لیبل JPEG')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->url(fn (): string => route('admin.orders.label', ['order' => $this->record->getKey(), 'format' => 'jpeg'])),
             Actions\Action::make('confirm_delivery')
                 ->label(fn (): string => $this->record->delivery_confirmed_at ? 'تأیید مجدد مشخصات تحویل' : 'تأیید و ارسال برای کاربر')
                 ->icon('heroicon-o-paper-airplane')

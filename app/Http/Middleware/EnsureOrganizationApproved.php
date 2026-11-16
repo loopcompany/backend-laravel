@@ -82,15 +82,7 @@ class EnsureOrganizationApproved
             return 'پروفایل شما رد شده است. لطفا اطلاعات خود را اصلاح کنید.';
         }
 
-        if ($organization->isContractRejected()) {
-            return 'قرارداد شما رد شده است. لطفا مجددا قرارداد را آپلود کنید.';
-        }
-
-        if ($organization->isContractNotUploaded()) {
-            return 'لطفا قرارداد امضا شده را آپلود کنید.';
-        }
-
-        if ($organization->isProfilePending() || $organization->isContractPending()) {
+        if ($organization->isProfilePending()) {
             return 'اطلاعات شما در حال بررسی توسط ادمین است. لطفا منتظر بمانید.';
         }
 

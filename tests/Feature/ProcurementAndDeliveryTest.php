@@ -36,6 +36,8 @@ class ProcurementAndDeliveryTest extends TestCase
         $user = $this->makeUser(['account_type' => 'company'] + $overrides);
         Organization::factory()->create(['user_id' => $user->id, 'profile_status' => 'approved', 'contract_status' => 'approved']);
 
+        $agreement=app(\App\Services\OrganizationAgreementService::class)->request($user,['project']);
+        $agreement->update(['status'=>'3']);
         return $user->fresh();
     }
 

@@ -431,6 +431,8 @@
             </div>
         @endif
 
+        @include('partials.order-request-notes', ['order' => $order])
+
         <!-- خدمات درخواستی -->
         @if (!$groupedDetails->isEmpty())
             <div class="section-card">

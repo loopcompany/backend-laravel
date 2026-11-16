@@ -10,7 +10,7 @@ class OrganizationTermApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_can_get_organization_terms_list()
     {
         // Arrange: Create some organization terms
@@ -40,7 +40,7 @@ class OrganizationTermApiTest extends TestCase
         $this->assertCount(3, $response->json('data'));
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_returns_empty_array_when_no_organization_terms_exist()
     {
         // Act: Call the API without creating any terms
@@ -54,7 +54,7 @@ class OrganizationTermApiTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function organization_terms_api_does_not_require_authentication()
     {
         // Arrange: Create organization terms
@@ -70,7 +70,7 @@ class OrganizationTermApiTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function organization_terms_response_includes_all_fields()
     {
         // Arrange

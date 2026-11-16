@@ -10,6 +10,7 @@ use App\Helpers\Helper;
 use App\Models\DiscountCode;
 use App\Models\Technician;
 use App\Models\Order;
+use App\Models\OrderQuote;
 use App\Models\ReferralCode;
 use App\Models\PromoCode;
 use App\Models\PromoCodeUsage;
@@ -62,6 +63,15 @@ class OrderService
 
     private function submitOrderInTransaction(array $data, int $userId): array
     {
+        $modes=$data['delivery_mode']??['once_short'];
+        $organizationUser=$data['user']??\App\Models\User::findOrFail($userId);
+        $contractModes=array_values(array_intersect($modes,array_keys(OrganizationAgreementService::MODES)));
+        if ($organizationUser->isOrganization() && $contractModes) {
+            $approved=\App\Models\OrganizationContractRequest::where('user_id',$userId)->where('status','3')->get();
+            if (collect($contractModes)->contains(fn ($mode) => !$approved->contains(fn ($agreement) => !$agreement->delivery_modes || in_array($mode,$agreement->delivery_modes,true)))) {
+                return ['success'=>false,'message'=>'برای ثبت خدمات ماهانه، سالانه و پروژه‌ای ابتدا توافق‌نامه باید توسط مدیریت تأیید شود.','error_code'=>'AGREEMENT_REQUIRED'];
+            }
+        }
         // لاگ کامل داده‌های ورودی از اپ
         Log::info('=== ORDER SUBMISSION - Raw Input Data ===', [
             'user_id' => $userId,
@@ -140,6 +150,7 @@ class OrderService
             'is_fixed' => $data['is_fixed'] ?? false,
             'image_path' => $data['image_path'] ?? null,
             'des' => $data['description'] ?? null,
+            'delivery_modes' => $modes,
             'date' => $data['date'],
             'time' => $data['time'],
             'platform' => $data['platform'],
@@ -205,6 +216,9 @@ class OrderService
         }
 
         $order = $this->repo->create($orderData);
+        if ($referralCode?->policy_version) {
+            $referralCode->update(['status'=>ReferralCode::STATUS_USED,'used_by_user_id'=>$userId,'used_at'=>now(),'used_order_id'=>$order->id]);
+        }
 
         // ذخیره جزئیات سفارش (steps)
         if (!empty($data['steps'])) {
@@ -234,7 +248,7 @@ class OrderService
         }
 
         // ارسال پیامک تأیید سفارش
-        $this->sendOrderConfirmationSms($order, $data['user']);
+        $this->sendOrderConfirmationSms($order, $organizationUser);
 
         return [
             'success' => true,
@@ -261,6 +275,11 @@ class OrderService
                     'valid' => false,
                     'message' => 'کد معرف معتبر نیست.',
                 ];
+            }
+
+            if ($referralCode->policy_version) {
+                $valid = (int)$referralCode->user_id === $userId && in_array($referralCode->status,ReferralCode::usableStatuses(),true) && !$referralCode->used_order_id;
+                return ['valid'=>$valid,'referral_code'=>$valid ? $referralCode : null,'message'=>$valid ? '' : 'کد معرف مخصوص این حساب نیست یا قبلاً مصرف شده است.'];
             }
 
             // کد مأمور خرید چندبارمصرف است و با هر سفارش مصرف نمی‌شود
@@ -398,14 +417,14 @@ class OrderService
             foreach ($step as $field) {
                 if (in_array($field['type'], $validTypes)) {
                     foreach ($field['field_details'] as $fieldDetail) {
-                        if (!empty($fieldDetail['value'])) {
+                        if (!empty($fieldDetail['value']) || ($field['type'] === 'input' && isset($fieldDetail['value']) && trim((string) $fieldDetail['value']) !== '')) {
                             $this->repo->createOrderDetail([
                                 'order_id' => $orderId,
                                 'field_id' => $field['id'],
                                 'field_detail_id' => $fieldDetail['id'],
                                 'price' => $fieldDetail['price'] ?? 0,
                                 'value' => $fieldDetail['value'],
-                                'user_descriptions' => $fieldDetail['user_descriptions'],
+                                'user_descriptions' => $fieldDetail['user_descriptions'] ?? null,
                             ]);
                         }
                     }
@@ -805,6 +824,7 @@ class OrderService
                 ];
             }
 
+            app(OrderWorkflowService::class)->ensureCustomerVisitApproved($order);
             if (!$order->arrived_at) {
                 return [
                     'success' => false,
@@ -850,6 +870,7 @@ class OrderService
                 ];
             }
 
+            app(OrderWorkflowService::class)->ensureCustomerVisitApproved($order);
             if (!$order->arrived_at) {
                 return [
                     'success' => false,
@@ -1169,7 +1190,28 @@ class OrderService
                 ];
             }
 
-            // ثبت پذیرش اولیه
+            // نسخه‌های قیمت از مسیر مشترک پذیرش می‌گذرند تا مهلت ۴۸ ساعته دور زده نشود.
+            if ($order->quotes()->where('kind', OrderQuote::KIND_INITIAL)->exists()) {
+                $workflow = app(OrderWorkflowService::class);
+                $quote = $workflow->openQuote($order);
+                if (!$quote || $quote->kind !== OrderQuote::KIND_INITIAL || $quote->effectiveStatus() !== OrderQuote::STATUS_SENT) {
+                    return ['success' => false, 'message' => 'پیش‌رسیدی در انتظار تأیید نیست.', 'error_code' => 'QUOTE_NOT_PENDING'];
+                }
+
+                try {
+                    $workflow->decideQuote($quote, true, 'پذیرش اولیه از اپ کاربر');
+                } catch (OrderWorkflowException $exception) {
+                    return ['success' => false, 'message' => $exception->getMessage(), 'error_code' => $exception->errorCode];
+                }
+
+                return [
+                    'success' => true,
+                    'message' => 'پذیرش اولیه با موفقیت ثبت شد.',
+                    'data' => ['order_id' => $orderId, 'user_initial_accept' => $order->fresh()->user_initial_accept?->toISOString()],
+                ];
+            }
+
+            // ثبت پذیرش اولیه برای سفارش‌های قدیمی بدون نسخه قیمت.
             $updated = $this->repo->setUserInitialAccept($orderId);
 
             if (!$updated) {
@@ -1785,9 +1827,25 @@ class OrderService
             }
 
             // ۵-۳ — اطلاعات مأموریت: وضعیت تخصیص، قیمت تأییدشده و توضیحات پنل
-            $workflowPayload = app(OrderWorkflowService::class)->technicianPayload($order);
+            $workflow = app(OrderWorkflowService::class);
+            $workflowPayload = $workflow->technicianPayload($order);
+            $workflow->recordTechnicianView($order, $technicianId);
             $order->unsetRelation('workflow');
             $order->setAttribute('workflow', $workflowPayload);
+            $order->setAttribute('payment_records', \App\Models\UserTransaction::where('order_id', $order->id)
+                ->where('user_id', $order->user_id)
+                ->where('status', 100)
+                ->whereIn('type', [2, 3, \App\Models\UserTransaction::TYPE_OFFLINE_PAYMENT])
+                ->orderBy('id')
+                ->get(['id', 'type', 'price', 'payment_method'])
+                ->map(fn ($payment) => [
+                    'id' => $payment->id,
+                    'amount' => (int) $payment->price,
+                    'method' => $payment->payment_method ?: match ((int) $payment->type) {
+                        2, 3 => 'in_app',
+                        default => null,
+                    },
+                ])->all());
 
             return [
                 'success' => true,

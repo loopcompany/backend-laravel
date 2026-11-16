@@ -10,13 +10,13 @@ use Tests\TestCase;
 
 class YearlyIncomeChartDebugTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \Tests\Concerns\MakesPeople;
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_can_query_transactions_correctly()
     {
         // Create technician
-        $technician = Technician::create([
+        $technician = $this->makeTechnician([
             'phone' => '09123456789',
             'password' => bcrypt('password'),
             'name' => 'Test',
@@ -25,7 +25,7 @@ class YearlyIncomeChartDebugTest extends TestCase
         ]);
 
         // Create a transaction
-        $transaction = TechnicianTransaction::create([
+        $transaction = TechnicianTransaction::forceCreate([
             'technician_id' => $technician->id,
             'order_id' => null,
             'price' => 50000,
@@ -65,10 +65,10 @@ class YearlyIncomeChartDebugTest extends TestCase
         $this->assertEquals(50000, $sum);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function api_returns_correct_structure()
     {
-        $technician = Technician::create([
+        $technician = $this->makeTechnician([
             'phone' => '09123456789',
             'password' => bcrypt('password'),
             'name' => 'Test',
@@ -76,7 +76,7 @@ class YearlyIncomeChartDebugTest extends TestCase
             'wallet' => 25000,
         ]);
 
-        Sanctum::actingAs($technician, ['*'], 'technician');
+        Sanctum::actingAs($technician);
 
         $response = $this->getJson('/api/technician/transactions/yearly-income-chart?year=1403');
 

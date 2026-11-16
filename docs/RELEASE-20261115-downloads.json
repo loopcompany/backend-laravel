@@ -1,0 +1,32 @@
+[
+  {
+    "file": "Loop-1.1.4-Windows-10-11-32bit-Setup.exe",
+    "bytes": 115760801,
+    "sha256": "a80470a74afd4717b7cec97e963988679b3f6dc40c4913f83ce9079c3d3b2a1a"
+  },
+  {
+    "file": "Loop-1.1.4-Windows-10-11-64bit-Setup.exe",
+    "bytes": 135049345,
+    "sha256": "6793d1a339df75cb9654f8089608dc784e20e316ea39e88294cea5eedf89c2b4"
+  },
+  {
+    "file": "Loop-1.1.4-Windows-7-8-32bit-Setup.exe",
+    "bytes": 88514530,
+    "sha256": "2192111a51f352e4a0cdf85e9ac20fe984370b4750c55db89d15b2a2998d688d"
+  },
+  {
+    "file": "Loop-1.1.4-Windows-7-8-64bit-Setup.exe",
+    "bytes": 92145889,
+    "sha256": "0258d84d48983dafa12051b942f5946183f756e911338519b693fa287b512792"
+  },
+  {
+    "file": "LoopUser-1.0.1.apk",
+    "bytes": 109229318,
+    "sha256": "a2a332400e038e8c0855988a193d876f129555f00a00454eaa7e700f10ef4cc0"
+  },
+  {
+    "file": "LoopTech-1.0.1.apk",
+    "bytes": 90415642,
+    "sha256": "c4ddb94f2c4fe1a6d984268e4c638402fb0c9b329de048bd126699746e4862b7"
+  }
+]

@@ -69,57 +69,16 @@ class ContractController extends Controller
     }
     public function submitRequest(Request $request, AdminPanelNotificationService $adminNotifications): JsonResponse
     {
-        $user = $request->user();
-        if (!$user || !$user->isOrganization()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'فقط کاربران سازمانی می‌توانند درخواست قرارداد ارسال کنند.',
-            ], 429);
-        }
-
-        $contract_request = OrganizationContractRequest::where('user_id', $user->id)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if (!$contract_request) {
-            $send_request = OrganizationContractRequest::create([
-                'user_id' => $user->id,
-                'organization_id' => $user->organization->id,
-            ]);
-            if ($send_request) {
-                $adminNotifications->sendToAdmins(
-                    'درخواست جدید سازمانی/شرکتی',
-                    'درخواست قرارداد جدید از ' . ($user->organization?->organization_name ?: 'یک سازمان') . ' ثبت شد.'
-                );
-
-                $admin_contact = Contact::where('type', 'sms')->first();
-                if($admin_contact?->link){
-
-                    Helper::send_sms($admin_contact->link, 163936, ['NAME'], [$user->organization?->organization_name]);
-                }
-                return response()->json([
-                    'success' => false,
-                    'message' => __("Your request submitted successfully."),
-                ], 200);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => __("An error occurred while submitting your request. Please try again later."),
-                ], 429);
-            }
-
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => __("You have already submitted a request."),
-            ], 429);
-        }
+        // Keep the legacy URL while enforcing the same explicit, eligible request.
+        return app(OrganizationAgreementController::class)->store($request, app(\App\Services\OrganizationAgreementService::class), $adminNotifications);
     }
     public function submitInformationForRequest(Request $request, AdminPanelNotificationService $adminNotifications): JsonResponse
     {
+        $request->validate(['information'=>['nullable','string','max:20000'],'files'=>['sometimes','array','max:5'],
+            'files.*'=>['file','mimes:pdf,png,jpg,jpeg','max:20480']]);
         $user = $request->user();
 
-        if (!$user || !$user->isOrganization()) {
+        if (!$user instanceof \App\Models\User || !$user->isOrganization()) {
             return response()->json([
                 'success' => false,
                 'message' => __("Just organizational users can submit information for contract request."),
@@ -127,8 +86,8 @@ class ContractController extends Controller
         }
 
         $contract_request = OrganizationContractRequest::where('user_id', $user->id)
-            ->latest()
-            ->first();
+            ->when($request->filled('contract_request_id'), fn ($query) => $query->whereKey($request->integer('contract_request_id')))
+            ->latest()->first();
 
         if (!$contract_request) {
             return response()->json([
@@ -137,6 +96,7 @@ class ContractController extends Controller
             ], 429);
         }
 
+        abort_unless(in_array((string)$contract_request->status,['0','1','4'],true),409,'این سابقه قابل ویرایش نیست؛ درخواست جدید ثبت کنید.');
         // آپدیت اطلاعات
         $contract_request->update([
             'information' => $request->information,

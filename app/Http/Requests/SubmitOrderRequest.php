@@ -24,7 +24,7 @@ class SubmitOrderRequest extends FormRequest
             'description' => 'nullable|string|max:20000',
             'date' => 'required|date_format:Y-m-d',
             'time' => 'nullable|string',
-            'female_count' => 'nullable|integer|min:0',
+            'female_count' => 'nullable|integer|min:0|max:0',
             'male_count' => 'nullable|integer|min:0',
             'unspecified_count' => 'nullable|integer|min:0',
             'discount_code' => 'nullable|string|max:50',
@@ -58,7 +58,7 @@ class SubmitOrderRequest extends FormRequest
             'procurement_items.*.description' => 'nullable|string|max:1000',
             'delivery_mode' => 'nullable|array',
             'delivery_mode.*' => 'string|in:once_short,monthly_short,yearly_long,project',
-            'technician_gender' => 'nullable|string|in:male,female',
+            'technician_gender' => 'nullable|string|in:male',
         ];
     }
 
@@ -114,7 +114,8 @@ class SubmitOrderRequest extends FormRequest
             'procurement_items.*.new_count.integer' => 'تعداد کالای نو باید عدد صحیح باشد.',
             'procurement_items.*.used_count.integer' => 'تعداد کالای کارکرده باید عدد صحیح باشد.',
             'delivery_mode.*.in' => 'نحوه‌ی ارائه‌ی خدمات نامعتبر است.',
-            'technician_gender.in' => 'جنسیت تکنسین نامعتبر است.',
+            'technician_gender.in' => 'انتخاب تکنسین خانم به‌زودی فعال می‌شود.',
+            'female_count.max' => 'انتخاب تکنسین خانم به‌زودی فعال می‌شود.',
         ];
     }
 }

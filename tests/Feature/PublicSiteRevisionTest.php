@@ -50,7 +50,7 @@ class PublicSiteRevisionTest extends TestCase
         foreach ($cards as $index=>$card) {
             $links=$xpath->query('.//div[@class="store-col"]/a',$card);
             $this->assertCount(6,$links);
-            $this->assertSame('/downloads/android/'.($index===1?'LoopTech-1.0.1.apk':'LoopUser-1.0.1.apk'),parse_url($links[0]->getAttribute('href'),PHP_URL_PATH));
+            $this->assertSame('/downloads/android/'.($index===1?'LoopTech-1.0.1.apk':'LoopUser-1.0.2.apk'),parse_url($links[0]->getAttribute('href'),PHP_URL_PATH));
             foreach (['android','bazaar','myket','ios','ios-web','web'] as $position=>$channel) {
                 $this->assertStringContainsString('store-btn--'.$channel,$links[$position]->getAttribute('class'));
             }

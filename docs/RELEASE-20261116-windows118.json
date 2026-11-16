@@ -1,0 +1,26 @@
+[
+  {
+    "file": "Loop-1.1.8-Windows-10-11-32bit-Setup.exe",
+    "bytes": 115700340,
+    "sha256": "597322dd2b1279387d6d231ffc7a06c950fa1e9a02421ae651eea7d2c0729bf1",
+    "folder": "windows"
+  },
+  {
+    "file": "Loop-1.1.8-Windows-10-11-64bit-Setup.exe",
+    "bytes": 134988996,
+    "sha256": "1b233fda0e82a0a2e1ce024b7248b4897688027ea04c5fda9ac15a9138641701",
+    "folder": "windows"
+  },
+  {
+    "file": "Loop-1.1.8-Windows-7-8-32bit-Setup.exe",
+    "bytes": 88454168,
+    "sha256": "d2d37a2f25cff081f7718e0f17f8cc3c3a8a90be5439abf3d3b964d7565b2654",
+    "folder": "windows"
+  },
+  {
+    "file": "Loop-1.1.8-Windows-7-8-64bit-Setup.exe",
+    "bytes": 92085515,
+    "sha256": "0c9154006f7b5ad0ab6680f9b891d8b51ab1002564efa960ddb83b1237bf0546",
+    "folder": "windows"
+  }
+]

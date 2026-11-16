@@ -1,26 +1,26 @@
 [
   {
-    "file": "Loop-1.1.5-Windows-10-11-32bit-Setup.exe",
-    "bytes": 115687533,
-    "sha256": "fec1fb5fef5f72bc8aeb3e3205fe857df1ca982562cbea3600a223adeb97b085",
+    "file": "Loop-1.1.6-Windows-10-11-32bit-Setup.exe",
+    "bytes": 115700433,
+    "sha256": "7458f146ef7bf32685e2c0362709e3b59fe477dce8615ec306b0de84cde78c12",
     "folder": "windows"
   },
   {
-    "file": "Loop-1.1.5-Windows-10-11-64bit-Setup.exe",
-    "bytes": 134976326,
-    "sha256": "3e9743482b406cf9ed8a3981b1088c7117001e5e527c57073bc8554f388b3809",
+    "file": "Loop-1.1.6-Windows-10-11-64bit-Setup.exe",
+    "bytes": 134988993,
+    "sha256": "312b7676da25d6788dd8287b76c0031174410ba3a84888ddfb4062c49f0fff4a",
     "folder": "windows"
   },
   {
-    "file": "Loop-1.1.5-Windows-7-8-32bit-Setup.exe",
-    "bytes": 88441373,
-    "sha256": "c521d2d3d818c3c197eb3791dd0b566cfdc8ddd7b3ecec6af2bb846d06e6f21c",
+    "file": "Loop-1.1.6-Windows-7-8-32bit-Setup.exe",
+    "bytes": 88454095,
+    "sha256": "0793a41b4d94801c86dbcf024d594c25434e5f160f0a990ce309cf4f4f39bca7",
     "folder": "windows"
   },
   {
-    "file": "Loop-1.1.5-Windows-7-8-64bit-Setup.exe",
-    "bytes": 92072683,
-    "sha256": "b16d00d4e69c157ca1d591b7f1dec5faeddb00b9bc872d0bc2e12019e19bab8e",
+    "file": "Loop-1.1.6-Windows-7-8-64bit-Setup.exe",
+    "bytes": 92085444,
+    "sha256": "d06c072bd3de3f15604eaf0ae6522757d24a5210a053a320db0fbc7ade69d677",
     "folder": "windows"
   },
   {

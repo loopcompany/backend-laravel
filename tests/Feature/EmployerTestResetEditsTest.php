@@ -31,5 +31,9 @@ class EmployerTestResetEditsTest extends TestCase
         $html=$this->get('/')->assertOk()->getContent();$dom=new \DOMDocument();@$dom->loadHTML('<?xml encoding="UTF-8">'.$html);$xpath=new \DOMXPath($dom);
         $link=$xpath->query('//a[contains(@href,"ecunion.ir/verify/")]')->item(0);
         $this->assertNotNull($link);$this->assertFalse($link->hasAttribute('target'));$this->assertFalse($link->hasAttribute('onclick'));
+        // The union verifier requires the registered site's Referer; suppressing
+        // it renders "domain not found" even with the correct domain and token.
+        $this->assertSame('origin', $link->getAttribute('referrerpolicy'));
+        $this->assertNotContains('noreferrer', preg_split('/\s+/', $link->getAttribute('rel')));
     }
 }

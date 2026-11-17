@@ -186,7 +186,7 @@
                     </a>
                     <img src="{{ asset('assets/images/samandehi.png') }}" alt="نشان ساماندهی" width="64" height="64">
                     <a href="https://ecunion.ir/verify/clpiran.com?token=73466486ae842901896d"
-                       rel="noopener noreferrer">
+                       referrerpolicy="origin" rel="noopener">
                         <img class="loop-union-badge" src="{{ asset('assets/images/ecunion-verification.svg') }}"
                              alt="استعلام عضویت در اتحادیه کشوری کسب‌وکارهای مجازی"
                              width="96" height="144" loading="lazy">

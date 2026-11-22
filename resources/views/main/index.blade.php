@@ -521,7 +521,7 @@
   $existingMockupImage3 = asset('assets/new-style/mockup3-3.png');
   $downloadLinks = function (string $app, string $web) {
     return [
-      'android' => asset($app === 'technician' ? 'downloads/android/LoopTech-1.0.1.apk' : 'downloads/android/LoopUser-1.0.2.apk'),
+      'android' => asset($app === 'technician' ? 'downloads/android/LoopTech-1.0.2.apk' : 'downloads/android/LoopUser-1.0.3.apk'),
       'bazaar' => config("downloads.$app.bazaar") ?: '#',
       'myket' => config("downloads.$app.myket") ?: '#',
       'ios' => config("downloads.$app.ios") ?: '#',

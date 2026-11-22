@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class RealtimeObserver
 {
     public const TOPICS = [
-        'Order' => 'orders', 'OrderDetail' => 'orders', 'OrderExtraService' => 'orders',
+        'ProcurementConsultation' => 'consultations', 'Order' => 'orders', 'OrderDetail' => 'orders', 'OrderExtraService' => 'orders',
         'OrderGallery' => 'orders', 'OrderQuote' => 'orders', 'OrderStageLog' => 'orders',
         'OrderWorkflow' => 'orders', 'OrderProcurement' => 'orders', 'OrderProcurementItem' => 'orders',
         'DeliveryReport' => 'orders', 'TechnicianOrderReport' => 'orders', 'DebtRequest' => 'orders',

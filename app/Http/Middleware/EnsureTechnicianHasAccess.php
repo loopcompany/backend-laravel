@@ -14,7 +14,7 @@ class EnsureTechnicianHasAccess
     {
         $technician = $request->user();
 
-        if ($technician instanceof Technician && !$technician->has_access) {
+        if ($technician instanceof Technician && (!$technician->has_access || !$technician->isApproved())) {
             return response()->json([
                 ...TechnicianRestriction::error($technician),
                 'valid' => false,

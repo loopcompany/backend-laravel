@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 class SmsService
 {
+    public function sendText(string $phone, string $message): bool
+    {
+        if (!config('smsir.enabled')) return false;
+        $line=config('smsir.line-number'); $key=config('smsir.api-key');
+        if (!$line || !is_numeric($line) || !$key || $key==='Your api key') return false;
+        try {
+            $r=\Illuminate\Support\Facades\Http::withHeaders(['X-API-KEY'=>$key])->timeout(15)->post('https://api.sms.ir/v1/send/bulk', [
+                'lineNumber'=>(int)$line,'messageText'=>$message,'mobiles'=>[$phone],'sendDateTime'=>null,
+            ]);
+            return $r->successful() && (int)$r->json('status')===1;
+        } catch (\Throwable $e) { Log::warning('Text SMS failed',['exception_type'=>$e::class]); return false; }
+    }
+
     /** Send the separately issued code; never reuse a password or user-ID template. */
     public function sendManagedCode(string $phone, string $code, string $label): bool
     {
@@ -119,11 +132,10 @@ class SmsService
 
             $result = Helper::send_sms($phone, $templateId, $names, $values);
 
-            if ($result == true) {
+            if ($result === true) {
                 Log::info("SMS {$type} code sent successfully", [
                     'phone' => $phone,
                     'type' => $type,
-                    'code' => $code // Remove this in production for security
                 ]);
                 return true;
             }

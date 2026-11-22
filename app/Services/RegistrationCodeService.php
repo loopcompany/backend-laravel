@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\EmploymentFile;
 use App\Models\User;
+use App\Models\Technician;
 use App\Models\Region;
 use App\Models\City;
 use App\Models\Province;
@@ -33,8 +34,10 @@ class RegistrationCodeService
 
     public static function isIssued(?string $code): bool
     {
-        return $code !== null && preg_match('/^[0-9]{2}-[0-9]{2}-[0-9]{2}-(10|30|31|40|41|60|61|70|71|80|81)-[1-5]-[0-9]\.[0-9]{3}\.[0-9]{3}$/D', $code) === 1
-            && substr($code, -9) !== '0.000.000';
+        if ($code === null) return false;
+        $digits = str_replace(['-', '.'], '', $code);
+        return preg_match('/^[0-9]{6}(10|30|31|40|41|60|61|70|71|80|81)[1-5][0-9]{7}$/D', $digits) === 1
+            && substr($digits, -7) !== '0000000';
     }
 
     public static function methodFromRequest(): ?int
@@ -83,11 +86,11 @@ class RegistrationCodeService
         return $code;
     }
 
-    public function issue(User|EmploymentFile $record, array $data): string
+    public function issue(User|EmploymentFile|Technician $record, array $data): string
     {
         return DB::transaction(function () use ($record, $data) {
             $locked = $record->newQuery()->lockForUpdate()->findOrFail($record->getKey());
-            $field = $locked instanceof User ? 'code' : 'personnel_code';
+            $field = match (true) { $locked instanceof User => 'code', $locked instanceof Technician => 'referral_code', default => 'personnel_code' };
             if (self::isIssued($locked->$field)) {
                 return $locked->$field;
             }
@@ -110,10 +113,10 @@ class RegistrationCodeService
                 $registeredAt = $locked->created_at;
             } else {
                 $type = (int) ($data['staff_type'] ?? 0);
-                if (!isset(self::staffTypes($locked->person_type)[$type])) {
+                if (!isset(self::staffTypes($locked instanceof Technician ? 'technician' : $locked->person_type)[$type])) {
                     throw ValidationException::withMessages(['staff_type' => 'نوع انتخاب‌شده با پرونده کارکنان سازگار نیست.']);
                 }
-                $registeredAt = $locked->cooperationRequest?->created_at ?? $locked->created_at;
+                $registeredAt = $locked instanceof Technician ? $locked->created_at : ($locked->cooperationRequest?->created_at ?? $locked->created_at);
             }
 
             $year = Jalalian::fromDateTime($registeredAt->copy()->setTimezone('Asia/Tehran'))->getYear() % 100;
@@ -124,9 +127,9 @@ class RegistrationCodeService
                     throw ValidationException::withMessages(['method' => 'ظرفیت شماره‌های ترتیبی تکمیل شده است.']);
                 }
                 $serial = str_pad((string) $number, 7, '0', STR_PAD_LEFT);
-                $code = sprintf('%s-%s-%02d-%02d-%d-%s.%s.%s', $city, $region, $year, $type, $method,
+                $code = sprintf('%s%s%02d%02d%d%s%s%s', $city, $region, $year, $type, $method,
                     $serial[0], substr($serial, 1, 3), substr($serial, 4, 3));
-            } while (User::where('code', $code)->exists() || EmploymentFile::withTrashed()->where('personnel_code', $code)->exists());
+            } while (User::where('code', $code)->exists() || EmploymentFile::withTrashed()->where('personnel_code', $code)->exists() || Technician::where('referral_code', $code)->exists());
 
             $sequence->update(['last_number' => $number]);
             $locked->update([$field => $code]);

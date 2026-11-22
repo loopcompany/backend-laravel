@@ -45,7 +45,7 @@ class OrganizationAccountAndPaymentTest extends TestCase
             'contract_status' => 'approved',
         ], $org));
 
-        return $user->fresh();
+        return $this->completeCustomerProfile($user);
     }
 
     // ----------------------------------------------------------------- پروفایل سازمان

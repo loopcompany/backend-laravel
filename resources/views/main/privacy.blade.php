@@ -21,10 +21,10 @@
                 <div class="col-lg-12">
                     <div class="section_title text_center mb-50">
                         <div class="section_main_title">
-                            <h1>سیاست حریم خصوصی لوپ</h1>
+                            <h1>{{ site_text('سیاست حریم خصوصی لوپ') }}</h1>
                         </div>
                         <div class="section_title_text pt-3">
-                            <p>ما در لوپ به حفظ حریم خصوصی و امنیت اطلاعات شخصی کاربران خود متعهد هستیم.</p>
+                            <p>{{ site_text('ما در لوپ به حفظ حریم خصوصی و امنیت اطلاعات شخصی کاربران خود متعهد هستیم.') }}</p>
                         </div>
                         <div class="em_bar">
                             <div class="em_bar_bg"></div>
@@ -57,7 +57,7 @@
                         <div class="no_privacy_content text-center">
                             <div class="alert alert-info">
                                 <i class="fa fa-info-circle"></i>
-                                اطلاعات حریم خصوصی در حال حاضر موجود نیست.
+                                {{ site_text('اطلاعات حریم خصوصی در حال حاضر موجود نیست.') }}
                             </div>
                         </div>
                     @endif
@@ -69,10 +69,10 @@
                 <div class="col-lg-12">
                     <div class="privacy_contact_section bg-light p-4 rounded" style="background-color: #1d283a !important">
                         <div class="text-center">
-                            <h4 class="mb-3">سوالی در مورد حریم خصوصی دارید؟</h4>
-                            <p class="mb-3">اگر سوال یا نگرانی‌ای در مورد سیاست حریم خصوصی ما دارید، با ما تماس بگیرید.</p>
+                            <h4 class="mb-3">{{ site_text('سوالی در مورد حریم خصوصی دارید؟') }}</h4>
+                            <p class="mb-3">{{ site_text('اگر سوال یا نگرانی‌ای در مورد سیاست حریم خصوصی ما دارید، با ما تماس بگیرید.') }}</p>
                             <a href="{{ route('web.contact') }}" class="btn btn-primary">
-                                <i class="fa fa-envelope"></i> تماس با ما
+                                <i class="fa fa-envelope"></i> {{ site_text('تماس با ما') }}
                             </a>
                         </div>
                     </div>

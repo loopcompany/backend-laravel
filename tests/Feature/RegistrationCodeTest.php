@@ -25,7 +25,7 @@ class RegistrationCodeTest extends TestCase
         $location=$this->location();
         foreach ([['individual',false,60],['individual',true,61],['company',false,70],['company',true,71],['g_organization',false,80],['s_g_organization',true,81]] as $index=>[$type,$special,$code]) {
             $user=$this->makeUser($location+['code'=>null,'account_type'=>$type,'is_special'=>$special,'by_who'=>'admin','registration_method'=>5,'birth_date'=>'1990-01-01']);
-            $this->assertSame('21-08-05-'.$code.'-5-0.000.'.str_pad((string)($index+1),3,'0',STR_PAD_LEFT),$user->code);
+            $this->assertSame('210805'.$code.'50000'.str_pad((string)($index+1),3,'0',STR_PAD_LEFT),$user->code);
         }
         $this->assertDatabaseHas('registration_code_sequence',['id'=>1,'last_number'=>6]);
     }
@@ -38,7 +38,7 @@ class RegistrationCodeTest extends TestCase
         $legacyWithoutCode=$this->makeUser(['code'=>null]);
         $this->assertNull($new->code);
         $new->update($location); $new->refresh();
-        $this->assertMatchesRegularExpression('/^21-08-03-60-2-0\.000\.001$/',$new->code);
+        $this->assertMatchesRegularExpression('/^2108036020000001$/',$new->code);
         $code=$new->code;
         $new->update(['region'=>'20']);
         $this->assertSame($code,$new->fresh()->code);
@@ -78,7 +78,7 @@ class RegistrationCodeTest extends TestCase
         $data=$location+['phone'=>'09121112223','melicode'=>'3333333333','email'=>'new@test.local','platform'=>'android'];
         $this->postJson('/api/auth/register',$data)->assertCreated();
         $user=\App\Models\User::where('phone',$data['phone'])->firstOrFail();
-        $this->assertSame('21-08-05-60-1-0.000.001',$user->code);
+        $this->assertSame('2108056010000001',$user->code);
         $this->assertSame(1,$user->registration_method);
 
         $legacy=$this->makeUser(['phone_verified_at'=>null,'code'=>'OLD-KEEP','melicode'=>'4444444444']);
@@ -102,7 +102,7 @@ class RegistrationCodeTest extends TestCase
             ->fillForm($location+['name'=>'New','last_name'=>'User','phone'=>'09121112224','account_type'=>'individual','is_special'=>true,'registration_method'=>5,'birth_date'=>'1990-01-01'])
             ->call('create')->assertHasNoFormErrors();
         $user=\App\Models\User::where('phone','09121112224')->firstOrFail();
-        $this->assertMatchesRegularExpression('/^21-08-[0-9]{2}-61-5-0\.000\.001$/',$user->code);
+        $this->assertMatchesRegularExpression('/^2108[0-9]{2}6150000001$/',$user->code);
     }
 
     public function test_company_registration_keeps_the_canonical_code_in_both_user_and_organization(): void
@@ -119,7 +119,7 @@ class RegistrationCodeTest extends TestCase
         $result=app(\App\Services\OrganizationRegistrationService::class)->register($dto);
         $this->assertTrue($result['success'],json_encode($result));
         $user=\App\Models\User::where('phone',$dto->manager_mobile)->firstOrFail();
-        $this->assertMatchesRegularExpression('/^21-08-[0-9]{2}-70-3-0\.000\.001$/',$user->code);
+        $this->assertMatchesRegularExpression('/^2108[0-9]{2}7030000001$/',$user->code);
         $this->assertSame($user->code,$user->organization->organization_code);
     }
 
@@ -132,9 +132,9 @@ class RegistrationCodeTest extends TestCase
         $input = ['city_code' => '21', 'region_code' => '08', 'method' => 4];
 
         $code = $service->issue($first, $input);
-        $this->assertSame('21-08-05-61-4-0.000.001', $code);
+        $this->assertSame('2108056140000001', $code);
         $this->assertSame($code, $first->fresh()->code);
         $this->assertSame($code, $service->issue($first, $input));
-        $this->assertSame('21-08-05-70-4-0.000.002', $service->issue($second, $input));
+        $this->assertSame('2108057040000002', $service->issue($second, $input));
     }
 }

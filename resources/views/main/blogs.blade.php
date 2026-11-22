@@ -29,10 +29,10 @@
                 <div class="col-lg-12">
                     <div class="section_title text_center mb-50">
                         <div class="section_main_title">
-                            <h1>مقالات و آموزش</h1>
+                            <h1>{{ site_text('مقالات و آموزش') }}</h1>
                         </div>
                         <div class="section_title_text pt-3">
-                            <p>در این بخش آخرین مقالات، اخبار و اطلاعات مفید را مطالعه کنید.</p>
+                            <p>{{ site_text('در این بخش آخرین مقالات، اخبار و اطلاعات مفید را مطالعه کنید.') }}</p>
                         </div>
                         <div class="em_bar">
                             <div class="em_bar_bg"></div>
@@ -52,7 +52,7 @@
                                     @else
                                         <div class="no_image_placeholder">
                                             <i class="fa fa-image"></i>
-                                            <span>بدون تصویر</span>
+                                            <span>{{ site_text('بدون تصویر') }}</span>
                                         </div>
                                     @endif
                                     @if($blog->category)
@@ -80,7 +80,7 @@
                                     @endif
                                     <div class="single_blog_button">
                                         <a href="{{ route('blog.detail', ['id' => $blog->id, 'slug' => $blog->slug]) }}" class="btn btn-primary btn-sm">
-                                            ادامه مطلب <i class="fa fa-angle-left"></i>
+                                            {{ site_text('ادامه مطلب') }} <i class="fa fa-angle-left"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -92,7 +92,7 @@
                         <div class="no_blogs_content text-center">
                             <div class="alert alert-info">
                                 <i class="fa fa-info-circle"></i>
-                                هیچ مقاله‌ای موجود نیست.
+                                {{ site_text('هیچ مقاله‌ای موجود نیست.') }}
                             </div>
                         </div>
                     </div>

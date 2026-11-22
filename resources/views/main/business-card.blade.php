@@ -745,10 +745,10 @@
                                                 <a href="{{ $mapUrl }}" target="_blank" rel="noopener noreferrer"
                                                     class="inline-flex rounded-xl bg-slate-900/80 px-3 py-2 text-xs font-semibold text-white"
                                                     style="{{ $buttonFontFamily ? 'font-family: ' . $buttonFontFamily . ';' : '' }}">
-                                                    مشاهده روی نقشه نشان
+                                                    {{ site_text('مشاهده روی نقشه نشان') }}
                                                 </a>
                                             @else
-                                                <p class="text-xs opacity-70">مختصات معتبری وارد نشده.</p>
+                                                <p class="text-xs opacity-70">{{ site_text('مختصات معتبری وارد نشده.') }}</p>
                                             @endif
                                             <p class="text-xs opacity-70">عرض:
                                                 {{ $block->map_blocks->latitude ?? '-' }}, طول:

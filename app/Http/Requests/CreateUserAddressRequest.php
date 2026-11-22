@@ -28,13 +28,14 @@ class CreateUserAddressRequest extends FormRequest
             'region_id' => 'nullable',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'address' => 'required|string|max:1000',
+            'address' => 'required|string|min:30|max:1000',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'address.min' => 'آدرس باید حداقل ۳۰ حرف داشته باشد.',
             'title.required' => 'عنوان آدرس الزامی است.',
             'title.max' => 'عنوان آدرس نباید بیش از 255 کاراکتر باشد.',
             'fname.required' => 'نام الزامی است.',

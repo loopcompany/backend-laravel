@@ -2,8 +2,8 @@
 <section id="partnership">
   <div class="partner-wide">
     <div class="partner-head reveal">
-      <span class="eyebrow rule-center">همکاری‌ها</span>
-      <h2>سوابق <span class="gold-text">همکاری</span></h2>
+      <span class="eyebrow rule-center">{{ site_text('همکاری‌ها') }}</span>
+      <h2>{{ site_text('سوابق') }} <span class="gold-text">{{ site_text('همکاری') }}</span></h2>
     </div>
 
     <div class="partner-banner reveal">

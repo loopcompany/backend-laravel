@@ -188,7 +188,7 @@
                     <nav aria-label="breadcrumb" class="category-breadcrumb mb-4">
                         <ol class="breadcrumb justify-content-center">
                             <li class="breadcrumb-item">
-                                <a href="{{ route('web.category.show') }}">دسته‌بندی‌ها</a>
+                                <a href="{{ route('web.category.show') }}">{{ site_text('دسته‌بندی‌ها') }}</a>
                             </li>
                             @foreach ($parents as $parent)
                                 @if ($parent->id)
@@ -208,10 +208,10 @@
             @if (isset($sub_categories) && $sub_categories->isEmpty())
                 <div class="col-12 text-center">
                     @if (isset($check) && $check->has_subcategory == 1)
-                        <p class="text-muted">ثبت سفارش برای این خدمت در دسترس نمی‌باشد</p>
+                        <p class="text-muted">{{ site_text('ثبت سفارش برای این خدمت در دسترس نمی‌باشد') }}</p>
                     @else
                         <a class="btn btn-primary" href="{{ isset($check) && $check->id ? route('web.order.form', ['category_id' => $check->id]) : '#' }}">
-                            ثبت سفارش
+                            {{ site_text('ثبت سفارش') }}
                         </a>
                     @endif
                 </div>
@@ -278,7 +278,7 @@
                         <img src="{{ asset('storage/' . $check->image_path) }}" alt="{{ $check->title }}"
                             class="img-fluid rounded-3" style="max-height: 400px; object-fit: cover; width: 80%;">
                     @else
-                        <p>عکس موجود نیست</p>
+                        <p>{{ site_text('عکس موجود نیست') }}</p>
                     @endif
                 </section>
                 {{-- متن SEO پایین کارت‌ها --}}

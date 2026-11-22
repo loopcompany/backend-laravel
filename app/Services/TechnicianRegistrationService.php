@@ -38,9 +38,9 @@ class TechnicianRegistrationService
         if ($existingTechnician) {
             if ($existingTechnician->phone_verified_at) {
                 return [
-                    'success' => false,
-                    'message' => 'این شماره تلفن قبلاً ثبت نام و تأیید شده است.',
-                    'error_code' => 'PHONE_ALREADY_VERIFIED'
+                    'success' => true,
+                    'message' => $existingTechnician->isApproved() ? 'حساب شما قبلاً تأیید شده است. از بخش ورود وارد شوید؛ در صورت فراموشی رمز از بازیابی رمز استفاده کنید.' : 'درخواست ثبت‌نام قبلی شما موجود است. پس از مراجعه حضوری و تکمیل مدارک، نتیجه و اطلاعات ورود توسط ادمین ارسال می‌شود.',
+                    'data' => ['pending_review' => !$existingTechnician->isApproved(), 'can_login' => $existingTechnician->isApproved(), 'verification_sent' => false]
                 ];
             }
 
@@ -101,16 +101,17 @@ class TechnicianRegistrationService
         $this->repo->verifyPhone($technician);
 
         // ایجاد رمز عبور و ارسال پیامک
-        $password = $this->generateAndSendPassword($technician);
+        // Phone verification proves ownership only. Admission and credentials are issued by the admin.
 
         return [
             'success' => true,
-            'message' => 'شماره تلفن با موفقیت تأیید شد. رمز عبور به شماره شما ارسال شد.',
+            'message' => 'شماره تلفن تأیید شد. ثبت‌نام شما در انتظار مراجعه حضوری، تکمیل مدارک و تأیید ادمین است.',
             'data' => [
                 'technician_id' => $technician->id,
                 'phone' => $technician->phone,
                 'verified_at' => $technician->phone_verified_at,
-                'password_sent' => true
+                'password_sent' => false,
+                'pending_review' => true
             ]
         ];
     }
@@ -167,8 +168,7 @@ class TechnicianRegistrationService
 
         // ایجاد تکنسین
         $technician = $this->repo->create($data);
-        $data['referral_code'] = $this->repo->createUniquCodeForTechnician(21, $data['region'], $technician, 2000);
-        $update_referral_code = $this->repo->update($technician, $data);
+
         // اتصال تخصص‌ها اگر وجود داشته باشند
         if (!empty($expertiseIds)) {
             $this->repo->attachExpertises($technician, $expertiseIds);
@@ -250,37 +250,6 @@ class TechnicianRegistrationService
                 'message' => 'خطا در ارسال کد تأیید.',
                 'error_code' => 'VERIFICATION_CODE_ERROR'
             ];
-        }
-    }
-
-    private function generateAndSendPassword(object $technician): string
-    {
-        try {
-            // تولید رمز عبور 8 کاراکتری
-            $password = Str::random(8);
-
-            // هش کردن و ذخیره رمز عبور
-            $hashedPassword = Hash::make($password);
-            $this->repo->update($technician, ['password' => $hashedPassword]);
-
-            // ارسال SMS با template 812565 و متغیرهای CODE و PASS
-            // ترتیب: ابتدا کد پرسنلی (#CODE#) سپس رمز عبور (#PASS#)
-            Helper::send_sms(
-                $technician->phone,
-                '812565',
-                ['CODE', 'PASS'],
-                [$technician->referral_code, $password]
-            );
-
-            return $password;
-
-        } catch (\Exception $e) {
-            // در صورت خطا، رمز عبور پیش‌فرض
-            $defaultPassword = '12345678';
-            $hashedPassword = Hash::make($defaultPassword);
-            $this->repo->update($technician, ['password' => $hashedPassword]);
-
-            return $defaultPassword;
         }
     }
 

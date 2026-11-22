@@ -8,6 +8,7 @@ class RealtimeAccess
 {
     public const PERMISSIONS = [
         'orders' => ['view-orders'],
+        'consultations' => ['view-procurement-consultations'],
         'chat' => ['view-technician-chats'],
         'support' => ['view-user-chats', 'view-technician-chats', 'view-fault-reports', 'view-report-violations'],
         'wallet' => ['view-user', 'view-technicians', 'view-debt-requests', 'review-order-payments'],

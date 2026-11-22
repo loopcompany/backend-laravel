@@ -38,7 +38,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header bg-dark">
-                        <h5 class="modal-title text-white" id="addNewcardLabel">تعیین موقعیت</h5>
+                        <h5 class="modal-title text-white" id="addNewcardLabel">{{ site_text('تعیین موقعیت') }}</h5>
                         <button type="button" class="btn btn-sm mb-0" style="color: #fff;" data-bs-dismiss="modal"
                             aria-label="Close"><i class="bi bi-x-lg"></i></button>
                     </div>
@@ -49,8 +49,8 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-success my-0" data-bs-dismiss="modal">ثبت و ادامه</button>
-                        {{-- <a href="" class="btn btn-success my-0">ثبت و ادامه</a> --}}
+                        <button type="button" class="btn btn-success my-0" data-bs-dismiss="modal">{{ site_text('ثبت و ادامه') }}</button>
+                        {{-- <a href="" class="btn btn-success my-0">{{ site_text('ثبت و ادامه') }}</a> --}}
                     </div>
                 </div>
             </div>

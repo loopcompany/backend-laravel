@@ -39,7 +39,7 @@ class OrganizationEditRequestTest extends TestCase
             'contract_status' => 'approved',
         ]);
 
-        return $user->fresh();
+        return $this->completeCustomerProfile($user);
     }
 
     public function test_free_fields_apply_immediately_and_partially(): void
@@ -50,13 +50,13 @@ class OrganizationEditRequestTest extends TestCase
         $this->postJson('/api/organization/update-profile', [
             'agent_name' => 'نماینده جدید',
             'history' => 'ده سال',
-            'organization_email' => 'info@test.local',
+            'organization_email' => $user->email,
             'region' => '7',
             // فیلد قفل بدون تغییر (فرم کامل اپ قدیمی) خطا نیست
             'organization_name' => 'شرکت آزمون',
         ])->assertOk()
             ->assertJsonPath('data.agent_name', 'نماینده جدید')
-            ->assertJsonPath('data.organization_email', 'info@test.local')
+            ->assertJsonPath('data.organization_email', $user->email)
             ->assertJsonPath('data.locked_fields_unlocked', false)
             ->assertJsonPath('data.edit_request', null);
 
@@ -148,6 +148,7 @@ class OrganizationEditRequestTest extends TestCase
         Storage::disk('public')->assertMissing('images/profiles/org.jpg');
 
         $person = $this->makeUser(['profile_photo_path' => 'images/profiles/p.jpg', 'has_access' => 1]);
+        $this->completeCustomerProfile($person);
         Storage::disk('public')->put('images/profiles/p.jpg', 'x');
         Sanctum::actingAs($person);
 

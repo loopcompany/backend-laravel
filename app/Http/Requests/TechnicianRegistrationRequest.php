@@ -39,7 +39,7 @@ class TechnicianRegistrationRequest extends FormRequest
             'home_postal_code' => 'required|string|size:10|regex:/^[0-9]{10}$/',
             'region' => 'required|string|max:191',
             'city' => 'required|string|max:191',
-            'home_address' => 'required|string|max:1000',
+            'home_address' => 'required|string|min:30|max:1000',
             'other_referral_code' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:191',
             'idea' => 'required|string|max:1000',
@@ -61,6 +61,7 @@ class TechnicianRegistrationRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'home_address.min' => 'آدرس باید حداقل ۳۰ حرف داشته باشد.',
             'name.required' => 'نام الزامی است.',
             'name.max' => 'نام نباید بیش از 191 کاراکتر باشد.',
             

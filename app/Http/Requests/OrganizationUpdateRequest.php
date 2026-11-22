@@ -24,6 +24,13 @@ class OrganizationUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'home_number' => ['sometimes','nullable','integer','min:0'],
+            'home_unit' => ['sometimes','nullable','integer','min:0'],
+            'home_floor' => ['sometimes','nullable','integer','min:0'],
+            'work_number' => ['sometimes','nullable','integer','min:0'],
+            'work_unit' => ['sometimes','nullable','integer','min:0'],
+            'work_floor' => ['sometimes','nullable','integer','min:0'],
+
             // فیلدهای جدول organizations
             'organization_name' => 'sometimes|required|string|max:255',
             'agent_name' => 'sometimes|required|string|max:191',
@@ -142,4 +149,21 @@ class OrganizationUpdateRequest extends FormRequest
 
         ];
     }
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (count(array_diff(array_keys($this->all()), ['password','password_confirmation','_method','current_password','g-recaptcha-response'])) > 0) {
+                $input=$this->all();
+                $input['email']=$input['organization_email']??$this->user()->email;
+                $input['birth_date']=$input['manager_birthdate']??$this->user()->birth_date;
+                foreach (app(\App\Services\CustomerProfileCompletion::class)->missing($this->user(),$input,$this->all()) as $field=>$message) $validator->errors()->add($field,$message);
+            }
+
+            if ($this->exists('organization_email') && $this->user()?->email &&
+                strcasecmp((string)$this->input('organization_email'), (string)$this->user()->email) !== 0) {
+                $validator->errors()->add('organization_email', 'ایمیل ثبت‌نام از حساب کاربری قابل تغییر نیست.');
+            }
+        });
+    }
+
 }

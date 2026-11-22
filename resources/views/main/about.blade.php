@@ -19,7 +19,7 @@
 
     <section class="about-connection">
         <div class="about-connection-panel">
-            <h1>هر اتصال، آغاز یک تجربه جدید است.</h1>
+            <h1>{{ site_text('هر اتصال، آغاز یک تجربه جدید است.') }}</h1>
             <p lang="en" dir="ltr">Every connection is the beginning of a new experience.</p>
             <div class="about-connection-mark" aria-hidden="true">
                 <span></span>
@@ -29,7 +29,7 @@
 
     <section class="loop-journey">
         <div class="loop-journey-inner">
-            <h2>مسیر شکل‌گیری <span dir="ltr">LOOP</span></h2>
+            <h2>{{ site_text('مسیر شکل‌گیری') }} <span dir="ltr">LOOP</span></h2>
 
             <svg class="loop-journey-path" viewBox="0 0 1600 120" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
@@ -58,8 +58,8 @@
                             <path d="m27 25 4 4 8-9"/>
                         </svg>
                     </div>
-                    <h3>ایده</h3>
-                    <p>همه چیز از یک ایده<br>برای ساده‌سازی شروع شد.</p>
+                    <h3>{{ site_text('ایده') }}</h3>
+                    <p>{{ site_text('همه چیز از یک ایده') }}<br>{{ site_text('برای ساده‌سازی شروع شد.') }}</p>
                 </article>
 
                 <article class="loop-journey-item">
@@ -70,8 +70,8 @@
                             <path d="M22 7v8M32 7v8M42 7v8M22 49v8M32 49v8M42 49v8M7 22h8M7 32h8M7 42h8M49 22h8M49 32h8M49 42h8"/>
                         </svg>
                     </div>
-                    <h3>فناوری</h3>
-                    <p>توسعه زیرساخت‌های<br>هوشمند و پایدار</p>
+                    <h3>{{ site_text('فناوری') }}</h3>
+                    <p>{{ site_text('توسعه زیرساخت‌های') }}<br>{{ site_text('هوشمند و پایدار') }}</p>
                 </article>
 
                 <article class="loop-journey-item">
@@ -81,8 +81,8 @@
                             <path d="M19 30h4M19 38h4M19 46h4M34 18h5M34 27h5M34 36h5M34 45h5M49 38h2M49 45h2"/>
                         </svg>
                     </div>
-                    <h3>راهکارهای سازمانی</h3>
-                    <p>راهکارهای اختصاصی<br>برای کسب‌وکارها</p>
+                    <h3>{{ site_text('راهکارهای سازمانی') }}</h3>
+                    <p>{{ site_text('راهکارهای اختصاصی') }}<br>{{ site_text('برای کسب‌وکارها') }}</p>
                 </article>
 
                 <article class="loop-journey-item">
@@ -92,8 +92,8 @@
                             <path d="M27 12h10M29 51h6"/>
                         </svg>
                     </div>
-                    <h3>اپلیکیشن‌های هوشمند</h3>
-                    <p>تجربه‌ای ساده و یکپارچه<br>در دستان شما</p>
+                    <h3>{{ site_text('اپلیکیشن‌های هوشمند') }}</h3>
+                    <p>{{ site_text('تجربه‌ای ساده و یکپارچه') }}<br>{{ site_text('در دستان شما') }}</p>
                 </article>
 
                 <article class="loop-journey-item">
@@ -103,8 +103,8 @@
                             <path d="m9 42 13 13M18 46l-5 5"/>
                         </svg>
                     </div>
-                    <h3>خدمات تخصصی</h3>
-                    <p>پشتیبانی، آموزش و<br>اجرای حرفه‌ای</p>
+                    <h3>{{ site_text('خدمات تخصصی') }}</h3>
+                    <p>{{ site_text('پشتیبانی، آموزش و') }}<br>{{ site_text('اجرای حرفه‌ای') }}</p>
                 </article>
 
                 <article class="loop-journey-item">
@@ -113,8 +113,8 @@
                             <path d="M14 22c8-12 18 1 18 10S42 54 50 42c8-12-2-22-10-14-4 4-5 13-8 18-5 9-14 13-20 5-7-9-2-21 7-22 8-1 13 8 17 14"/>
                         </svg>
                     </div>
-                    <h3>اکوسیستم LOOP</h3>
-                    <p>همه چیز در یک حلقه<br>بی‌نقص به هم متصل است.</p>
+                    <h3>{{ site_text('اکوسیستم LOOP') }}</h3>
+                    <p>{{ site_text('همه چیز در یک حلقه') }}<br>{{ site_text('بی‌نقص به هم متصل است.') }}</p>
                 </article>
             </div>
         </div>
@@ -128,9 +128,9 @@
                     <circle cx="40" cy="32" r="12"/>
                     <circle cx="40" cy="32" r="3"/>
                 </svg>
-                <h2>چشم‌انداز ما</h2>
+                <h2>{{ site_text('چشم‌انداز ما') }}</h2>
                 <h3 dir="ltr">VISION</h3>
-                <p>تبدیل شدن به پیشروترین اکوسیستم یکپارچه<br>در ارائه خدمات فناوری، آموزش و پشتیبانی</p>
+                <p>{{ site_text('تبدیل شدن به پیشروترین اکوسیستم یکپارچه') }}<br>{{ site_text('در ارائه خدمات فناوری، آموزش و پشتیبانی') }}</p>
             </article>
 
             <article class="about-pillar">
@@ -140,9 +140,9 @@
                     <circle cx="32" cy="38" r="7"/>
                     <path d="m32 38 24-24M48 14l9-1-1 9M53 9l9-1-1 9"/>
                 </svg>
-                <h2>ماموریت ما</h2>
+                <h2>{{ site_text('ماموریت ما') }}</h2>
                 <h3 dir="ltr">MISSION</h3>
-                <p>ارائه راهکارهای نوآورانه و خدماتی با کیفیت<br>که زندگی دیجیتال کاربران و بهره‌وری سازمان‌ها<br>را متحول کند.</p>
+                <p>{{ site_text('ارائه راهکارهای نوآورانه و خدماتی با کیفیت') }}<br>{{ site_text('که زندگی دیجیتال کاربران و بهره‌وری سازمان‌ها') }}<br>{{ site_text('را متحول کند.') }}</p>
             </article>
 
             <article class="about-pillar">
@@ -150,14 +150,14 @@
                     <path d="M10 22h52L36 62 10 22Z"/>
                     <path d="m10 22 12-14h28l12 14M22 8l-5 14 19 40M50 8l5 14-19 40M17 22h38M28 8l-5 14M44 8l5 14"/>
                 </svg>
-                <h2>ارزش‌های ما</h2>
+                <h2>{{ site_text('ارزش‌های ما') }}</h2>
                 <h3 dir="ltr">VALUES</h3>
                 <ul>
-                    <li>اعتماد</li>
-                    <li>نوآوری</li>
-                    <li>تعهد</li>
-                    <li>کیفیت</li>
-                    <li>مسئولیت‌پذیری</li>
+                    <li>{{ site_text('اعتماد') }}</li>
+                    <li>{{ site_text('نوآوری') }}</li>
+                    <li>{{ site_text('تعهد') }}</li>
+                    <li>{{ site_text('کیفیت') }}</li>
+                    <li>{{ site_text('مسئولیت‌پذیری') }}</li>
                 </ul>
             </article>
         </div>
@@ -165,7 +165,7 @@
 
     <section class="about-ecosystem">
         <div class="about-ecosystem-inner">
-            <h2>اکوسیستم <span dir="ltr">LOOP</span></h2>
+            <h2>{{ site_text('اکوسیستم') }} <span dir="ltr">LOOP</span></h2>
 
             <svg class="about-ecosystem-lines" viewBox="0 0 1400 560" preserveAspectRatio="none" aria-hidden="true">
                 <g fill="none" stroke="#e0aa35" stroke-width="3" stroke-dasharray="5 7">
@@ -186,64 +186,64 @@
                 <div class="about-eco-icon">
                     <svg viewBox="0 0 64 64"><rect x="8" y="13" width="48" height="38" rx="3"/><path d="M8 22h48"/><circle cx="32" cy="36" r="10"/><path d="M22 36h20M32 26c4 5 4 15 0 20M32 26c-4 5-4 15 0 20"/></svg>
                 </div>
-                <div><h3>وب‌سایت</h3><p>درگاه اصلی ارتباط<br>با کاربران!</p></div>
+                <div><h3>{{ site_text('وب‌سایت') }}</h3><p>{{ site_text('درگاه اصلی ارتباط') }}<br>{{ site_text('با کاربران!') }}</p></div>
             </article>
 
             <article class="about-eco-node node-app">
                 <div class="about-eco-icon">
                     <svg viewBox="0 0 64 64"><rect x="21" y="7" width="22" height="50" rx="4"/><path d="M27 12h10"/><circle cx="32" cy="51" r="2"/></svg>
                 </div>
-                <div><h3>اپلیکیشن</h3><p>تجربه‌ای سریع، امن<br>و همیشه در دسترس</p></div>
+                <div><h3>{{ site_text('اپلیکیشن') }}</h3><p>{{ site_text('تجربه‌ای سریع، امن') }}<br>{{ site_text('و همیشه در دسترس') }}</p></div>
             </article>
 
             <article class="about-eco-node node-users">
                 <div class="about-eco-icon">
                     <svg viewBox="0 0 64 64"><circle cx="32" cy="22" r="10"/><path d="M13 54c2-12 9-18 19-18s17 6 19 18M28 19l4 4 7-8"/></svg>
                 </div>
-                <div><h3>کاربران</h3><p>هسته اصلی<br>این اکوسیستم</p></div>
+                <div><h3>{{ site_text('کاربران') }}</h3><p>{{ site_text('هسته اصلی') }}<br>{{ site_text('این اکوسیستم') }}</p></div>
             </article>
 
             <article class="about-eco-node node-service">
                 <div class="about-eco-icon">
                     <svg viewBox="0 0 64 64"><path d="M16 38V27a16 16 0 0 1 32 0v11"/><rect x="10" y="31" width="8" height="15" rx="3"/><rect x="46" y="31" width="8" height="15" rx="3"/><path d="M46 45c-2 7-7 10-14 10"/><circle cx="29" cy="55" r="3"/></svg>
                 </div>
-                <div><h3>مرکز خدمات</h3><p>پشتیبانی تخصصی<br>و پاسخ‌گویی سریع</p></div>
+                <div><h3>{{ site_text('مرکز خدمات') }}</h3><p>{{ site_text('پشتیبانی تخصصی') }}<br>{{ site_text('و پاسخ‌گویی سریع') }}</p></div>
             </article>
 
             <article class="about-eco-node node-tech">
                 <div class="about-eco-icon">
                     <svg viewBox="0 0 64 64"><path d="m14 48 18-18M24 12l8 8-8 8-8-8 8-8ZM40 36l10 10M45 8a12 12 0 0 0-9 17l-7 7 7 7 7-7a12 12 0 0 0 13-15l-8 8-8-8 8-8-3-1Z"/></svg>
                 </div>
-                <div><h3>تکنسین‌ها</h3><p>شبکه‌ای از متخصصان<br>آماده خدمت‌رسانی</p></div>
+                <div><h3>{{ site_text('تکنسین‌ها') }}</h3><p>{{ site_text('شبکه‌ای از متخصصان') }}<br>{{ site_text('آماده خدمت‌رسانی') }}</p></div>
             </article>
 
             <article class="about-eco-node node-org">
                 <div class="about-eco-icon">
                     <svg viewBox="0 0 64 64"><path d="M8 55h48M14 55V25h14v30M28 55V10h18v45M46 55V31h9v24"/><path d="M19 32h4M19 40h4M19 48h4M34 18h6M34 27h6M34 36h6M34 45h6M50 38h2M50 46h2"/></svg>
                 </div>
-                <div><h3>سازمان‌ها</h3><p>راهکارهای سازمانی<br>متناسب با نیاز شما</p></div>
+                <div><h3>{{ site_text('سازمان‌ها') }}</h3><p>{{ site_text('راهکارهای سازمانی') }}<br>{{ site_text('متناسب با نیاز شما') }}</p></div>
             </article>
         </div>
     </section>
 
     <section class="about-behind">
         <div class="about-behind-inner">
-            <h2>پشت صحنه <span dir="ltr">LOOP</span></h2>
+            <h2>{{ site_text('پشت صحنه') }} <span dir="ltr">LOOP</span></h2>
             <div class="about-behind-grid">
                 <article>
                     <img src="{{ asset('assets/new-style/aboutsec.jpeg') }}" alt="نوآوری و طراحی در لوپ" loading="lazy">
-                    <h3>نوآوری و طراحی</h3>
-                    <p>ایده‌هایی که به راهکار تبدیل می‌شوند</p>
+                    <h3>{{ site_text('نوآوری و طراحی') }}</h3>
+                    <p>{{ site_text('ایده‌هایی که به راهکار تبدیل می‌شوند') }}</p>
                 </article>
                 <article>
                     <img src="{{ asset('assets/new-style/academysec.jpeg') }}" alt="آموزش و توسعه در لوپ" loading="lazy">
-                    <h3>آموزش و توسعه</h3>
-                    <p>سرمایه‌گذاری روی دانش، سرمایه‌گذاری روی آینده</p>
+                    <h3>{{ site_text('آموزش و توسعه') }}</h3>
+                    <p>{{ site_text('سرمایه‌گذاری روی دانش، سرمایه‌گذاری روی آینده') }}</p>
                 </article>
                 <article>
                     <img src="{{ asset('assets/new-style/service02.jpg') }}" alt="خدمات تخصصی لوپ" loading="lazy">
-                    <h3>خدمات تخصصی</h3>
-                    <p>تجهیزات پیشرفته، استانداردهای جهانی</p>
+                    <h3>{{ site_text('خدمات تخصصی') }}</h3>
+                    <p>{{ site_text('تجهیزات پیشرفته، استانداردهای جهانی') }}</p>
                 </article>
             </div>
         </div>
@@ -252,33 +252,33 @@
     <section class="about-stats">
         <div class="about-stats-inner">
             <article>
-                <strong dir="ltr">۲۵۰+</strong>
-                <span>پروژه موفق</span>
+                <strong dir="ltr">{{ site_text('۲۵۰+') }}</strong>
+                <span>{{ site_text('پروژه موفق') }}</span>
             </article>
             <article>
-                <strong dir="ltr">۴۰+</strong>
-                <span>متخصص و کارشناس</span>
+                <strong dir="ltr">{{ site_text('۴۰+') }}</strong>
+                <span>{{ site_text('متخصص و کارشناس') }}</span>
             </article>
             <article>
-                <strong dir="ltr">۹۸٪</strong>
-                <span>رضایت مشتریان</span>
+                <strong dir="ltr">{{ site_text('۹۸٪') }}</strong>
+                <span>{{ site_text('رضایت مشتریان') }}</span>
             </article>
         </div>
     </section>
 
     <section class="about-belief pt-0">
         <div class="about-belief-panel">
-            <p class="fa" style="font-family: Vazirmatn FD, Muli, sans-serif;">در LOOP، فناوری زمانی ارزشمند است <br> که انسان‌ها، کسب‌وکارها و خدمات را در یک تجربه یکپارچه به هم متصل کند.</p>
+            <p class="fa" style="font-family: Vazirmatn FD, Muli, sans-serif;">{{ site_text('در LOOP، فناوری زمانی ارزشمند است') }} <br> {{ site_text('که انسان‌ها، کسب‌وکارها و خدمات را در یک تجربه یکپارچه به هم متصل کند.') }}</p>
             <p class="en" lang="en" dir="ltr">LOOP believes technology is valuable only when it brings<br>people, businesses, and services together in one seamless experience.</p>
         </div>
     </section>
 
     <section class="about-final-cta">
         <div class="about-final-cta-inner">
-            <h2>به اکوسیستم <span dir="ltr">LOOP</span> خوش آمدید.</h2>
-            <p>آماده‌اید تجربه‌ای متفاوت را آغاز کنید؟</p>
+            <h2>{{ site_text('به اکوسیستم') }} <span dir="ltr">LOOP</span> {{ site_text('خوش آمدید.') }}</h2>
+            <p>{{ site_text('آماده‌اید تجربه‌ای متفاوت را آغاز کنید؟') }}</p>
             <a href="{{ route('web.contact') }}" class="about-final-button">
-                شروع همکاری
+                {{ site_text('شروع همکاری') }}
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
             </a>
         </div>

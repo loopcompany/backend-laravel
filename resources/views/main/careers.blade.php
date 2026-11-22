@@ -27,13 +27,13 @@
   <section class="cr-intro">
     <div class="cr-container">
       <div class="cr-head">
-        <span class="cr-eyebrow">همکاری با لوپ</span>
-        <h1>آینده را با هم می‌سازیم</h1>
+        <span class="cr-eyebrow">{{ site_text('همکاری با لوپ') }}</span>
+        <h1>{{ site_text('آینده را با هم می‌سازیم') }}</h1>
         <div class="cr-rule"></div>
       </div>
       <div class="cr-lead">
-        <p>در <span class="en">LOOP</span>، باور داریم که آینده فناوری با دانش، تخصص، خلاقیت و همکاری افراد توانمند شکل می‌گیرد. هدف ما ایجاد مجموعه‌ای پویا، حرفه‌ای و رو به رشد است؛ محیطی که در آن افراد بتوانند استعدادهای خود را شکوفا کنند، مهارت‌هایشان را توسعه دهند و در مسیر پیشرفت، نقشی مؤثر داشته باشند.</p>
-        <p>ما به ارزش توانمندی‌های انسانی و فرصت‌های برابر در مسیر رشد حرفه‌ای باور داریم و از همکاری با آقایان و بانوان در بخش‌های مختلف مجموعه، از جمله واحدهای فنی و تکنسینی، اداری، پشتیبانی، فروش و سایر حوزه‌های تخصصی استقبال می‌کنیم.</p>
+        <p>{{ site_text('در') }} <span class="en">LOOP</span>{{ site_text('، باور داریم که آینده فناوری با دانش، تخصص، خلاقیت و همکاری افراد توانمند شکل می‌گیرد. هدف ما ایجاد مجموعه‌ای پویا، حرفه‌ای و رو به رشد است؛ محیطی که در آن افراد بتوانند استعدادهای خود را شکوفا کنند، مهارت‌هایشان را توسعه دهند و در مسیر پیشرفت، نقشی مؤثر داشته باشند.') }}</p>
+        <p>{{ site_text('ما به ارزش توانمندی‌های انسانی و فرصت‌های برابر در مسیر رشد حرفه‌ای باور داریم و از همکاری با آقایان و بانوان در بخش‌های مختلف مجموعه، از جمله واحدهای فنی و تکنسینی، اداری، پشتیبانی، فروش و سایر حوزه‌های تخصصی استقبال می‌کنیم.') }}</p>
       </div>
     </div>
   </section>
@@ -42,10 +42,10 @@
   <section class="cr-opportunity">
     <div class="cr-container cr-split">
       <div class="cr-split-text">
-        <span class="cr-eyebrow">فرصت‌های تازه</span>
-        <h2>فرصت‌های تازه در دنیای فناوری</h2>
-        <p>در راستای توسعه فعالیت‌های <span class="en">LOOP</span>، زمینه همکاری بانوان در بخش تکنسینی رایانه نیز فراهم شده است؛ فرصتی برای حضور در حوزه‌های تخصصی فناوری، کسب تجربه، توسعه مهارت‌های فنی و مشارکت در ارائه خدمات حرفه‌ای.</p>
-        <p>در <span class="en">LOOP</span>، معیار اصلی همکاری، شایستگی، دانش، مهارت، مسئولیت‌پذیری و تناسب توانمندی‌های افراد با الزامات هر موقعیت شغلی است.</p>
+        <span class="cr-eyebrow">{{ site_text('فرصت‌های تازه') }}</span>
+        <h2>{{ site_text('فرصت‌های تازه در دنیای فناوری') }}</h2>
+        <p>{{ site_text('در راستای توسعه فعالیت‌های') }} <span class="en">LOOP</span>{{ site_text('، زمینه همکاری بانوان در بخش تکنسینی رایانه نیز فراهم شده است؛ فرصتی برای حضور در حوزه‌های تخصصی فناوری، کسب تجربه، توسعه مهارت‌های فنی و مشارکت در ارائه خدمات حرفه‌ای.') }}</p>
+        <p>{{ site_text('در') }} <span class="en">LOOP</span>{{ site_text('، معیار اصلی همکاری، شایستگی، دانش، مهارت، مسئولیت‌پذیری و تناسب توانمندی‌های افراد با الزامات هر موقعیت شغلی است.') }}</p>
       </div>
       <div class="cr-split-media">
         <img src="{{ asset('assets/new-style/careers/technician.jpg') }}" alt="تکنسین بانوی لوپ در حال سرویس کیس رایانه در کارگاه لوپ" width="1024" height="1536" loading="lazy">
@@ -57,32 +57,32 @@
   <section class="cr-path">
     <div class="cr-container">
       <div class="cr-head">
-        <span class="cr-eyebrow">مسیر همکاری</span>
-        <h2>مسیر همکاری شما با <span class="en">LOOP</span></h2>
+        <span class="cr-eyebrow">{{ site_text('مسیر همکاری') }}</span>
+        <h2>{{ site_text('مسیر همکاری شما با') }} <span class="en">LOOP</span></h2>
         <div class="cr-rule"></div>
       </div>
       <div class="cr-path-grid">
         <div class="cr-path-card">
           <span class="cr-step">01</span>
-          <p>اگر علاقه‌مند به فعالیت در محیطی حرفه‌ای، یادگیری مستمر و مشارکت در مسیر توسعه <span class="en">LOOP</span> هستید، از شما دعوت می‌کنیم فرم درخواست همکاری را تکمیل کنید.</p>
+          <p>{{ site_text('اگر علاقه‌مند به فعالیت در محیطی حرفه‌ای، یادگیری مستمر و مشارکت در مسیر توسعه') }} <span class="en">LOOP</span> {{ site_text('هستید، از شما دعوت می‌کنیم فرم درخواست همکاری را تکمیل کنید.') }}</p>
         </div>
         <div class="cr-path-card">
           <span class="cr-step">02</span>
-          <p>این فرم با هدف آشنایی اولیه با مشخصات، سوابق، تخصص‌ها، مهارت‌ها و زمینه‌های موردعلاقه شما طراحی شده و بخشی از فرایند گزینش اولیه مجموعه است.</p>
+          <p>{{ site_text('این فرم با هدف آشنایی اولیه با مشخصات، سوابق، تخصص‌ها، مهارت‌ها و زمینه‌های موردعلاقه شما طراحی شده و بخشی از فرایند گزینش اولیه مجموعه است.') }}</p>
         </div>
         <div class="cr-path-card">
           <span class="cr-step">03</span>
-          <p>پس از ثبت درخواست، اطلاعات شما توسط واحد مربوطه بررسی خواهد شد و در صورت تناسب با فرصت‌های شغلی موجود، برای ادامه مراحل گزینش، مصاحبه یا ارزیابی تخصصی با شما تماس گرفته می‌شود.</p>
+          <p>{{ site_text('پس از ثبت درخواست، اطلاعات شما توسط واحد مربوطه بررسی خواهد شد و در صورت تناسب با فرصت‌های شغلی موجود، برای ادامه مراحل گزینش، مصاحبه یا ارزیابی تخصصی با شما تماس گرفته می‌شود.') }}</p>
         </div>
       </div>
-      <p class="cr-note">تکمیل فرم درخواست همکاری به‌منزله استخدام قطعی یا ایجاد تعهد استخدامی برای طرفین نیست و صرفاً به‌عنوان ثبت درخواست و آغاز فرایند بررسی و گزینش اولیه در نظر گرفته می‌شود.</p>
+      <p class="cr-note">{{ site_text('تکمیل فرم درخواست همکاری به‌منزله استخدام قطعی یا ایجاد تعهد استخدامی برای طرفین نیست و صرفاً به‌عنوان ثبت درخواست و آغاز فرایند بررسی و گزینش اولیه در نظر گرفته می‌شود.') }}</p>
 
       <div class="cr-cta">
-        <h3>یک گام برای شروع مسیری تازه</h3>
-        <p>توانمندی‌های خود را با ما به اشتراک بگذارید و نخستین گام را برای آشنایی و همکاری با <span class="en">LOOP</span> بردارید.</p>
+        <h3>{{ site_text('یک گام برای شروع مسیری تازه') }}</h3>
+        <p>{{ site_text('توانمندی‌های خود را با ما به اشتراک بگذارید و نخستین گام را برای آشنایی و همکاری با') }} <span class="en">LOOP</span> {{ site_text('بردارید.') }}</p>
         <div class="cr-cta-actions">
-          <a href="#apply" class="cr-btn solid">همکاری با لوپ</a>
-          <a href="#track" class="cr-btn">استعلام کد پیگیری</a>
+          <a href="#apply" class="cr-btn solid">{{ site_text('همکاری با لوپ') }}</a>
+          <a href="#track" class="cr-btn">{{ site_text('استعلام کد پیگیری') }}</a>
         </div>
       </div>
     </div>
@@ -92,8 +92,8 @@
   <section class="cr-form-section" id="apply">
     <div class="cr-container">
       <div class="cr-head dark">
-        <span class="cr-eyebrow">فرم درخواست</span>
-        <h2>فرم درخواست همکاری با لوپ</h2>
+        <span class="cr-eyebrow">{{ site_text('فرم درخواست') }}</span>
+        <h2>{{ site_text('فرم درخواست همکاری با لوپ') }}</h2>
         <div class="cr-rule"></div>
       </div>
 
@@ -101,9 +101,9 @@
         <div class="cr-success" role="status">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
           <div>
-            <h3>درخواست همکاری شما با موفقیت ثبت شد.</h3>
-            <p>اطلاعات شما بررسی و در صورت تطابق با فرصت‌های همکاری، کارشناسان لوپ با شما تماس خواهند گرفت.</p>
-            <p class="cr-code">کد پیگیری: <strong class="en">{{ $submitted['tracking_code'] }}</strong></p>
+            <h3>{{ site_text('درخواست همکاری شما با موفقیت ثبت شد.') }}</h3>
+            <p>{{ site_text('اطلاعات شما بررسی و در صورت تطابق با فرصت‌های همکاری، کارشناسان لوپ با شما تماس خواهند گرفت.') }}</p>
+            <p class="cr-code">{{ site_text('کد پیگیری:') }} <strong class="en">{{ $submitted['tracking_code'] }}</strong></p>
             <p class="cr-muted">
               @if ($submitted['sms_sent'])
                 کد پیگیری به شماره موبایل شما پیامک شد.
@@ -116,7 +116,7 @@
       @else
         @if ($errors->hasAny(['form']) || ($errors->any() && $trackErrors->isEmpty()))
           <div class="cr-alert" role="alert">
-            <strong>لطفاً موارد زیر را بررسی کنید:</strong>
+            <strong>{{ site_text('لطفاً موارد زیر را بررسی کنید:') }}</strong>
             <ul>
               @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -128,42 +128,42 @@
         <form class="cr-form" action="{{ route('web.careers.store') }}" method="POST" enctype="multipart/form-data" novalidate>
           @csrf
           <div class="cr-hp" aria-hidden="true">
-            <label>وب‌سایت <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+            <label>{{ site_text('وب‌سایت') }} <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
           </div>
 
           {{-- ۱. اطلاعات فردی --}}
           <fieldset class="cr-card">
-            <legend><span>۱</span> اطلاعات فردی</legend>
+            <legend><span>{{ site_text('۱') }}</span> {{ site_text('اطلاعات فردی') }}</legend>
             <div class="cr-grid">
-              <label class="cr-field">نام و نام خانوادگی <b>*</b>
+              <label class="cr-field">{{ site_text('نام و نام خانوادگی') }} <b>*</b>
                 <input type="text" name="full_name" value="{{ $old('full_name') }}" required maxlength="191" autocomplete="name">
                 @error('full_name')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field">شماره موبایل <b>*</b>
+              <label class="cr-field">{{ site_text('شماره موبایل') }} <b>*</b>
                 <input type="tel" name="mobile" value="{{ $old('mobile') }}" required inputmode="numeric" maxlength="11" placeholder="09xxxxxxxxx" class="ltr" autocomplete="tel">
                 @error('mobile')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field">کد ملی <b>*</b>
+              <label class="cr-field">{{ site_text('کد ملی') }} <b>*</b>
                 <input type="text" name="national_code" value="{{ $old('national_code') }}" required inputmode="numeric" maxlength="10" class="ltr">
-                <small class="cr-hint">کد ملی با شماره موبایل استعلام می‌شود؛ شماره‌ای را وارد کنید که به نام خودتان است.</small>
+                <small class="cr-hint">{{ site_text('کد ملی با شماره موبایل استعلام می‌شود؛ شماره‌ای را وارد کنید که به نام خودتان است.') }}</small>
                 @error('national_code')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field">سن <b>*</b>
+              <label class="cr-field">{{ site_text('سن') }} <b>*</b>
                 <input type="number" name="age" value="{{ $old('age') }}" required min="16" max="70" inputmode="numeric">
                 @error('age')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field">شهر محل سکونت <b>*</b>
+              <label class="cr-field">{{ site_text('شهر محل سکونت') }} <b>*</b>
                 <input type="text" name="city" value="{{ $old('city') }}" required maxlength="100">
                 @error('city')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field">منطقه محل سکونت
+              <label class="cr-field">{{ site_text('منطقه محل سکونت') }}
                 <input type="text" name="district" value="{{ $old('district') }}" maxlength="100" placeholder="مثلاً منطقه ۵">
                 @error('district')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
             </div>
 
             <div class="cr-q">
-              <span class="cr-q-title">جنسیت <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('جنسیت') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::GENDERS as $value => $label)
                   <label class="cr-choice"><input type="radio" name="gender" value="{{ $value }}" {{ $checked('gender', $value) }} required><span>{{ $label }}</span></label>
@@ -173,7 +173,7 @@
             </div>
 
             <div class="cr-q">
-              <span class="cr-q-title">وضعیت تأهل <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('وضعیت تأهل') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::MARITAL as $value => $label)
                   <label class="cr-choice"><input type="radio" name="marital_status" value="{{ $value }}" {{ $checked('marital_status', $value) }} required><span>{{ $label }}</span></label>
@@ -183,13 +183,13 @@
             </div>
 
             <div class="cr-q" data-show-when="gender=male">
-              <span class="cr-q-title">وضعیت نظام وظیفه <b>*</b> <small>(برای آقایان)</small></span>
+              <span class="cr-q-title">{{ site_text('وضعیت نظام وظیفه') }} <b>*</b> <small>{{ site_text('(برای آقایان)') }}</small></span>
               <div class="cr-choices">
                 @foreach (O::MILITARY as $value => $label)
                   <label class="cr-choice"><input type="radio" name="military_status" value="{{ $value }}" {{ $checked('military_status', $value) }}><span>{{ $label }}</span></label>
                 @endforeach
               </div>
-              <label class="cr-field cr-inline" data-show-when="military_status=other">توضیح
+              <label class="cr-field cr-inline" data-show-when="military_status=other">{{ site_text('توضیح') }}
                 <input type="text" name="military_status_other" value="{{ $old('military_status_other') }}" maxlength="191">
               </label>
               @error('military_status')<small class="cr-err">{{ $message }}</small>@enderror
@@ -199,22 +199,22 @@
 
           {{-- ۲. موقعیت شغلی --}}
           <fieldset class="cr-card">
-            <legend><span>۲</span> موقعیت شغلی مورد درخواست</legend>
+            <legend><span>{{ site_text('۲') }}</span> {{ site_text('موقعیت شغلی مورد درخواست') }}</legend>
             <div class="cr-q">
-              <span class="cr-q-title">عنوان شغلی <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('عنوان شغلی') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::JOB_TITLES as $value => $label)
                   <label class="cr-choice"><input type="radio" name="job_title" value="{{ $value }}" {{ $checked('job_title', $value) }} required><span>{{ $label }}</span></label>
                 @endforeach
               </div>
-              <label class="cr-field cr-inline" data-show-when="job_title=other">عنوان شغلی موردنظر
+              <label class="cr-field cr-inline" data-show-when="job_title=other">{{ site_text('عنوان شغلی موردنظر') }}
                 <input type="text" name="job_title_other" value="{{ $old('job_title_other') }}" maxlength="191">
               </label>
               @error('job_title')<small class="cr-err">{{ $message }}</small>@enderror
               @error('job_title_other')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
             <div class="cr-q">
-              <span class="cr-q-title">نوع همکاری <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('نوع همکاری') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::COOPERATION_TYPES as $value => $label)
                   <label class="cr-choice"><input type="radio" name="cooperation_type" value="{{ $value }}" {{ $checked('cooperation_type', $value) }} required><span>{{ $label }}</span></label>
@@ -226,25 +226,25 @@
 
           {{-- ۳. تحصیلات و سابقه کاری --}}
           <fieldset class="cr-card">
-            <legend><span>۳</span> تحصیلات و سابقه کاری</legend>
+            <legend><span>{{ site_text('۳') }}</span> {{ site_text('تحصیلات و سابقه کاری') }}</legend>
             <div class="cr-q">
-              <span class="cr-q-title">آخرین مدرک تحصیلی <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('آخرین مدرک تحصیلی') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::EDUCATION as $value => $label)
                   <label class="cr-choice"><input type="radio" name="education_level" value="{{ $value }}" {{ $checked('education_level', $value) }} required><span>{{ $label }}</span></label>
                 @endforeach
               </div>
-              <label class="cr-field cr-inline" data-show-when="education_level=other">مدرک تحصیلی
+              <label class="cr-field cr-inline" data-show-when="education_level=other">{{ site_text('مدرک تحصیلی') }}
                 <input type="text" name="education_level_other" value="{{ $old('education_level_other') }}" maxlength="191">
               </label>
               @error('education_level')<small class="cr-err">{{ $message }}</small>@enderror
               @error('education_level_other')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
-            <label class="cr-field">رشته تحصیلی
+            <label class="cr-field">{{ site_text('رشته تحصیلی') }}
               <input type="text" name="field_of_study" value="{{ $old('field_of_study') }}" maxlength="191">
             </label>
             <div class="cr-q">
-              <span class="cr-q-title">سابقه کاری <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('سابقه کاری') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::WORK_EXPERIENCE as $value => $label)
                   <label class="cr-choice"><input type="radio" name="work_experience" value="{{ $value }}" {{ $checked('work_experience', $value) }} required><span>{{ $label }}</span></label>
@@ -253,7 +253,7 @@
               @error('work_experience')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
             <div class="cr-q">
-              <span class="cr-q-title">سابقه کار مرتبط با موقعیت شغلی <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('سابقه کار مرتبط با موقعیت شغلی') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::RELATED_EXPERIENCE as $value => $label)
                   <label class="cr-choice"><input type="radio" name="related_experience" value="{{ $value }}" {{ $checked('related_experience', $value) }} required><span>{{ $label }}</span></label>
@@ -265,8 +265,8 @@
 
           {{-- ۴. مهارت‌های کامپیوتری و فنی --}}
           <fieldset class="cr-card">
-            <legend><span>۴</span> مهارت‌های کامپیوتری و فنی</legend>
-            <p class="cr-desc">برای هر مهارت، سطح توانایی خود را انتخاب کنید:</p>
+            <legend><span>{{ site_text('۴') }}</span> {{ site_text('مهارت‌های کامپیوتری و فنی') }}</legend>
+            <p class="cr-desc">{{ site_text('برای هر مهارت، سطح توانایی خود را انتخاب کنید:') }}</p>
             <ul class="cr-levels">
               @foreach (O::SKILL_LEVEL_HINTS as $level => $hint)
                 <li><strong>{{ O::SKILL_LEVELS[$level] }}:</strong> {{ $hint }}</li>
@@ -278,7 +278,7 @@
                 <h4>{{ ['hardware' => 'الف', 'software' => 'ب', 'office' => 'ج'][$groupKey] }}) {{ $group['title'] }}</h4>
                 <div class="cr-skill-table" role="table">
                   <div class="cr-skill-row cr-skill-headrow" role="row">
-                    <span role="columnheader">مهارت</span>
+                    <span role="columnheader">{{ site_text('مهارت') }}</span>
                     @foreach (O::SKILL_LEVELS as $label)
                       <span role="columnheader">{{ $label }}</span>
                     @endforeach
@@ -302,34 +302,34 @@
 
           {{-- ۵. تخصص‌های تکمیلی --}}
           <fieldset class="cr-card">
-            <legend><span>۵</span> تخصص‌های تکمیلی</legend>
+            <legend><span>{{ site_text('۵') }}</span> {{ site_text('تخصص‌های تکمیلی') }}</legend>
             <div class="cr-q">
-              <span class="cr-q-title">حوزه‌های تخصصی موردعلاقه</span>
+              <span class="cr-q-title">{{ site_text('حوزه‌های تخصصی موردعلاقه') }}</span>
               <div class="cr-choices">
                 @foreach (O::INTEREST_AREAS as $value => $label)
                   <label class="cr-choice"><input type="checkbox" name="interest_areas[]" value="{{ $value }}" {{ in_array($value, old('interest_areas', []), true) ? 'checked' : '' }}><span>{{ $label }}</span></label>
                 @endforeach
               </div>
-              <label class="cr-field cr-inline" data-show-when="interest_areas[]=other">سایر حوزه‌ها
+              <label class="cr-field cr-inline" data-show-when="interest_areas[]=other">{{ site_text('سایر حوزه‌ها') }}
                 <input type="text" name="interest_other" value="{{ $old('interest_other') }}" maxlength="191">
               </label>
             </div>
             <div class="cr-q">
-              <span class="cr-q-title">مدارک فنی و گواهینامه‌ها <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('مدارک فنی و گواهینامه‌ها') }} <b>*</b></span>
               <div class="cr-choices">
-                <label class="cr-choice"><input type="radio" name="has_certificates" value="yes" {{ $checked('has_certificates', 'yes') }} required><span>دارم</span></label>
-                <label class="cr-choice"><input type="radio" name="has_certificates" value="no" {{ $checked('has_certificates', 'no') }}><span>ندارم</span></label>
+                <label class="cr-choice"><input type="radio" name="has_certificates" value="yes" {{ $checked('has_certificates', 'yes') }} required><span>{{ site_text('دارم') }}</span></label>
+                <label class="cr-choice"><input type="radio" name="has_certificates" value="no" {{ $checked('has_certificates', 'no') }}><span>{{ site_text('ندارم') }}</span></label>
               </div>
               @error('has_certificates')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
-            <label class="cr-field">توضیحات یا تخصص‌های دیگر
+            <label class="cr-field">{{ site_text('توضیحات یا تخصص‌های دیگر') }}
               <textarea name="extra_skills" rows="3" maxlength="2000">{{ $old('extra_skills') }}</textarea>
             </label>
           </fieldset>
 
           {{-- ۶. اطلاعات ویژه تکنسین‌های میدانی --}}
           <fieldset class="cr-card" data-show-when="job_title=field_technician">
-            <legend><span>۶</span> اطلاعات ویژه تکنسین‌های میدانی</legend>
+            <legend><span>{{ site_text('۶') }}</span> {{ site_text('اطلاعات ویژه تکنسین‌های میدانی') }}</legend>
             @php
               $fieldQuestions = [
                 ['has_vehicle', 'آیا وسیله نقلیه شخصی دارید؟', O::YES_NO, null],
@@ -356,9 +356,9 @@
 
           {{-- ۷. شرایط همکاری --}}
           <fieldset class="cr-card">
-            <legend><span>۷</span> شرایط همکاری</legend>
+            <legend><span>{{ site_text('۷') }}</span> {{ site_text('شرایط همکاری') }}</legend>
             <div class="cr-q">
-              <span class="cr-q-title">زمان آمادگی برای شروع <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('زمان آمادگی برای شروع') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::START_AVAILABILITY as $value => $label)
                   <label class="cr-choice"><input type="radio" name="start_availability" value="{{ $value }}" {{ $checked('start_availability', $value) }} required><span>{{ $label }}</span></label>
@@ -367,20 +367,20 @@
               @error('start_availability')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
             <div class="cr-q">
-              <span class="cr-q-title">حقوق درخواستی <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('حقوق درخواستی') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::SALARY_TYPES as $value => $label)
                   <label class="cr-choice"><input type="radio" name="salary_type" value="{{ $value }}" {{ $checked('salary_type', $value) }} required><span>{{ $label }}</span></label>
                 @endforeach
               </div>
-              <label class="cr-field cr-inline" data-show-when="salary_type=fixed">مبلغ حقوق درخواستی (تومان، اختیاری)
+              <label class="cr-field cr-inline" data-show-when="salary_type=fixed">{{ site_text('مبلغ حقوق درخواستی (تومان، اختیاری)') }}
                 <input type="text" name="salary_amount" value="{{ $old('salary_amount') }}" inputmode="numeric" class="ltr">
               </label>
               @error('salary_type')<small class="cr-err">{{ $message }}</small>@enderror
               @error('salary_amount')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
             <div class="cr-q">
-              <span class="cr-q-title">امکان کار اضافه‌کاری <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('امکان کار اضافه‌کاری') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::YES_NO_COORDINATION as $value => $label)
                   <label class="cr-choice"><input type="radio" name="overtime" value="{{ $value }}" {{ $checked('overtime', $value) }} required><span>{{ $label }}</span></label>
@@ -389,7 +389,7 @@
               @error('overtime')<small class="cr-err">{{ $message }}</small>@enderror
             </div>
             <div class="cr-q">
-              <span class="cr-q-title">امکان کار در شیفت <b>*</b></span>
+              <span class="cr-q-title">{{ site_text('امکان کار در شیفت') }} <b>*</b></span>
               <div class="cr-choices">
                 @foreach (O::YES_NO_COORDINATION as $value => $label)
                   <label class="cr-choice"><input type="radio" name="shift_work" value="{{ $value }}" {{ $checked('shift_work', $value) }} required><span>{{ $label }}</span></label>
@@ -401,24 +401,24 @@
 
           {{-- ۸. رزومه و مدارک --}}
           <fieldset class="cr-card">
-            <legend><span>۸</span> رزومه و مدارک</legend>
+            <legend><span>{{ site_text('۸') }}</span> {{ site_text('رزومه و مدارک') }}</legend>
             <div class="cr-grid">
-              <label class="cr-field cr-file">بارگذاری رزومه
+              <label class="cr-field cr-file">{{ site_text('بارگذاری رزومه') }}
                 <input type="file" name="resume" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                <small class="cr-hint">PDF، Word یا تصویر — حداکثر ۵ مگابایت</small>
+                <small class="cr-hint">{{ site_text('PDF، Word یا تصویر — حداکثر ۵ مگابایت') }}</small>
                 @error('resume')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field cr-file">بارگذاری مدارک فنی
+              <label class="cr-field cr-file">{{ site_text('بارگذاری مدارک فنی') }}
                 <input type="file" name="certificates" accept=".pdf,.jpg,.jpeg,.png,.zip">
-                <small class="cr-hint">PDF، تصویر یا ZIP — حداکثر ۱۰ مگابایت</small>
+                <small class="cr-hint">{{ site_text('PDF، تصویر یا ZIP — حداکثر ۱۰ مگابایت') }}</small>
                 @error('certificates')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field cr-file">بارگذاری نمونه‌کار
+              <label class="cr-field cr-file">{{ site_text('بارگذاری نمونه‌کار') }}
                 <input type="file" name="portfolio" accept=".pdf,.jpg,.jpeg,.png,.zip">
-                <small class="cr-hint">PDF، تصویر یا ZIP — حداکثر ۱۰ مگابایت</small>
+                <small class="cr-hint">{{ site_text('PDF، تصویر یا ZIP — حداکثر ۱۰ مگابایت') }}</small>
                 @error('portfolio')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
-              <label class="cr-field">لینک رزومه یا نمونه‌کار (اختیاری)
+              <label class="cr-field">{{ site_text('لینک رزومه یا نمونه‌کار (اختیاری)') }}
                 <input type="url" name="portfolio_link" value="{{ $old('portfolio_link') }}" class="ltr" placeholder="https://">
                 @error('portfolio_link')<small class="cr-err">{{ $message }}</small>@enderror
               </label>
@@ -427,20 +427,20 @@
 
           {{-- ۹. تأیید و ثبت درخواست --}}
           <fieldset class="cr-card">
-            <legend><span>۹</span> تأیید و ثبت درخواست</legend>
+            <legend><span>{{ site_text('۹') }}</span> {{ site_text('تأیید و ثبت درخواست') }}</legend>
             <label class="cr-check">
               <input type="checkbox" name="confirm_accuracy" value="1" {{ old('confirm_accuracy') ? 'checked' : '' }} required>
-              <span>من تأیید می‌کنم اطلاعات ثبت‌شده صحیح است.</span>
+              <span>{{ site_text('من تأیید می‌کنم اطلاعات ثبت‌شده صحیح است.') }}</span>
             </label>
             @error('confirm_accuracy')<small class="cr-err">{{ $message }}</small>@enderror
             <label class="cr-check">
               <input type="checkbox" name="confirm_privacy" value="1" {{ old('confirm_privacy') ? 'checked' : '' }} required>
-              <span>با ثبت و نگهداری اطلاعات و رزومه‌ام برای بررسی درخواست همکاری موافقم.</span>
+              <span>{{ site_text('با ثبت و نگهداری اطلاعات و رزومه‌ام برای بررسی درخواست همکاری موافقم.') }}</span>
             </label>
             @error('confirm_privacy')<small class="cr-err">{{ $message }}</small>@enderror
 
-            <button type="submit" class="cr-btn solid cr-submit">همکاری با لوپ</button>
-            <p class="cr-muted">پس از ثبت، کد پیگیری صادر و پیامک تأیید برای شماره موبایل ثبت‌شده ارسال می‌شود.</p>
+            <button type="submit" class="cr-btn solid cr-submit">{{ site_text('همکاری با لوپ') }}</button>
+            <p class="cr-muted">{{ site_text('پس از ثبت، کد پیگیری صادر و پیامک تأیید برای شماره موبایل ثبت‌شده ارسال می‌شود.') }}</p>
           </fieldset>
         </form>
       @endif
@@ -452,16 +452,16 @@
     <div class="cr-container">
       <div class="cr-track-box">
         <div>
-          <span class="cr-eyebrow">پیگیری</span>
-          <h2>استعلام کد پیگیری همکاری</h2>
-          <p>کد پیگیری (مثل <span class="en">PCS-284580</span>) و شماره موبایل ثبت‌شده در درخواست را وارد کنید.</p>
+          <span class="cr-eyebrow">{{ site_text('پیگیری') }}</span>
+          <h2>{{ site_text('استعلام کد پیگیری همکاری') }}</h2>
+          <p>{{ site_text('کد پیگیری (مثل') }} <span class="en">PCS-284580</span>{{ site_text(') و شماره موبایل ثبت‌شده در درخواست را وارد کنید.') }}</p>
         </div>
         <form action="{{ route('web.careers.track') }}" method="POST" class="cr-track-form">
           @csrf
           <input type="text" name="tracking_code" value="{{ old('tracking_code') }}" placeholder="کد پیگیری" class="ltr" required maxlength="20" aria-label="کد پیگیری" data-label="کد پیگیری">
           <input type="tel" name="track_mobile" value="{{ old('track_mobile') }}" placeholder="شماره موبایل" class="ltr" required maxlength="11" inputmode="numeric" aria-label="شماره موبایل" data-label="شماره موبایل"
                  pattern="[0۰٠][9۹٩][0-9۰-۹٠-٩]{9}" data-msg-pattern="شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد.">
-          <button type="submit" class="cr-btn solid">استعلام</button>
+          <button type="submit" class="cr-btn solid">{{ site_text('استعلام') }}</button>
         </form>
         @if ($trackErrors->any())
           <div class="cr-alert" role="alert">
@@ -470,9 +470,9 @@
         @endif
         @if ($tracked)
           <div class="cr-track-result" role="status">
-            <div><span>کد پیگیری</span><strong class="en">{{ $tracked['tracking_code'] }}</strong></div>
-            <div><span>موقعیت شغلی</span><strong>{{ $tracked['job_title'] }}</strong></div>
-            <div><span>تاریخ ثبت</span><strong>{{ $tracked['submitted_at'] }}</strong></div>
+            <div><span>{{ site_text('کد پیگیری') }}</span><strong class="en">{{ $tracked['tracking_code'] }}</strong></div>
+            <div><span>{{ site_text('موقعیت شغلی') }}</span><strong>{{ $tracked['job_title'] }}</strong></div>
+            <div><span>{{ site_text('تاریخ ثبت') }}</span><strong>{{ $tracked['submitted_at'] }}</strong></div>
             <p>{{ $tracked['status_message'] }}</p>
           </div>
         @endif

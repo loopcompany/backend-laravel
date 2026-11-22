@@ -1,6 +1,9 @@
 <?php
 
+Route::get('/localization/bootstrap', [\App\Http\Controllers\LocalizationController::class, 'bootstrap'])->middleware('throttle:120,1');
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/procurement-consultations', [\App\Http\Controllers\ProcurementConsultationController::class, 'store'])->middleware('throttle:10,1');
     Route::get('/realtime/config', [\App\Http\Controllers\RealtimeController::class, 'config']);
     Route::get('/organization/agreements', [\App\Http\Controllers\OrganizationAgreementController::class, 'index']);
     Route::post('/organization/agreements', [\App\Http\Controllers\OrganizationAgreementController::class, 'store']);

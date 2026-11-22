@@ -1,6 +1,13 @@
 
 
 @extends('layout.main.header')
+@section('meta')
+<meta property="og:title" content="لوپ">
+<meta property="og:image" content="{{ asset('assets/images/logo.png') }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="{{ asset('assets/images/logo.png') }}">
+@endsection
 @section('content')
 
 
@@ -88,16 +95,16 @@
 
       <div class="col fa" dir="rtl">
         <span class="eyebrow" style="direction:ltr; display:inline-flex;">LOOP</span>
-        <h1>هر اتصال،<br><span class="gold-text">یک شروع</span></h1>
-        <p>LOOP جایی است که ارتباط‌ها به فرصت، اعتماد و آینده تبدیل می‌شوند.</p>
-        <a href="#ecosystem" class="btn">شروع مسیر
+        <h1>{{ site_text('هر اتصال،') }}<br><span class="gold-text">{{ site_text('یک شروع') }}</span></h1>
+        <p>{{ site_text('LOOP جایی است که ارتباط‌ها به فرصت، اعتماد و آینده تبدیل می‌شوند.') }}</p>
+        <a href="#ecosystem" class="btn">{{ site_text('شروع مسیر') }}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
         </a>
       </div>
     </div>
 
     <div class="hero-tagline reveal">
-      <span>با LOOP: تا بی‌نهایت در کنار هم هستیم.</span>
+      <span>{{ site_text('با LOOP: تا بی‌نهایت در کنار هم هستیم.') }}</span>
       <svg class="infinity" viewBox="0 0 46 22" fill="none">
         <path d="M12 4a7 7 0 1 0 0 14 12 12 0 0 0 11-7 12 12 0 0 1 11-7 7 7 0 1 1 0 14 12 12 0 0 1-11-7 12 12 0 0 0-11-7Z" stroke="#d9a940" stroke-width="1.6"/>
       </svg>
@@ -118,9 +125,9 @@
 
     <div class="about-banner-text">
       <span class="eyebrow">LOOP</span>
-      <h2>درباره <span class="gold-text en">LOOP</span></h2>
-      <p>لوپ یک شرکت متعهد و متخصص می‌باشد که با استفاده از تکنولوژی و دانش روز، بهترین راهکارها را برای شما فراهم می‌کند.</p>
-      <a href="{{ route('web.about') }}" class="btn solid">بیشتر درباره ما
+      <h2>{{ site_text('درباره') }} <span class="gold-text en">LOOP</span></h2>
+      <p>{{ site_text('لوپ یک شرکت متعهد و متخصص می‌باشد که با استفاده از تکنولوژی و دانش روز، بهترین راهکارها را برای شما فراهم می‌کند.') }}</p>
+      <a href="{{ route('web.about') }}" class="btn solid">{{ site_text('بیشتر درباره ما') }}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
       </a>
     </div>
@@ -162,10 +169,10 @@
   </div>
   <div class="container">
     <div class="eco-head reveal">
-      <h2>اکوسیستم <span class="gold-text en">LOOP</span></h2>
-      <p class="sub">همه چیز به هم متصل است.</p>
+      <h2>{{ site_text('اکوسیستم') }} <span class="gold-text en">LOOP</span></h2>
+      <p class="sub">{{ site_text('همه چیز به هم متصل است.') }}</p>
       <div class="gold-rule"></div>
-      <p>اکوسیستم LOOP مجموعه‌ای یکپارچه از وب‌سایت، اپلیکیشن‌ها، خدمات، آموزش و پشتیبانی است.<br>که برای ایجاد تجربه‌ای هوشمند، سریع و مطمئن طراحی شده است.</p>
+      <p>{{ site_text('اکوسیستم LOOP مجموعه‌ای یکپارچه از وب‌سایت، اپلیکیشن‌ها، خدمات، آموزش و پشتیبانی است.') }}<br>{{ site_text('که برای ایجاد تجربه‌ای هوشمند، سریع و مطمئن طراحی شده است.') }}</p>
     </div>
 
     <div class="eco-wrap reveal">
@@ -425,56 +432,56 @@
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/2.png') }}"/>
         </div>
-        <h4>Website</h4><p>دسترسی سریع<br>به خدمات<br><span class="site en">clpiran.com</span></p>
+        <h4>Website</h4><p>{{ site_text('دسترسی سریع') }}<br>{{ site_text('به خدمات') }}<br><span class="site en">clpiran.com</span></p>
       </div>
       <div class="eco-node pos-tr">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/4.png') }}"/>
         </div>
-        <h4>User<br>App</h4><p>درخواست خدمات<br>مدیریت کاربران</p>
+        <h4>User<br>App</h4><p>{{ site_text('درخواست خدمات') }}<br>{{ site_text('مدیریت کاربران') }}</p>
       </div>
       <div class="eco-node pos-ml">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/1.png') }}"/>
         </div>
-        <h4>Enterprise</h4><p>سازمان‌ها و شرکت‌ها<br>مدیریت پروژه‌ها</p>
+        <h4>Enterprise</h4><p>{{ site_text('سازمان‌ها و شرکت‌ها') }}<br>{{ site_text('مدیریت پروژه‌ها') }}</p>
       </div>
       <div class="eco-node pos-mr">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 1 5 5l-2.4-.7-1.9 1.9-2-2 1.9-1.9-.6-2.3z"/><path d="M15.4 12.6 20 17.2a2 2 0 0 1-2.8 2.8l-4.6-4.6"/><path d="M9 6.5 6.5 9 3 5.5 5.5 3 9 6.5z"/><path d="m9 6.5 8.5 8.5"/><path d="M8 14.5 3.5 19a2 2 0 0 0 2.8 2.8l4.5-4.5"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/5.png') }}"/>
         </div>
-        <h4>Technician<br>App</h4><p>مدیریت مأموریت‌ها<br>عملیات میدانی</p>
+        <h4>Technician<br>App</h4><p>{{ site_text('مدیریت مأموریت‌ها') }}<br>{{ site_text('عملیات میدانی') }}</p>
       </div>
       <div class="eco-node pos-bl">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/3.png') }}"/>
         </div>
-        <h4>Academy</h4><p>آموزش تخصصی<br>کلاس‌ها و دوره‌ها</p>
+        <h4>Academy</h4><p>{{ site_text('آموزش تخصصی') }}<br>{{ site_text('کلاس‌ها و دوره‌ها') }}</p>
       </div>
       <div class="eco-node pos-br">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5-9-10a5 5 0 0 1 9-4 5 5 0 0 1 9 4c-2 5-9 10-9 10Z"/><circle cx="12" cy="11" r="2"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/6.png') }}"/>
         </div>
-        <h4>Service<br>Center</h4><p>پشتیبانی حضوری<br>عملیات فیزیکی</p>
+        <h4>Service<br>Center</h4><p>{{ site_text('پشتیبانی حضوری') }}<br>{{ site_text('عملیات فیزیکی') }}</p>
       </div>
     </div>
 
     <div class="eco-ready reveal">
       <div class="ln" style="background:linear-gradient(90deg, transparent, var(--gold-600));"></div>
-      <span>آماده‌اید متصل شوید؟</span>
+      <span>{{ site_text('آماده‌اید متصل شوید؟') }}</span>
       <div class="ln"></div>
     </div>
     <div class="eco-cta reveal">
-      <a href="#apps" class="btn solid">شروع تجربه LOOP
+      <a href="#apps" class="btn solid">{{ site_text('شروع تجربه LOOP') }}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
-      <a href="#windows-app" class="btn">مشاهده نسخه ویندوز</a>
-      <a href="#apps" class="btn">مشاهده اپلیکیشن‌ها
+      <a href="#windows-app" class="btn">{{ site_text('مشاهده نسخه ویندوز') }}</a>
+      <a href="#apps" class="btn">{{ site_text('مشاهده اپلیکیشن‌ها') }}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       </a>
     </div>
@@ -487,10 +494,10 @@
     <div class="academy-banner-content">
       <div class="academy-banner-dots"></div>
       <div class="academy-banner-text">
-        <h2>آکادمی <span class="gold-text en">LOOP</span></h2>
-        <p class="sub">دانش، کلید پیشرفت است</p>
-        <p class="desc">دوره‌های تخصصی از مقدماتی تا پیشرفته</p>
-        <a href="{{ route('loop.learn') }}" class="btn solid">مشاهده دوره‌ها</a>
+        <h2>{{ site_text('آکادمی') }} <span class="gold-text en">LOOP</span></h2>
+        <p class="sub">{{ site_text('دانش، کلید پیشرفت است') }}</p>
+        <p class="desc">{{ site_text('دوره‌های تخصصی از مقدماتی تا پیشرفته') }}</p>
+        <a href="{{ route('loop.learn') }}" class="btn solid">{{ site_text('مشاهده دوره‌ها') }}</a>
       </div>
     </div>
     <div
@@ -558,9 +565,9 @@
   </div>
   <div class="apps-wide">
     <div class="apps-head reveal">
-      <span class="eyebrow rule-center">اپلیکیشن‌ها</span>
-      <h2>اپلیکیشن‌های <span class="gold-text en">LOOP</span></h2>
-      <p>همراه شما در هر لحظه و هر زمان</p>
+      <span class="eyebrow rule-center">{{ site_text('اپلیکیشن‌ها') }}</span>
+      <h2>{{ site_text('اپلیکیشن‌های') }} <span class="gold-text en">LOOP</span></h2>
+      <p>{{ site_text('همراه شما در هر لحظه و هر زمان') }}</p>
     </div>
 
     <div class="apps-grid reveal">
@@ -583,7 +590,7 @@
                   </a>
                 @else
                   <span class="store-btn store-btn--{{ $platform['key'] }} is-unavailable" aria-disabled="true" title="در حال حاضر در دسترس نیست">
-                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong><small>در دسترس نیست</small></span>
+                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong><small>{{ site_text('در دسترس نیست') }}</small></span>
                   </span>
                 @endif
               @endforeach

@@ -22,13 +22,13 @@
                 <div class="col-lg-12">
                     <div class="section_title text_center mb-50">
                         <div class="section_main_title">
-                            <h1>قوانین و شرایط استفاده از خدمات لوپ</h1>
+                            <h1>{{ site_text('قوانین و شرایط استفاده از خدمات لوپ') }}</h1>
                         </div>
                         <div class="section_title_text pt-3">
-                            <p>لطفاً قوانین و مقررات زیر را به دقت مطالعه کنید. با استفاده از خدمات لوپ، شما این قوانین را
-                                می‌پذیرید.</p>
+                            <p>{{ site_text('لطفاً قوانین و مقررات زیر را به دقت مطالعه کنید. با استفاده از خدمات لوپ، شما این قوانین را
+                                می‌پذیرید.') }}</p>
                             <a class="btn btn-outline-primary" href="{{ asset('assets/guid/loop-service-terms.pdf') }}"
-                               target="_blank" rel="noopener">فایل شرایط و ضوابط استفاده از خدمات (PDF)</a>
+                               target="_blank" rel="noopener">{{ site_text('فایل شرایط و ضوابط استفاده از خدمات (PDF)') }}</a>
                         </div>
                         <div class="em_bar">
                             <div class="em_bar_bg"></div>
@@ -70,18 +70,18 @@
                                     <div class="agreement_content text-center">
                                         <h4 class="mb-3">
                                             <i class="fa fa-check-circle text-success"></i>
-                                            پذیرش قوانین و مقررات
+                                            {{ site_text('پذیرش قوانین و مقررات') }}
                                         </h4>
                                         <p class="mb-3">
-                                            با ثبت نام و استفاده از خدمات لوپ، شما تمامی قوانین و مقررات فوق را می‌پذیرید و
-                                            متعهد به رعایت آن‌ها هستید.
+                                            {{ site_text('با ثبت نام و استفاده از خدمات لوپ، شما تمامی قوانین و مقررات فوق را می‌پذیرید و
+                                            متعهد به رعایت آن‌ها هستید.') }}
                                         </p>
                                         <div class="agreement_actions">
                                             <a href="{{ route('web.contact') }}" class="btn btn-outline-primary mr-3">
-                                                <i class="fa fa-envelope"></i> تماس با ما
+                                                <i class="fa fa-envelope"></i> {{ site_text('تماس با ما') }}
                                             </a>
                                             <a href="{{ route('web.privacy') }}" class="btn btn-outline-secondary">
-                                                <i class="fa fa-shield"></i> حریم خصوصی
+                                                <i class="fa fa-shield"></i> {{ site_text('حریم خصوصی') }}
                                             </a>
                                         </div>
                                     </div>
@@ -92,7 +92,7 @@
                         <div class="no_terms_content text-center">
                             <div class="alert alert-info">
                                 <i class="fa fa-info-circle"></i>
-                                قوانین و مقررات در حال حاضر موجود نیست.
+                                {{ site_text('قوانین و مقررات در حال حاضر موجود نیست.') }}
                             </div>
                         </div>
                     @endif

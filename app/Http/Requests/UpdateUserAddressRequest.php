@@ -24,7 +24,7 @@ class UpdateUserAddressRequest extends FormRequest
             'room' => 'nullable|string|max:100',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'address' => 'sometimes|required|string|max:1000',
+            'address' => 'sometimes|required|string|min:30|max:1000',
         ];
     }
 
@@ -48,6 +48,7 @@ class UpdateUserAddressRequest extends FormRequest
             'latitude.between' => 'عرض جغرافیایی باید بین -90 تا 90 باشد.',
             'longitude.numeric' => 'طول جغرافیایی باید عدد باشد.',
             'longitude.between' => 'طول جغرافیایی باید بین -180 تا 180 باشد.',
+            'address.min' => 'آدرس باید حداقل ۳۰ حرف داشته باشد.',
             'address.required' => 'آدرس الزامی است.',
             'address.max' => 'آدرس نباید بیش از 1000 کاراکتر باشد.',
         ];

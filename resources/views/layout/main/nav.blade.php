@@ -25,11 +25,11 @@
     <div class="loop-topbar-inner">
         <nav class="loop-top-links" aria-label="دسترسی‌های سایت">
             @foreach (array_merge(array_slice($primaryLinks, 0, 2), array_slice($informationLinks, 0, 1)) as $link)
-                <a href="{{ $link['url'] }}">{{ $link['label'] }}</a>
+                <a href="{{ $link['url'] }}">{{ site_text($link['label']) }}</a>
             @endforeach
-            <details class="loop-header-guides"><summary>راهنما</summary><div>@foreach ($guides as $link)<a href="{{ $link['url'] }}" target="_blank" rel="noopener">{{ $link['label'] }}</a>@endforeach</div></details>
-            <a href="{{ route('web.faqs') }}">سوالات متداول</a>
-            @foreach ([$informationLinks[4], $informationLinks[2], $informationLinks[3]] as $link)<a href="{{ $link['url'] }}">{{ $link['desktop_label'] ?? $link['label'] }}</a>@endforeach
+            <details class="loop-header-guides"><summary>{{ site_text('راهنما') }}</summary><div>@foreach ($guides as $link)<a href="{{ $link['url'] }}" target="_blank" rel="noopener">{{ site_text($link['label']) }}</a>@endforeach</div></details>
+            <a href="{{ route('web.faqs') }}">{{ site_text('سوالات متداول') }}</a>
+            @foreach ([$informationLinks[4], $informationLinks[2], $informationLinks[3]] as $link)<a href="{{ $link['url'] }}">{{ site_text($link['desktop_label'] ?? $link['label']) }}</a>@endforeach
         </nav>
         <div class="loop-header-contact">
             @if ($headerPhone)<a href="{{ $headerPhone->link }}" class="loop-header-phone"><bdi>{{ $headerPhone->name }}</bdi></a>@endif
@@ -39,19 +39,28 @@
 <header class="loop-glass-header" data-loop-header>
     <div class="loop-header-inner">
         <a class="loop-header-logo" href="{{ route('web.home') }}" aria-label="صفحهٔ نخست لوپ"><img src="{{ asset('assets/images/logo.png') }}" alt="LOOP" width="115" height="54"></a>
-        <nav class="loop-primary-links" aria-label="منوی اصلی">@foreach ($primaryLinks as $link)<a href="{{ $link['url'] }}">{{ $link['label'] }}</a>@endforeach</nav>
+        <nav class="loop-primary-links" aria-label="منوی اصلی">@foreach ($primaryLinks as $link)<a href="{{ $link['url'] }}">{{ site_text($link['label']) }}</a>@endforeach</nav>
         <button type="button" class="loop-menu-toggle" data-loop-menu-open aria-controls="loop-mobile-menu" aria-expanded="false" aria-label="باز کردن منوی سایت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg></button>
     </div>
 </header>
 <div class="loop-mobile-drawer" id="loop-mobile-menu" hidden>
     <button type="button" class="loop-menu-backdrop" data-loop-menu-close aria-label="بستن منو"></button>
     <div class="loop-menu-panel" role="dialog" aria-modal="true" aria-labelledby="loop-menu-title" tabindex="-1">
-        <div class="loop-menu-title"><strong id="loop-menu-title">لوپ</strong><button type="button" data-loop-menu-close aria-label="بستن منو">×</button></div>
+        <div class="loop-menu-title"><strong id="loop-menu-title">{{ site_text('لوپ') }}</strong><button type="button" data-loop-menu-close aria-label="بستن منو">×</button></div>
         <nav aria-label="منوی موبایل">
-            @foreach (array_merge($primaryLinks, $informationLinks) as $link)<a href="{{ $link['url'] }}">{{ $link['label'] }}</a>@endforeach
-            <details><summary>راهنما</summary>@foreach ($guides as $link)<a href="{{ $link['url'] }}" target="_blank" rel="noopener">{{ $link['label'] }}</a>@endforeach</details>
+            @foreach (array_merge($primaryLinks, $informationLinks) as $link)<a href="{{ $link['url'] }}">{{ site_text($link['label']) }}</a>@endforeach
+            <details><summary>{{ site_text('راهنما') }}</summary>@foreach ($guides as $link)<a href="{{ $link['url'] }}" target="_blank" rel="noopener">{{ site_text($link['label']) }}</a>@endforeach</details>
         </nav>
         <div class="loop-menu-visual"><img src="{{ asset('assets/new-style/mobile/hero-home.webp') }}" alt="هر اتصال، یک شروع" width="1023" height="1537" loading="lazy"></div>
     </div>
 </div>
 <script src="{{ asset('assets/js/loop-site-header.js') }}?v=20261115-2" defer></script>
+
+<div class="loop-language-picker" style="text-align:center;padding:6px;background:#102435;color:#fff">
+ <label for="site-language">{{ site_text('زبان') }}</label>
+ <select id="site-language" aria-label="Language" style="color:#fff;background:#17334f;border:1px solid #c7a24d;border-radius:6px;padding:4px" onchange="const next=new URL(window.location.href);next.searchParams.set('lang',this.value);window.location.assign(next.href)">
+ @foreach(app(\App\Services\LocalizationCatalog::class)->languages() as $language)
+  <option value="{{ $language['code'] }}" @selected(app()->getLocale()===$language['code'])>{{ $language['native_name'] }} — {{ strtoupper($language['code']) }}</option>
+ @endforeach
+ </select>
+</div>

@@ -1,97 +1,48 @@
 <?php
-
 namespace Tests\Unit;
-
-use App\Services\TechnicianRegistrationService;
+use App\Helpers\Helper;
+use App\Services\TechnicianAdmissionService;
+use Cryptommer\Smsir\Smsir;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Tests\Concerns\MakesPeople;
 use Tests\TestCase;
 
+/** Exercise the actual admission and SMS boundary; no real message is sent. */
 class TechnicianPasswordSMSTest extends TestCase
 {
-    /**
-     * تست رفع باگ: کد پرسنلی و رمز عبور باید با ترتیب صحیح ارسال شوند
-     * 
-     * قالب SMS 812565:
-     * کد پرسنلی: #CODE# 
-     * رمز عبور شما: #PASS#
-     * 
-     * پس ترتیب صحیح پارامترها:
-     * names: ['CODE', 'PASS']
-     * values: [کد_پرسنلی, رمز_عبور]
-     */
-    public function test_sms_template_parameter_order_is_documented(): void
-    {
-        // این تست فقط برای مستندسازی و یادآوری ترتیب صحیح است
-        $correctOrder = [
-            'template_id' => '812565',
-            'parameters' => [
-                'names' => ['CODE', 'PASS'],
-                'values' => ['کد_پرسنلی', 'رمز_عبور']
-            ],
-            'message_format' => 'کد پرسنلی: #CODE# و رمز عبور شما: #PASS# می باشد.'
-        ];
-
-        $this->assertEquals('812565', $correctOrder['template_id']);
-        $this->assertEquals(['CODE', 'PASS'], $correctOrder['parameters']['names']);
-        
-        // اطمینان از اینکه اولین پارامتر CODE (کد پرسنلی) است
-        $this->assertEquals('CODE', $correctOrder['parameters']['names'][0]);
-        
-        // اطمینان از اینکه دومین پارامتر PASS (رمز عبور) است
-        $this->assertEquals('PASS', $correctOrder['parameters']['names'][1]);
-    }
-
-    /**
-     * تست بررسی ساختار صحیح کد در سرویس
-     */
-    public function test_service_code_structure_is_correct(): void
-    {
-        // بررسی وجود فایل سرویس
-        $serviceFile = app_path('Services/TechnicianRegistrationService.php');
-        $this->assertFileExists($serviceFile);
-
-        // خواندن محتوای فایل
-        $content = file_get_contents($serviceFile);
-
-        // بررسی وجود ترتیب صحیح ['CODE', 'PASS']
-        $this->assertStringContainsString("['CODE', 'PASS']", $content);
-        
-        // بررسی وجود ارسال با ترتیب صحیح: کد پرسنلی، رمز عبور
-        $this->assertStringContainsString('[$technician->referral_code, $password]', $content);
-        
-        // بررسی وجود template ID صحیح
-        $this->assertMatchesRegularExpression('/(?<![0-9])812565(?![0-9])/', $content);
-        
-        // اطمینان از عدم وجود ترتیب اشتباه قدیمی ['PASS', 'CODE']
-        $this->assertStringNotContainsString("['PASS', 'CODE']", $content);
-    }
-
-    /**
-     * تست مقایسه ترتیب قبل و بعد از رفع باگ
-     */
-    public function test_parameter_order_fix(): void
-    {
-        // ترتیب اشتباه قبل از رفع باگ
-        $wrongOrder = [
-            'names' => ['PASS', 'CODE'],
-            'values' => ['password123', 'TECH12345']
-        ];
-
-        // ترتیب صحیح بعد از رفع باگ
-        $correctOrder = [
-            'names' => ['CODE', 'PASS'],
-            'values' => ['TECH12345', 'password123']
-        ];
-
-        // بررسی که ترتیب صحیح اول CODE سپس PASS است
-        $this->assertEquals('CODE', $correctOrder['names'][0]);
-        $this->assertEquals('PASS', $correctOrder['names'][1]);
-
-        // بررسی که مقادیر هم به همین ترتیب هستند
-        $this->assertEquals('TECH12345', $correctOrder['values'][0]); // کد پرسنلی
-        $this->assertEquals('password123', $correctOrder['values'][1]); // رمز عبور
-
-        // اطمینان از اینکه ترتیب صحیح با ترتیب اشتباه قبلی متفاوت است
-        $this->assertNotEquals($wrongOrder['names'], $correctOrder['names']);
-    }
+ use RefreshDatabase, MakesPeople;
+ public function test_admission_sends_issued_code_then_fresh_password_and_preserves_it_on_repeat():void
+ {
+  config(['smsir.enabled'=>true,'smsir.technician_approved_template_id'=>null,'firebase.enabled'=>false]);
+  $technician=$this->makeTechnician(['approval_status'=>'pending','phone_verified_at'=>now(),'referral_code'=>null,'melicode'=>'1234567891']);
+  $failure=null;\Illuminate\Support\Facades\Log::listen(function($event)use(&$failure){if(isset($event->context['exception_message']))$failure=$event->context['exception_message'];});
+  $captured=null;$sender=\Mockery::mock(\Cryptommer\Smsir\Classes\Send::class);
+  $sender->shouldReceive('Verify')->once()->withArgs(function($phone,$template,$parameters)use($technician,&$captured){
+   $this->assertSame($technician->phone,$phone);$this->assertSame(812565,$template);
+   $this->assertSame(['CODE','PASS'],array_map(fn($parameter)=>$parameter->Name,$parameters));
+   $captured=array_map(fn($parameter)=>$parameter->Value,$parameters);return true;
+  })->andReturn(new \Cryptommer\Smsir\Objects\VerifyResponse(['status'=>1,'message'=>'OK','data'=>['messageId'=>123,'cost'=>1]]));
+  Smsir::shouldReceive('Send')->once()->andReturn($sender);
+  $data=['city_code'=>'21','region_code'=>'08','staff_type'=>41,'method'=>1,'documents_confirmed'=>true];
+  $service=app(TechnicianAdmissionService::class);$sent=$service->admit($technician,$data,null);$this->assertTrue($sent,(string)$failure);
+  $technician->refresh();$this->assertTrue($technician->isApproved());$this->assertMatchesRegularExpression('/^[0-9]{16}$/',$technician->referral_code);
+  $this->assertSame($technician->referral_code,$captured[0]);$this->assertGreaterThanOrEqual(12,strlen($captured[1]));
+  $this->assertTrue(Hash::check($captured[1],$technician->password));$hash=$technician->password;
+  $this->assertThrows(fn()=>$service->admit($technician,$data,null),ValidationException::class);
+  $this->assertSame($hash,$technician->fresh()->password);
+ }
+ public function test_missing_confirmation_cannot_approve_or_issue_credentials():void
+ {
+  $technician=$this->makeTechnician(['approval_status'=>'pending','referral_code'=>null]);
+  $this->assertThrows(fn()=>app(TechnicianAdmissionService::class)->admit($technician,[],null),ValidationException::class);
+  $this->assertSame('pending',$technician->fresh()->approval_status);$this->assertNull($technician->fresh()->referral_code);
+ }
+ public function test_sms_failure_objects_are_false_rather_than_truthy_success():void
+ {
+  config(['smsir.enabled'=>true]);$sender=\Mockery::mock(\Cryptommer\Smsir\Classes\Send::class);$sender->shouldReceive('Verify')->once()->andReturn(new \Cryptommer\Smsir\Objects\VerifyResponse(['status'=>0,'message'=>'Rejected','data'=>['messageId'=>0,'cost'=>0]]));
+  Smsir::shouldReceive('Send')->once()->andReturn($sender);
+  $this->assertFalse(Helper::send_sms('09000000000','812565',['CODE','PASS'],['test-code','test-password']));
+ }
 }
-

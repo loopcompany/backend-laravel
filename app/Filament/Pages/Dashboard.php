@@ -25,6 +25,7 @@ class Dashboard extends BaseDashboard
         return [
             DashboardStatsOverview::class,
             QuickActionsWidget::class,
+            \App\Filament\Widgets\ProcurementConsultationsWidget::class,
             MonthlyRevenueChart::class,
             OrderStatusChart::class,
             TechnicianStatusChart::class,

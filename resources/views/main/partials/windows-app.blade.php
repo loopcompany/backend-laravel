@@ -40,21 +40,21 @@
             <strong>{{ $build['os'] }}</strong>
             <small>{{ $build['arch'] }}@if ($build['size']) · {{ $build['size'] }}@endif</small>
           </span>
-          <span class="win-dl-pill">پیشنهادی</span>
+          <span class="win-dl-pill">{{ site_text('پیشنهادی') }}</span>
           <svg class="win-dl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0-4-4m4 4 4-4M5 21h14"/></svg>
         </a>
       @endforeach
     </div>
 
     <p class="win-detected" id="win-detected" @unless ($winDetected['is_windows']) hidden @endunless>
-      سیستم شما: <b id="win-detected-os">{{ $winDetected['family'] === 'win7' ? 'ویندوز ۷ یا ۸' : 'ویندوز ۱۰ یا ۱۱' }} ({{ $winDetected['bits'] === '64' ? '۶۴' : '۳۲' }} بیتی)</b>
-      — نسخه‌ی <span class="win-detected-pill">پیشنهادی</span> مناسب رایانه‌ی شما مشخص شده است.
+      {{ site_text('سیستم شما:') }} <b id="win-detected-os">{{ $winDetected['family'] === 'win7' ? 'ویندوز ۷ یا ۸' : 'ویندوز ۱۰ یا ۱۱' }} ({{ $winDetected['bits'] === '64' ? '۶۴' : '۳۲' }} بیتی)</b>
+      {{ site_text('— نسخه‌ی') }} <span class="win-detected-pill">{{ site_text('پیشنهادی') }}</span> {{ site_text('مناسب رایانه‌ی شما مشخص شده است.') }}
     </p>
     <p class="win-detected win-detected--other" id="win-not-windows" @if ($winDetected['is_windows']) hidden @endif>
-برای نصب نرم‌افزار، لطفاً این صفحه را در رایانه‌ای با سیستم‌عامل ویندوز باز کنید
+{{ site_text('برای نصب نرم‌افزار، لطفاً این صفحه را در رایانه‌ای با سیستم‌عامل ویندوز باز کنید') }}
     </p>
 
-    <p class="win-hint">نسخه نرم‌افزار: <b>{{ $windowsVersion }}</b> · نمی‌دانید ویندوز شما ۳۲ یا ۶۴ بیتی است؟ در ویندوز به مسیر <b>Settings › System › About</b> بروید و بخش <b>System type</b> را ببینید.</p>
+    <p class="win-hint">{{ site_text('نسخه نرم‌افزار:') }} <b>{{ $windowsVersion }}</b> {{ site_text('· نمی‌دانید ویندوز شما ۳۲ یا ۶۴ بیتی است؟ در ویندوز به مسیر') }} <b>Settings › System › About</b> {{ site_text('بروید و بخش') }} <b>System type</b> {{ site_text('را ببینید.') }}</p>
   </div>
 </section>
 

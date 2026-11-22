@@ -56,6 +56,7 @@ class SubmitOrderRequest extends FormRequest
             'procurement_items.*.new_count' => 'nullable|integer|min:0|max:10000',
             'procurement_items.*.used_count' => 'nullable|integer|min:0|max:10000',
             'procurement_items.*.description' => 'nullable|string|max:1000',
+            'procurement_items.*.budget_rial' => 'nullable|integer|min:1|max:9007199254740990',
             'delivery_mode' => 'nullable|array',
             'delivery_mode.*' => 'string|in:once_short,monthly_short,yearly_long,project',
             'technician_gender' => 'nullable|string|in:male',
@@ -118,4 +119,11 @@ class SubmitOrderRequest extends FormRequest
             'female_count.max' => 'انتخاب تکنسین خانم به‌زودی فعال می‌شود.',
         ];
     }
+    public function withValidator($validator): void {
+        $validator->after(function($validator) {
+            if ($this->user() instanceof \App\Models\User)
+              foreach (app(\App\Services\CustomerProfileCompletion::class)->orderErrors($this->user()) as $field=>$message) $validator->errors()->add($field,$message);
+        });
+    }
+
 }

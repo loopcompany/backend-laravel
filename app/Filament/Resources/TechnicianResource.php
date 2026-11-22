@@ -81,7 +81,9 @@ class TechnicianResource extends Resource
                                     ProfilePhotoField::make('profile_photo_path', 'technicians/profiles'),
 
                                     Forms\Components\TextInput::make('referral_code')
-                                        ->required()
+                                        ->disabled()
+                                        ->dehydrated(false)
+                                        ->helperText('کد ترتیبی با اقدام تأیید مدارک صادر می‌شود.')
                                         ->unique(ignoreRecord: true)
                                         ->label('کد تکنسین'),
                                     Forms\Components\TextInput::make('other_referral_code')
@@ -100,9 +102,9 @@ class TechnicianResource extends Resource
                                         ->required()
                                         ->disabledOn('edit')
                                         ->unique(ignoreRecord: true)
-                                        ->label('شماره تلفن'),
+                                        ->label('شماره تلفن موبایل اصلی'),
 
-                                    Forms\Components\TextInput::make('birth_date')
+                                    \App\Support\JalaliDateField::make('birth_date')
                                         ->label('تاریخ تولد')
                                         ->placeholder('1370/01/01')
                                         // در ویرایش فقط وقتی تاریخ تولد عوض شود بررسی می‌شود تا رکوردهای قبلی قفل نشوند
@@ -145,14 +147,14 @@ class TechnicianResource extends Resource
                                         ->label('رشته تحصیلی'),
 
 
-                                    Forms\Components\TextInput::make('certificate_expiry_date')
+                                    \App\Support\JalaliDateField::make('certificate_expiry_date')
 
                                         ->label('تاریخ اعتبار گواهینامه')
                                         ->placeholder('1402/01/01'),
                                     Forms\Components\TextInput::make('certificate_number')
 
                                         ->label('شماره گواهینامه'),
-                                    Forms\Components\TextInput::make('certificate_issue_date')
+                                    \App\Support\JalaliDateField::make('certificate_issue_date')
                                         ->label('تاریخ صدور گواهینامه')
                                         ->placeholder('1402/01/01'),
 
@@ -180,7 +182,7 @@ class TechnicianResource extends Resource
                                         ->label('تلفن ثابت'),
 
                                     Forms\Components\TextInput::make('mobile')
-                                        ->label('موبایل'),
+                                        ->label('شماره تلفن موبایل دوم'),
                                     Forms\Components\TextInput::make('home_postal_code')
                                         ->required()
                                         ->label('کد پستی منزل'),
@@ -229,8 +231,7 @@ class TechnicianResource extends Resource
                                 ->maxLength(191)
                                 ->label('کد یکتای بیمه شخص ثالث')
                                 ->visible(fn(Get $get) => ($get('vehicle_type') === 'موتور سیکلت' || $get('vehicle_type') === 'خودرو')),
-                            Forms\Components\TextInput::make('car_insurance_expiry_date')
-                                ->maxLength(191)
+                            \App\Support\JalaliDateField::make('car_insurance_expiry_date')
                                 ->label('تاریخ انقضاء بیمه شخص ثالث ')
                                 ->visible(fn(Get $get) => ($get('vehicle_type') === 'موتور سیکلت' || $get('vehicle_type') === 'خودرو')),
 
@@ -302,7 +303,7 @@ class TechnicianResource extends Resource
                         Forms\Components\Tabs\Tab::make('وضعیت و تایید')
                             ->schema([
                                 Forms\Components\Section::make('وضعیت تایید')->schema([
-                                    Forms\Components\Select::make('approval_status')
+                                    Forms\Components\Select::make('approval_status')->disabled()->dehydrated(false)
                                         ->options([
                                             Technician::APPROVAL_PENDING => 'در انتظار تایید',
                                             Technician::APPROVAL_APPROVED => 'تایید شده',
@@ -365,7 +366,7 @@ class TechnicianResource extends Resource
 
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable()
-                    ->label('تلفن'),
+                    ->label('شماره تلفن موبایل اصلی'),
 
                 Tables\Columns\BadgeColumn::make('is_online')
                     ->colors([
@@ -459,23 +460,37 @@ class TechnicianResource extends Resource
                     ->label('تایید')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn(Technician $record): bool => $record->isPending() || $record->isRejected())
+                    ->visible(fn(Technician $record): bool => static::canEdit($record) && ($record->isPending() || $record->isRejected()))
                     ->requiresConfirmation()
                     ->modalHeading('تایید تکنسین')
-                    ->modalDescription('آیا از تایید این تکنسین اطمینان دارید؟')
-                    ->action(function (Technician $record) {
-                        $record->approve(Auth::id());
+                    ->modalDescription('پس از تأیید مدارک، کد و رمز تازه به موبایل تکنسین ارسال می‌شود.')
+                    ->form(\App\Services\TechnicianAdmissionService::fields())
+                    ->action(function (Technician $record, array $data) {
+                        abort_unless(static::canEdit($record),403);
+                        $sent=app(\App\Services\TechnicianAdmissionService::class)->admit($record, $data, Auth::id());
                         Notification::make()
-                            ->success()
-                            ->title('تکنسین با موفقیت تایید شد')
+                            ->status($sent ? 'success' : 'warning')
+                            ->title($sent ? 'تکنسین تأیید شد و پیامک ارسال شد' : 'تکنسین تأیید شد؛ ارسال پیامک ناموفق بود. از بازنشانی رمز و ارسال پیامک استفاده کنید.')
                             ->send();
+                    }),
+
+                Tables\Actions\Action::make('resend_credentials')
+                    ->label('بازنشانی رمز و ارسال پیامک')
+                    ->icon('heroicon-o-key')
+                    ->visible(fn(Technician $record): bool => static::canEdit($record) && $record->isApproved())
+                    ->requiresConfirmation()
+                    ->modalDescription('رمز تازه ساخته و پیامک می‌شود و نشست‌های قبلی این تکنسین بسته می‌شوند. کد پرسنلی تغییر نمی‌کند.')
+                    ->action(function(Technician $record){
+                        abort_unless(static::canEdit($record),403);
+                        $sent=app(\App\Services\TechnicianAdmissionService::class)->resetCredentials($record);
+                        Notification::make()->status($sent?'success':'warning')->title($sent?'رمز تازه پیامک شد':'رمز بازنشانی شد؛ ارسال پیامک ناموفق بود. دوباره اقدام کنید.')->send();
                     }),
 
                 Tables\Actions\Action::make('reject')
                     ->label('رد')
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
-                    ->visible(fn(Technician $record): bool => !$record->isRejected())
+                    ->visible(fn(Technician $record): bool => static::canEdit($record) && !$record->isRejected())
                     ->form([
                         Forms\Components\Textarea::make('rejection_reason')
                             ->label('علت رد')
@@ -484,6 +499,7 @@ class TechnicianResource extends Resource
                             ->rows(4),
                     ])
                     ->action(function (Technician $record, array $data) {
+                        abort_unless(static::canEdit($record),403);
                         $record->reject($data['rejection_reason'], Auth::id());
                         Notification::make()
                             ->success()
@@ -544,24 +560,27 @@ class TechnicianResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
 
                     Tables\Actions\BulkAction::make('approve_selected')
+                        ->visible(fn()=>static::canEdit(null))
                         ->label('تایید انتخاب شده‌ها')
                         ->icon('heroicon-o-check')
                         ->color('success')
                         ->requiresConfirmation()
                         ->modalHeading('تایید تکنسین‌ها انتخاب شده')
-                        ->modalDescription('آیا از تایید تکنسین‌ها انتخاب شده اطمینان دارید؟')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            $approved = 0;
+                        ->modalDescription('مشخصات صدور کد و تأیید مدارک برای همه تکنسین‌های انتخاب‌شده اعمال می‌شود.')
+                        ->form(\App\Services\TechnicianAdmissionService::fields())
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            abort_unless(static::canEdit(null),403);
+                            $approved = 0; $failedSms=0;
                             foreach ($records as $record) {
                                 if ($record->isPending() || $record->isRejected()) {
-                                    $record->approve(Auth::id());
+                                    if(!app(\App\Services\TechnicianAdmissionService::class)->admit($record, $data, Auth::id()))$failedSms++;
                                     $approved++;
                                 }
                             }
 
                             Notification::make()
                                 ->success()
-                                ->title("$approved تکنسین تایید شد")
+                                ->status($failedSms ? 'warning' : 'success')->title("$approved تکنسین تایید شد؛ ارسال ناموفق پیامک: $failedSms")
                                 ->send();
                         }),
                 ]),

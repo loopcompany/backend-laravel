@@ -54,7 +54,7 @@ class ProcurementService
                     'title' => $item['title'] ?? ($item['item_id'] ?? 'کالا'),
                     'condition' => $condition,
                     'quantity' => $quantity,
-                    'description' => $item['description'] ?? null,
+                    'description' => trim(($item['description'] ?? '').(!empty($item['budget_rial']) ? "\nمحدوده هزینه مورد نظر مشتری (ریال): ".$item['budget_rial'] : '')) ?: null,
                 ]);
             }
         }

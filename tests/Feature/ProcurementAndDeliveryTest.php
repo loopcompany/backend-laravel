@@ -43,6 +43,7 @@ class ProcurementAndDeliveryTest extends TestCase
 
     private function submitPayload(User $user, array $extra = []): array
     {
+        $this->completeCustomerProfile($user);
         $addressId = DB::table('user_addresses')->insertGetId([
             'user_id' => $user->id, 'title' => 'دفتر', 'fname' => 'علی', 'lname' => 'رضایی', 'mobile' => '09120000000',
             'city' => 'تهران', 'region' => '1', 'address' => 'خیابان آزادی', 'created_at' => now(), 'updated_at' => now(),

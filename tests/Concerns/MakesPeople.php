@@ -66,6 +66,26 @@ trait MakesPeople
         return $user;
     }
 
+    /** An existing, completed account for tests unrelated to profile onboarding. */
+    protected function completeCustomerProfile(User $user): User
+    {
+        $defaults=['name'=>'علی','last_name'=>'رضایی','email'=>'profile-'.$user->id.'@example.test','melicode'=>'1234567891',
+            'birth_date'=>'1370/01/01','city'=>'تهران','region'=>'01','postal_code'=>'1234567890',
+            'home_address'=>'تهران خیابان نمونه کوچه آزمایش پلاک ده واحد دو','home_number'=>'10','home_unit'=>'2','home_floor'=>'0',
+            'work_number'=>'20','work_unit'=>'1','work_floor'=>'0','code'=>'TEST-LEGACY-'.$user->id];
+        foreach($defaults as $field=>$value)if(blank($user->$field))$user->forceFill([$field=>$value]);
+        $user->forceFill(['has_access'=>1,'profile_completed_at'=>now(),'profile_completion_token_id'=>0])->save();
+        if($user->isOrganization()) {
+            $organization=$user->organization()->first() ?? \App\Models\Organization::factory()->create(['user_id'=>$user->id]);
+            foreach(['organization_name'=>'شرکت نمونه','manager_full_name'=>'مدیر نمونه','manager_national_code'=>'1234567891',
+                'organization_phone'=>'02100000000','organization_address'=>'تهران خیابان نمونه ساختمان شرکت پلاک بیست واحد یک'] as $field=>$value)
+                if(blank($organization->$field))$organization->forceFill([$field=>$value]);
+            if(mb_strlen(trim($organization->organization_address))<30)$organization->organization_address='تهران خیابان نمونه ساختمان شرکت پلاک بیست واحد یک';
+            $organization->save();
+        }
+        return $user->refresh();
+    }
+
     private function hashPassword(array $overrides): array
     {
         if (isset($overrides['password']) && !str_starts_with($overrides['password'], '$2y$')) {

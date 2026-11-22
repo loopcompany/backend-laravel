@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa-IR" dir="rtl">
+<html lang="{{ app()->getLocale() }}" dir="{{ request()->attributes->get('site_direction', 'rtl') }}">
 
 <head>
     <meta charset="UTF-8">
@@ -41,7 +41,7 @@
     <!-- RTL FONT Vazir matn with nine weights -->
     <link rel="stylesheet" href="{{ asset('assets/fonts/vazir/Farsi-Digits/Vazirmatn-FD-font-face.css') }}">
     <!-- Custom RTL Code -->
-    <link rel="stylesheet" href="{{ asset('assets/css/custom_rtl.css') }}">
+    <link rel="stylesheet" id="site-rtl-styles" media="{{ request()->attributes->get('site_direction', 'rtl') === 'rtl' ? 'all' : 'not all' }}" href="{{ asset('assets/css/custom_rtl.css') }}">
     <!-- modernizr js -->
     <script type="text/javascript" src="{{ asset('assets/js/vendor/modernizr-3.5.0.min.js') }}"></script>
     {{-- <script src="{{ asset('assets/js/jquery-3.4.1.slim.min.js') }}"></script>
@@ -49,9 +49,10 @@
     <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script> --}}
     <link rel="stylesheet" href="{{ asset('assets/jalali/jalalidatepicker.min.css') }}">
 
+<link rel="stylesheet" href="{{ asset('assets/css/loop-localization.css') }}?v=20261123">
 </head>
 
-<body dir="rtl">
+<body dir="{{ request()->attributes->get('site_direction', 'rtl') }}">
 
 
     <!--==================================================-->
@@ -87,7 +88,7 @@
                         <div class="follow-company-info pt-3" style="flex-direction: column;display: flex;">
                             <div class="follow-company-text ml-3">
                                 <a href="#">
-                                    <p>راه‌های ارتباطی</p>
+                                    <p>{{ site_text('راه‌های ارتباطی') }}</p>
                                 </a>
                             </div>
                             <div class="follow-company-icon" style="display: flex;flex-direction: column;">
@@ -111,12 +112,12 @@
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-12">
                     <div class="widget widget-nav-menu">
-                        <h4 class="widget-title pb-4">لوپ</h4>
+                        <h4 class="widget-title pb-4">{{ site_text('لوپ') }}</h4>
                         <div class="menu-quick-link-container mr-4">
                             <ul id="menu-quick-link" class="menu">
-                                <li><a href="{{ route('web.about') }}">درباره ما</a></li>
-                                <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
-                                <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
+                                <li><a href="{{ route('web.about') }}">{{ site_text('درباره ما') }}</a></li>
+                                <li><a href="{{ route('web.contact') }}">{{ site_text('تماس با ما') }}</a></li>
+                                <li><a href="{{ route('web.blogs') }}">{{ site_text('مقالات و آموزش') }}</a></li>
 
 
                             </ul>
@@ -125,24 +126,24 @@
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-12">
                     <div class="widget widget-nav-menu">
-                        <h4 class="widget-title pb-4">خدمات مشتریان</h4>
+                        <h4 class="widget-title pb-4">{{ site_text('خدمات مشتریان') }}</h4>
                         <div class="menu-quick-link-container mr-4">
                             <ul id="menu-quick-link" class="menu">
-                                <li><a href="{{ route('web.privacy') }}">حریم خصوصی</a></li>
-                                <li><a href="{{ route('web.terms') }}">قوانین ومقررات</a></li>
-                                <li><a href="{{ route('web.faqs') }}">سوالات متداول</a></li>
+                                <li><a href="{{ route('web.privacy') }}">{{ site_text('حریم خصوصی') }}</a></li>
+                                <li><a href="{{ route('web.terms') }}">{{ site_text('قوانین ومقررات') }}</a></li>
+                                <li><a href="{{ route('web.faqs') }}">{{ site_text('سوالات متداول') }}</a></li>
                             </ul>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-12">
                     <div class="widget widget-nav-menu">
-                        <h4 class="widget-title pb-4">فرصت‌های شغلی</h4>
+                        <h4 class="widget-title pb-4">{{ site_text('فرصت‌های شغلی') }}</h4>
                         <div class="menu-quick-link-container mr-4">
                             <ul id="menu-quick-link" class="menu">
-                                <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
-                    <li><a href="{{ route('web.technician.register-form') }}">ثبت نام تکنسین‌لوپ</a></li>
-                                <li><a href="{{ route('loop.learn') }}">ثبت نام در کلاس های آموزش رایگان رایانه</a>
+                                <li><a href="{{ route('web.careers') }}">{{ site_text('همکاری با لوپ') }}</a></li>
+                    <li><a href="{{ route('web.technician.register-form') }}">{{ site_text('ثبت نام تکنسین‌لوپ') }}</a></li>
+                                <li><a href="{{ route('loop.learn') }}">{{ site_text('ثبت نام در کلاس های آموزش رایگان رایانه') }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -150,13 +151,13 @@
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-12">
                     <div class="widget widget-nav-menu">
-                        <h4 class="widget-title pb-4">راهنمای لوپ</h4>
+                        <h4 class="widget-title pb-4">{{ site_text('راهنمای لوپ') }}</h4>
                         <div class="menu-quick-link-container mr-4">
                             <ul id="menu-quick-link" class="menu">
-                                <li><a href="{{ asset('assets/guid/tech.pdf') }}">راهنمای اپلیکیشن تکنسین</a></li>
-                                <li><a href="{{ asset('assets/guid/user.pdf') }}">راهنمای اپلیکیشن کاربر</a></li>
-                                <li><a href="{{ asset('assets/guid/organ.pdf') }}">راهنمای اپلیکیشن کاربری سازمانی
-                                        شرکتی</a>
+                                <li><a href="{{ asset('assets/guid/tech.pdf') }}">{{ site_text('راهنمای اپلیکیشن تکنسین') }}</a></li>
+                                <li><a href="{{ asset('assets/guid/user.pdf') }}">{{ site_text('راهنمای اپلیکیشن کاربر') }}</a></li>
+                                <li><a href="{{ asset('assets/guid/organ.pdf') }}">{{ site_text('راهنمای اپلیکیشن کاربری سازمانی
+                                        شرکتی') }}</a>
                                 </li>
                             </ul>
                         </div>

@@ -183,7 +183,7 @@ class EnhancedValidationTest extends TestCase
 
     public function test_active_user_can_update_own_profile_name(): void
     {
-        $user=User::factory()->create(['phone'=>'09350000010','has_access'=>1,'name'=>'علی','phone_verified_at'=>now()]);
+        $user=User::factory()->create(['phone'=>'09350000010','account_type'=>'individual','has_access'=>1,'name'=>'علی','phone_verified_at'=>now(),'last_name'=>'رضایی','melicode'=>'1234567891','birth_date'=>'1370/01/01','city'=>'تهران','region'=>'08','postal_code'=>'1234567890','home_address'=>'تهران خیابان نمونه کوچه آزمایش پلاک ده واحد دو','home_number'=>'10','home_unit'=>'2','home_floor'=>'0']);
         $this->actingAs($user)->putJson('/api/profile',['name'=>'رضا'])->assertOk();
         $this->assertSame('رضا',$user->fresh()->name);
     }

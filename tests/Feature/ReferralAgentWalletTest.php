@@ -41,6 +41,7 @@ class ReferralAgentWalletTest extends TestCase
 
     private function submit(User $buyer, string $code, int $price = 1000000)
     {
+        $this->completeCustomerProfile($buyer);
         Sanctum::actingAs($buyer);
         $addressId = DB::table('user_addresses')->insertGetId([
             'user_id' => $buyer->id, 'title' => 'خانه', 'fname' => 'a', 'lname' => 'b', 'mobile' => '09120000000',

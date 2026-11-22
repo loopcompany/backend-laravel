@@ -25,7 +25,9 @@
         <!-- Widgets Grid -->
         <div class="space-y-6">
             @foreach ($this->getWidgets() as $widget)
-                @livewire($widget)
+                @if ($widget::canView())
+                    @livewire($widget)
+                @endif
             @endforeach
         </div>
     </div>

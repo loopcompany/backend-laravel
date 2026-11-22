@@ -70,3 +70,6 @@ if (!function_exists('gregorian_to_jalali')) {
         }
     }
 }
+if (!function_exists('site_text')) {
+ function site_text(string $source):string { return app(\App\Services\LocalizationCatalog::class)->siteText($source); }
+}

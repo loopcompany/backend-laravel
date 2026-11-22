@@ -16,9 +16,9 @@
                         </div>
                         <div class="breatcome_content">
                             <ul>
-                                <li><a href="{{ route('web.home') }}">خانه</a> 
+                                <li><a href="{{ route('web.home') }}">{{ site_text('خانه') }}</a>
                                     <i class="fa fa-angle-left"></i> 
-                                    <a href="{{ route('web.blogs') }}">مقالات و آموزش</a>
+                                    <a href="{{ route('web.blogs') }}">{{ site_text('مقالات و آموزش') }}</a>
                                     <i class="fa fa-angle-left"></i> 
                                     <span>{{ Str::limit($blog->title, 30) }}</span>
                                 </li>
@@ -79,15 +79,15 @@
                         <!-- Blog Media -->
                         @if($blog->video_path || $blog->audio_path || $blog->document_path)
                             <div class="blog_media mt-5">
-                                <h3>فایل‌های ضمیمه</h3>
+                                <h3>{{ site_text('فایل‌های ضمیمه') }}</h3>
                                 <div class="row">
                                     @if($blog->video_path)
                                         <div class="col-md-12 mb-3">
                                             <div class="media_item">
-                                                <h5><i class="fa fa-video-camera"></i> ویدیو</h5>
+                                                <h5><i class="fa fa-video-camera"></i> {{ site_text('ویدیو') }}</h5>
                                                 <video controls class="w-100" style="max-height: 400px;">
                                                     <source src="{{ asset('storage/' . $blog->video_path) }}" type="video/mp4">
-                                                    مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                                                    {{ site_text('مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.') }}
                                                 </video>
                                             </div>
                                         </div>
@@ -96,10 +96,10 @@
                                     @if($blog->audio_path)
                                         <div class="col-md-12 mb-3">
                                             <div class="media_item">
-                                                <h5><i class="fa fa-music"></i> فایل صوتی</h5>
+                                                <h5><i class="fa fa-music"></i> {{ site_text('فایل صوتی') }}</h5>
                                                 <audio controls class="w-100">
                                                     <source src="{{ asset('storage/' . $blog->audio_path) }}" type="audio/mpeg">
-                                                    مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
+                                                    {{ site_text('مرورگر شما از پخش صوت پشتیبانی نمی‌کند.') }}
                                                 </audio>
                                             </div>
                                         </div>
@@ -108,9 +108,9 @@
                                     @if($blog->document_path)
                                         <div class="col-md-12 mb-3">
                                             <div class="media_item">
-                                                <h5><i class="fa fa-file-pdf-o"></i> فایل ضمیمه</h5>
+                                                <h5><i class="fa fa-file-pdf-o"></i> {{ site_text('فایل ضمیمه') }}</h5>
                                                 <a href="{{ asset('storage/' . $blog->document_path) }}" target="_blank" class="btn btn-outline-primary">
-                                                    <i class="fa fa-download"></i> دانلود فایل
+                                                    <i class="fa fa-download"></i> {{ site_text('دانلود فایل') }}
                                                 </a>
                                             </div>
                                         </div>
@@ -122,7 +122,7 @@
                         <!-- FAQs Section -->
                         @if($blog->faqs && count($blog->faqs) > 0)
                             <div class="blog_faqs mt-5">
-                                <h3>سوالات متداول</h3>
+                                <h3>{{ site_text('سوالات متداول') }}</h3>
                                 <div class="accordion" id="blogFaqAccordion">
                                     @foreach($blog->faqs as $index => $faq)
                                         <div class="card">
@@ -146,16 +146,16 @@
 
                         <!-- Share Section -->
                         <div class="blog_share mt-5 pt-4 border-top">
-                            <h5>اشتراک‌گذاری:</h5>
+                            <h5>{{ site_text('اشتراک‌گذاری:') }}</h5>
                             <div class="share_buttons" style="margin-top: 10px">
                                 <a href="https://t.me/share/url?url={{ urlencode(request()->fullUrl()) }}&text={{ urlencode($blog->title) }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                    <i class="fa fa-telegram"></i> تلگرام
+                                    <i class="fa fa-telegram"></i> {{ site_text('تلگرام') }}
                                 </a>
                                 <a href="https://wa.me/?text={{ urlencode($blog->title . ' ' . request()->fullUrl()) }}" target="_blank" class="btn btn-outline-success btn-sm">
-                                    <i class="fa fa-whatsapp"></i> واتساپ
+                                    <i class="fa fa-whatsapp"></i> {{ site_text('واتساپ') }}
                                 </a>
                                 <a href="javascript:void(0)" onclick="copyToClipboard('{{ request()->fullUrl() }}')" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fa fa-copy"></i> کپی لینک
+                                    <i class="fa fa-copy"></i> {{ site_text('کپی لینک') }}
                                 </a>
                             </div>
                         </div>
@@ -168,7 +168,7 @@
                         <!-- Recent Blogs -->
                         @if($recent_blogs->count() > 0)
                             <div class="sidebar_widget mb-4">
-                                <h4 class="widget_title">مقالات اخیر</h4>
+                                <h4 class="widget_title">{{ site_text('مقالات اخیر') }}</h4>
                                 <div class="recent_blogs">
                                     @foreach($recent_blogs as $recent_blog)
                                         <div class="recent_blog_item mb-3">
@@ -196,7 +196,7 @@
                         <!-- Back to Blog -->
                         <div class="sidebar_widget">
                             <a href="{{ route('web.blogs') }}" class="btn btn-primary btn-block">
-                                <i class="fa fa-arrow-right"></i> بازگشت به مقالات و آموزش
+                                <i class="fa fa-arrow-right"></i> {{ site_text('بازگشت به مقالات و آموزش') }}
                             </a>
                         </div>
                     </div>

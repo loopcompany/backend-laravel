@@ -9,12 +9,12 @@
                 <div class="col-lg-12">
                     <div class="breatcome_title">
                         <div class="breatcome_title_inner pb-2">
-                            <h2>اطلاعات تکنسین</h2>
+                            <h2>{{ site_text('اطلاعات تکنسین') }}</h2>
                         </div>
                         <div class="breatcome_content">
                             <ul>
-                                <li><a href="{{ route('web.home') }}">خانه</a> 
-                                    <i class="fa fa-angle-left"></i> <span>اطلاعات تکنسین</span></li>
+                                <li><a href="{{ route('web.home') }}">{{ site_text('خانه') }}</a>
+                                    <i class="fa fa-angle-left"></i> <span>{{ site_text('اطلاعات تکنسین') }}</span></li>
                             </ul>
                         </div>
                     </div>
@@ -36,9 +36,9 @@
                     <div class="col-lg-12 text-center">
                         <div class="error_content">
                             <i class="fas fa-exclamation-triangle" style="font-size: 100px; color: #ff6b6b; margin-bottom: 30px;"></i>
-                            <h2>تکنسین یافت نشد</h2>
-                            <p class="mt-3">متاسفانه اطلاعات تکنسین مورد نظر در سیستم موجود نیست.</p>
-                            <a href="{{ route('web.home') }}" class="btn btn-primary mt-4">بازگشت به صفحه اصلی</a>
+                            <h2>{{ site_text('تکنسین یافت نشد') }}</h2>
+                            <p class="mt-3">{{ site_text('متاسفانه اطلاعات تکنسین مورد نظر در سیستم موجود نیست.') }}</p>
+                            <a href="{{ route('web.home') }}" class="btn btn-primary mt-4">{{ site_text('بازگشت به صفحه اصلی') }}</a>
                         </div>
                     </div>
                 </div>
@@ -74,17 +74,17 @@
                                     @if($technician->referral_code)
                                         <p class="text-muted mb-3">
                                             <i class="fas fa-id-card ml-2"></i>
-                                            کد پرسنلی: <strong>{{ $technician->referral_code }}</strong>
+                                            {{ site_text('کد پرسنلی:') }} <strong>{{ $technician->referral_code }}</strong>
                                         </p>
                                     @endif
 
                                     @if($technician->has_access)
                                         <span class="badge badge-success p-2">
-                                            <i class="fas fa-check-circle ml-1"></i> تایید شده
+                                            <i class="fas fa-check-circle ml-1"></i> {{ site_text('تایید شده') }}
                                         </span>
                                     @else
                                         <span class="badge badge-warning p-2">
-                                            <i class="fas fa-clock ml-1"></i> در انتظار تایید
+                                            <i class="fas fa-clock ml-1"></i> {{ site_text('در انتظار تایید') }}
                                         </span>
                                     @endif
                                 </div>
@@ -94,13 +94,13 @@
                             <div class="contact_info_card shadow-sm mb-4">
                                 <div class="card-body p-4">
                                     <h5 class="mb-3 pb-2 border-bottom">
-                                        <i class="fas fa-address-book ml-2"></i> اطلاعات تماس
+                                        <i class="fas fa-address-book ml-2"></i> {{ site_text('اطلاعات تماس') }}
                                     </h5>
                                     
                                     @if($technician->phone)
                                         <div class="info_item mb-3">
                                             <i class="fas fa-phone ml-2 text-primary"></i>
-                                            <strong>موبایل:</strong>
+                                            <strong>{{ site_text('موبایل:') }}</strong>
                                             <a href="tel:{{ $technician->phone }}" dir="ltr">{{ $technician->phone }}</a>
                                         </div>
                                     @endif
@@ -108,7 +108,7 @@
                                     @if($technician->email)
                                         <div class="info_item mb-3">
                                             <i class="fas fa-envelope ml-2 text-primary"></i>
-                                            <strong>ایمیل:</strong>
+                                            <strong>{{ site_text('ایمیل:') }}</strong>
                                             <a href="mailto:{{ $technician->email }}">{{ $technician->email }}</a>
                                         </div>
                                     @endif
@@ -116,7 +116,7 @@
                                     @if($technician->telephone)
                                         <div class="info_item mb-3">
                                             <i class="fas fa-phone-square ml-2 text-primary"></i>
-                                            <strong>تلفن ثابت:</strong>
+                                            <strong>{{ site_text('تلفن ثابت:') }}</strong>
                                             <span dir="ltr">{{ $technician->telephone }}</span>
                                         </div>
                                     @endif
@@ -127,16 +127,16 @@
                             <div class="stats_card shadow-sm">
                                 <div class="card-body p-4">
                                     <h5 class="mb-3 pb-2 border-bottom">
-                                        <i class="fas fa-chart-line ml-2"></i> آمار فعالیت
+                                        <i class="fas fa-chart-line ml-2"></i> {{ site_text('آمار فعالیت') }}
                                     </h5>
                                     
                                     <div class="stat_item d-flex justify-content-between mb-3">
-                                        <span><i class="fas fa-briefcase ml-2 text-success"></i> تعداد سفارشات:</span>
+                                        <span><i class="fas fa-briefcase ml-2 text-success"></i> {{ site_text('تعداد سفارشات:') }}</span>
                                         <strong>{{ $ordersCount }}</strong>
                                     </div>
                                     
                                     <div class="stat_item d-flex justify-content-between">
-                                        <span><i class="fas fa-star ml-2 text-warning"></i> امتیاز:</span>
+                                        <span><i class="fas fa-star ml-2 text-warning"></i> {{ site_text('امتیاز:') }}</span>
                                         <strong>{{ number_format($averageRating, 1) }} از 5</strong>
                                     </div>
                                 </div>
@@ -150,14 +150,14 @@
                         <div class="info_section shadow-sm mb-4">
                             <div class="card-body p-4">
                                 <h4 class="mb-4 pb-2 border-bottom">
-                                    <i class="fas fa-user ml-2"></i> اطلاعات شخصی
+                                    <i class="fas fa-user ml-2"></i> {{ site_text('اطلاعات شخصی') }}
                                 </h4>
                                 
                                 <div class="row">
                                     @if($technician->melicode)
                                         <div class="col-md-6 mb-3">
                                             <div class="info_box p-3 bg-light rounded">
-                                                <small class="text-muted d-block mb-1">کد ملی</small>
+                                                <small class="text-muted d-block mb-1">{{ site_text('کد ملی') }}</small>
                                                 <strong dir="ltr">{{ $technician->melicode }}</strong>
                                             </div>
                                         </div>
@@ -168,7 +168,7 @@
                                     @if($technician->education_status)
                                         <div class="col-md-6 mb-3">
                                             <div class="info_box p-3 bg-light rounded">
-                                                <small class="text-muted d-block mb-1">میزان تحصیلات</small>
+                                                <small class="text-muted d-block mb-1">{{ site_text('میزان تحصیلات') }}</small>
                                                 <strong>{{ $technician->education_status }}</strong>
                                             </div>
                                         </div>
@@ -176,7 +176,7 @@
                                     @if($technician->education_field)
                                         <div class="col-md-6 mb-3">
                                             <div class="info_box p-3 bg-light rounded">
-                                                <small class="text-muted d-block mb-1">رشته تحصیلی</small>
+                                                <small class="text-muted d-block mb-1">{{ site_text('رشته تحصیلی') }}</small>
                                                 <strong>{{ $technician->education_field }}</strong>
                                             </div>
                                         </div>
@@ -195,13 +195,13 @@
                             <div class="info_section shadow-sm mb-4">
                                 <div class="card-body p-4">
                                     <h4 class="mb-4 pb-2 border-bottom">
-                                        <i class="fas fa-tools ml-2"></i> مهارت‌ها و توانمندی‌ها
+                                        <i class="fas fa-tools ml-2"></i> {{ site_text('مهارت‌ها و توانمندی‌ها') }}
                                     </h4>
                                     
                                     @if($technician->software_skill)
                                         <div class="skill_box mb-3">
                                             <h6 class="text-primary mb-2">
-                                                <i class="fas fa-laptop-code ml-2"></i> مهارت‌های نرم‌افزاری
+                                                <i class="fas fa-laptop-code ml-2"></i> {{ site_text('مهارت‌های نرم‌افزاری') }}
                                             </h6>
                                             <p class="text-justify">{{ $technician->software_skill }}</p>
                                         </div>
@@ -210,7 +210,7 @@
                                     @if($technician->hardware_skill)
                                         <div class="skill_box mb-3">
                                             <h6 class="text-primary mb-2">
-                                                <i class="fas fa-microchip ml-2"></i> مهارت‌های سخت‌افزاری
+                                                <i class="fas fa-microchip ml-2"></i> {{ site_text('مهارت‌های سخت‌افزاری') }}
                                             </h6>
                                             <p class="text-justify">{{ $technician->hardware_skill }}</p>
                                         </div>
@@ -219,7 +219,7 @@
                                     @if($technician->idea)
                                         <div class="skill_box mb-3">
                                             <h6 class="text-primary mb-2">
-                                                <i class="fas fa-lightbulb ml-2"></i> ایده‌ها و نظرات
+                                                <i class="fas fa-lightbulb ml-2"></i> {{ site_text('ایده‌ها و نظرات') }}
                                             </h6>
                                             <p class="text-justify">{{ $technician->idea }}</p>
                                         </div>
@@ -233,14 +233,14 @@
                             <div class="info_section shadow-sm mb-4">
                                 <div class="card-body p-4">
                                     <h4 class="mb-4 pb-2 border-bottom">
-                                        <i class="fas fa-car ml-2"></i> اطلاعات وسیله نقلیه
+                                        <i class="fas fa-car ml-2"></i> {{ site_text('اطلاعات وسیله نقلیه') }}
                                     </h4>
                                     
                                     <div class="row">
                                         @if($technician->vehicle_type)
                                             <div class="col-md-6 mb-3">
                                                 <div class="info_box p-3 bg-light rounded">
-                                                    <small class="text-muted d-block mb-1">نوع وسیله</small>
+                                                    <small class="text-muted d-block mb-1">{{ site_text('نوع وسیله') }}</small>
                                                     <strong>{{ $technician->vehicle_type }}</strong>
                                                 </div>
                                             </div>
@@ -249,7 +249,7 @@
                                         @if($technician->car_model)
                                             <div class="col-md-6 mb-3">
                                                 <div class="info_box p-3 bg-light rounded">
-                                                    <small class="text-muted d-block mb-1">مدل خودرو</small>
+                                                    <small class="text-muted d-block mb-1">{{ site_text('مدل خودرو') }}</small>
                                                     <strong>{{ $technician->car_model }}</strong>
                                                 </div>
                                             </div>
@@ -258,7 +258,7 @@
                                         @if($technician->car_color)
                                             <div class="col-md-6 mb-3">
                                                 <div class="info_box p-3 bg-light rounded">
-                                                    <small class="text-muted d-block mb-1">رنگ خودرو</small>
+                                                    <small class="text-muted d-block mb-1">{{ site_text('رنگ خودرو') }}</small>
                                                     <strong>{{ $technician->car_color }}</strong>
                                                 </div>
                                             </div>
@@ -267,7 +267,7 @@
                                         @if($technician->car_plate)
                                             <div class="col-md-6 mb-3">
                                                 <div class="info_box p-3 bg-light rounded">
-                                                    <small class="text-muted d-block mb-1">پلاک خودرو</small>
+                                                    <small class="text-muted d-block mb-1">{{ site_text('پلاک خودرو') }}</small>
                                                     <strong dir="ltr">{{ $technician->car_plate }}</strong>
                                                 </div>
                                             </div>

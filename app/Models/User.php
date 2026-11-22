@@ -40,6 +40,7 @@ class User extends Authenticatable
         'province_id',
         'city_id',
         'region_id',
+        'home_number','home_unit','home_floor','work_number','work_unit','work_floor',
         'home_address',
         'work_address',
         'card_number',

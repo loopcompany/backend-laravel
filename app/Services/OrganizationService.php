@@ -69,6 +69,13 @@ class OrganizationService
                     'profile_image' => $user->profile_photo_path,
                     // اطلاعات از جدول users
                     'organization_email' => $user?->email,
+                    'home_number' => $user?->home_number,
+                    'home_unit' => $user?->home_unit,
+                    'home_floor' => $user?->home_floor,
+                    'work_number' => $user?->work_number,
+                    'work_unit' => $user?->work_unit,
+                    'work_floor' => $user?->work_floor,
+
                     'manager_mobile' => $user?->phone,
                     'manager_birthdate' => $birthdate,
                     'province_id' => $user?->province_id,
@@ -156,7 +163,7 @@ class OrganizationService
             $organizationData = array_intersect_key($data, array_flip([
                 'agent_name', 'agent_phone', 'history', 'organization_phone', 'organization_address',
             ]));
-            $userData = array_intersect_key($data, array_flip(['postal_code', 'city', 'province_id', 'city_id']));
+            $userData = array_intersect_key($data, array_flip(['postal_code', 'city', 'province_id', 'city_id', 'home_number','home_unit','home_floor','work_number','work_unit','work_floor']));
 
             if (array_key_exists('organization_email', $data)) {
                 $email = $data['organization_email'] ?: null;
@@ -211,6 +218,7 @@ class OrganizationService
             // پس از ذخیره‌ی موفق، فیلدهای قفل دوباره قفل می‌شوند
             $editRequest?->forceFill(['status' => OrganizationEditRequest::STATUS_USED, 'used_at' => now()])->save();
 
+            $firstCompletion = app(CustomerProfileCompletion::class)->finish($user);
             DB::commit();
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -240,7 +248,8 @@ class OrganizationService
         ]);
 
         $result = $this->getOrganizationByUserId($userId);
-        $result['message'] = 'اطلاعات حساب با موفقیت به‌روزرسانی شد.';
+        $result['message'] = !empty($firstCompletion) ? 'اطلاعات کامل شد. برای دریافت شناسه کاربری و فعال شدن ثبت سفارش، از حساب خارج شوید و دوباره وارد شوید.' : 'اطلاعات حساب با موفقیت به‌روزرسانی شد.';
+        $result['requires_relogin'] = !empty($firstCompletion);
 
         return $result;
     }

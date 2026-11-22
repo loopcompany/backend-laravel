@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 
 <head>
-    <title>لوپ | پلتفرم خدمات تعمیرات موبایل، لپ‌تاپ و تبلت</title>
+    <title>{{ site_text('لوپ | پلتفرم خدمات تعمیرات موبایل، لپ‌تاپ و تبلت') }}</title>
 
     <!-- Meta Tags -->
     <meta charset="utf-8">
@@ -94,12 +94,12 @@
                 <ul class="nav align-items-center justify-content-center">
                     <li class="nav-item me-3" data-bs-toggle="tooltip" data-bs-animation="false"
                         data-bs-placement="bottom" data-bs-original-title="Sunday CLOSED">
-                        <span class="text-white"><i class="far fa-clock me-2"></i>زمان بازدید: دوشنبه تا شنبه دقیقه 9:00
-                            الی 19:00</span>
+                        <span class="text-white"><i class="far fa-clock me-2"></i>{{ site_text('زمان بازدید: دوشنبه تا شنبه دقیقه 9:00
+                            الی 19:00') }}</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-headset me-2"></i>با ما تماس بگیرید:
-                            093200000000</a>
+                        <a class="nav-link" href="#"><i class="fas fa-headset me-2"></i>{{ site_text('با ما تماس بگیرید:
+                            093200000000') }}</a>
                     </li>
                 </ul>
 
@@ -150,19 +150,19 @@
                     <ul class="navbar-nav navbar-nav-scroll mx-auto">
                         <!-- Nav item 1 Demos -->
                          <li class="nav-item">
-                            <a class="nav-link active" href="{{ route('web.home') }}" id="demoMenu">صفحه اصلی</a>
+                            <a class="nav-link active" href="{{ route('web.home') }}" id="demoMenu">{{ site_text('صفحه اصلی') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" id="demoMenu">خدمات لوپ</a>
+                            <a class="nav-link" href="#" id="demoMenu">{{ site_text('خدمات لوپ') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('web.faqs') }}" id="demoMenu">سوالات متداول</a>
+                            <a class="nav-link" href="{{ route('web.faqs') }}" id="demoMenu">{{ site_text('سوالات متداول') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('web.about') }}" id="demoMenu">درباره ما</a>
+                            <a class="nav-link" href="{{ route('web.about') }}" id="demoMenu">{{ site_text('درباره ما') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('web.contact') }}" id="demoMenu">تماس با ما</a>
+                            <a class="nav-link" href="{{ route('web.contact') }}" id="demoMenu">{{ site_text('تماس با ما') }}</a>
                         </li>
 
 
@@ -182,30 +182,30 @@
                         <form class="input-group">
                             <input class="form-control border-primary" type="search" placeholder="جستجو..."
                                 aria-label="Search">
-                            <button class="btn btn-primary m-0" type="submit">جستجو</button>
+                            <button class="btn btn-primary m-0" type="submit">{{ site_text('جستجو') }}</button>
                         </form>
 
                         <!-- Recent search -->
                         <ul class="list-group list-group-borderless p-2 small">
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">جستجوهای اخیر</span>
-                                <button class="btn btn-sm btn-link mb-0 px-0">حذف همه</button>
+                                <span class="fw-bold">{{ site_text('جستجوهای اخیر') }}</span>
+                                <button class="btn btn-sm btn-link mb-0 px-0">{{ site_text('حذف همه') }}</button>
                             </li>
                             <li class="list-group-item text-primary-hover text-truncate">
-                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>تعمیر
-                                    صفحه‌نمایش آیفون</a>
+                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>{{ site_text('تعمیر
+                                    صفحه‌نمایش آیفون') }}</a>
                             </li>
                             <li class="list-group-item text-primary-hover text-truncate">
-                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>تعویض باتری
-                                    سامسونگ</a>
+                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>{{ site_text('تعویض باتری
+                                    سامسونگ') }}</a>
                             </li>
                             <li class="list-group-item text-primary-hover text-truncate">
-                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>نصب ویندوز و
-                                    درایورها لپ‌تاپ</a>
+                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>{{ site_text('نصب ویندوز و
+                                    درایورها لپ‌تاپ') }}</a>
                             </li>
                             <li class="list-group-item text-primary-hover text-truncate">
-                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>تعمیر پورت شارژ
-                                    تبلت</a>
+                                <a href="#" class="text-body"> <i class="far fa-clock me-1"></i>{{ site_text('تعمیر پورت شارژ
+                                    تبلت') }}</a>
                             </li>
                         </ul>
                     </div>
@@ -231,7 +231,7 @@
                                         src="{{ asset('assets/images/avatar/user.png') }}" alt="avatar">
                                 </div>
                                 <div>
-                                    <a class="h6" href="#">الهام حسینی</a>
+                                    <a class="h6" href="#">{{ site_text('الهام حسینی') }}</a>
                                     <p class="small m-0">example@gmail.com</p>
                                 </div>
                             </div>
@@ -240,14 +240,14 @@
                             <hr class="dropdown-divider">
                         </li>
                         <!-- Links -->
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person fa-fw me-2"></i>ویرایش</a>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-person fa-fw me-2"></i>{{ site_text('ویرایش') }}</a>
                         </li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear fa-fw me-2"></i>تنظیمات</a>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear fa-fw me-2"></i>{{ site_text('تنظیمات') }}</a>
                         </li>
                         <li><a class="dropdown-item" href="#"><i
-                                    class="bi bi-info-circle fa-fw me-2"></i>پشتیبانی</a></li>
+                                    class="bi bi-info-circle fa-fw me-2"></i>{{ site_text('پشتیبانی') }}</a></li>
                         <li><a class="dropdown-item bg-danger-soft-hover" href="#"><i
-                                    class="bi bi-power fa-fw me-2"></i>خروج</a></li>
+                                    class="bi bi-power fa-fw me-2"></i>{{ site_text('خروج') }}</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
@@ -262,7 +262,7 @@
                                             d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z">
                                         </path>
                                         <use href="#"></use>
-                                    </svg> روشن
+                                    </svg> {{ site_text('روشن') }}
                                 </button>
                                 <button type="button" class="btn btn-sm mb-0" data-bs-theme-value="dark">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -275,7 +275,7 @@
                                             d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.734 1.734 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.734 1.734 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.734 1.734 0 0 0 1.097-1.097l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z">
                                         </path>
                                         <use href="#"></use>
-                                    </svg> تیره
+                                    </svg> {{ site_text('تیره') }}
                                 </button>
                                 <button type="button" class="btn btn-sm mb-0 active" data-bs-theme-value="auto">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -283,7 +283,7 @@
                                         viewBox="0 0 16 16">
                                         <path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"></path>
                                         <use href="#"></use>
-                                    </svg> خودکار
+                                    </svg> {{ site_text('خودکار') }}
                                 </button>
                             </div>
                         </li>
@@ -325,19 +325,19 @@ Footer START -->
                     <!-- Logo -->
                     <img class="mx-auto h-40px" src="{{ asset('assets/images/logo-light.png') }}" alt="logo">
                     <p class="mt-3 text-white">
-                        لوپ، پلتفرمی هوشمند برای اتصال کاربران به تعمیرکاران حرفه‌ای در حوزه‌ی موبایل، لپ‌تاپ و تبلت
+                        {{ site_text('لوپ، پلتفرمی هوشمند برای اتصال کاربران به تعمیرکاران حرفه‌ای در حوزه‌ی موبایل، لپ‌تاپ و تبلت
                         است.
                         ما با هدف ایجاد شفافیت، اعتماد و سرعت در خدمات تعمیرات، بستری امن و کارآمد فراهم کرده‌ایم تا
-                        کاربران بتوانند به‌راحتی بهترین تکنسین‌ها را انتخاب کنند.
+                        کاربران بتوانند به‌راحتی بهترین تکنسین‌ها را انتخاب کنند.') }}
                     </p>
                     <!-- Links -->
                     <ul class="nav justify-content-center text-primary-hover mt-3 mt-md-0">
-                        <li class="nav-item"><a class="nav-link text-white" href="#">درباره ما</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="#">شرایط</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="#">قوانین</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="#">نحوه استفاده</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="#">تماس با ما</a></li>
-                        <li class="nav-item"><a class="nav-link text-white pe-0" href="#">کوکی ها</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">{{ site_text('درباره ما') }}</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">{{ site_text('شرایط') }}</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">{{ site_text('قوانین') }}</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">{{ site_text('نحوه استفاده') }}</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">{{ site_text('تماس با ما') }}</a></li>
+                        <li class="nav-item"><a class="nav-link text-white pe-0" href="#">{{ site_text('کوکی ها') }}</a></li>
                     </ul>
                     <!-- Social media button -->
                     <ul class="list-inline mt-3 mb-0">
@@ -363,7 +363,7 @@ Footer START -->
                         </li>
                     </ul>
                     <!-- Bottom footer link -->
-                    <div class="mt-3 text-white">تمامی حقوق محفوظ است.</div>
+                    <div class="mt-3 text-white">{{ site_text('تمامی حقوق محفوظ است.') }}</div>
                 </div>
             </div>
         </div>

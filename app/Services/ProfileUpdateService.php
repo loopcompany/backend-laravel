@@ -56,12 +56,14 @@ class ProfileUpdateService
             // Location completion for new registrations is handled by UserObserver.
             // Existing registration codes remain stable after profile edits.
 
+            $firstCompletion = app(CustomerProfileCompletion::class)->finish($updatedUser);
             DB::commit();
 
             // Prepare response
             $response = [
                 'success' => true,
-                'message' => 'اطلاعات شما با موفقیت به‌روزرسانی شد.',
+                'message' => $firstCompletion ? 'اطلاعات کامل شد. برای دریافت شناسه کاربری و فعال شدن ثبت سفارش، از حساب خارج شوید و دوباره وارد شوید.' : 'اطلاعات شما با موفقیت به‌روزرسانی شد.',
+                'requires_relogin' => $firstCompletion,
                 'user' => [
                     'id' => $updatedUser->id,
                     'code' => $updatedUser->code,
@@ -137,6 +139,13 @@ class ProfileUpdateService
                     'city' => $user->city,
                     'region_id' => $region_info,
                     'home_address' => $user->home_address,
+                    'home_number' => $user->home_number,
+                    'home_unit' => $user->home_unit,
+                    'home_floor' => $user->home_floor,
+                    'work_number' => $user->work_number,
+                    'work_unit' => $user->work_unit,
+                    'work_floor' => $user->work_floor,
+
                     'work_address' => $user->work_address,
                     'card_number' => $user->card_number,
                     'sheba_number' => $user->sheba_number,

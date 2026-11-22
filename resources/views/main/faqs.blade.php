@@ -26,7 +26,7 @@
                 <div class="col-lg-12">
                     <div class="section_title text_center mb-50">
                         <div class="section_main_title">
-                            <h1>برخی از سوالات و پاسخ آنها </h1>
+                            <h1>{{ site_text('برخی از سوالات و پاسخ آنها') }} </h1>
                         </div>
                         <div class="em_bar">
                             <div class="em_bar_bg"></div>
@@ -43,7 +43,7 @@
                                                    placeholder="جستجو در سوالات متداول...">
                                             <div class="input-group-append">
                                                 <button class="btn btn-primary" type="submit">
-                                                    <i class="fa fa-search"></i> جستجو
+                                                    <i class="fa fa-search"></i> {{ site_text('جستجو') }}
                                                 </button>
                                             </div>
                                         </div>
@@ -52,7 +52,7 @@
                                 @if(request('search'))
                                     <div class="mt-2">
                                         <a href="{{ route('web.faqs') }}" class="btn btn-sm btn-secondary">
-                                            <i class="fa fa-times"></i> پاک کردن جستجو
+                                            <i class="fa fa-times"></i> {{ site_text('پاک کردن جستجو') }}
                                         </a>
                                     </div>
                                 @endif
@@ -63,7 +63,7 @@
                             <div class="search_result_info mt-3">
                                 <div class="alert alert-info">
                                     <i class="fa fa-info-circle"></i>
-                                    نتایج جستجو برای: <strong>"{{ request('search') }}"</strong>
+                                    {{ site_text('نتایج جستجو برای:') }} <strong>"{{ request('search') }}"</strong>
                                     ({{ $faqs->count() }} نتیجه یافت شد)
                                 </div>
                             </div>
@@ -128,10 +128,10 @@
                         <div class="alert alert-info">
                             @if(request('search'))
                                 <i class="fa fa-search"></i>
-                                نتیجه‌ای برای جستجوی شما یافت نشد.
+                                {{ site_text('نتیجه‌ای برای جستجوی شما یافت نشد.') }}
                                 <br>
                                 <a href="{{ route('web.faqs') }}" class="btn btn-sm btn-primary mt-2">
-                                    مشاهده همه سوالات
+                                    {{ site_text('مشاهده همه سوالات') }}
                                 </a>
                             @else
                                 <i class="fa fa-info-circle"></i>

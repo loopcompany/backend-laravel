@@ -5,6 +5,12 @@ namespace App\DTOs;
 class UpdateProfileDTO
 {
     public function __construct(
+        public readonly ?string $home_number = null,
+        public readonly ?string $home_unit = null,
+        public readonly ?string $home_floor = null,
+        public readonly ?string $work_number = null,
+        public readonly ?string $work_unit = null,
+        public readonly ?string $work_floor = null,
         public readonly ?string $name = null,
         public readonly ?string $last_name = null,
         public readonly ?string $email = null,
@@ -29,6 +35,13 @@ class UpdateProfileDTO
     public static function fromArray(array $data): self
     {
         return new self(
+            home_number: $data['home_number'] ?? null,
+            home_unit: $data['home_unit'] ?? null,
+            home_floor: $data['home_floor'] ?? null,
+            work_number: $data['work_number'] ?? null,
+            work_unit: $data['work_unit'] ?? null,
+            work_floor: $data['work_floor'] ?? null,
+
             name: $data['name'] ?? null,
             last_name: $data['last_name'] ?? null,
             email: $data['email'] ?? null,
@@ -52,6 +65,13 @@ class UpdateProfileDTO
     public function toArray(): array
     {
         $data = [];
+        if ($this->home_number !== null) $data['home_number'] = $this->home_number;
+        if ($this->home_unit !== null) $data['home_unit'] = $this->home_unit;
+        if ($this->home_floor !== null) $data['home_floor'] = $this->home_floor;
+        if ($this->work_number !== null) $data['work_number'] = $this->work_number;
+        if ($this->work_unit !== null) $data['work_unit'] = $this->work_unit;
+        if ($this->work_floor !== null) $data['work_floor'] = $this->work_floor;
+
         
         if ($this->name != null) {
             $data['name'] = $this->name;
@@ -125,7 +145,9 @@ class UpdateProfileDTO
 
     public function hasChanges(): bool
     {
-        return $this->name != null 
+        return $this->home_number !== null || $this->home_unit !== null || $this->home_floor !== null
+            || $this->work_number !== null || $this->work_unit !== null || $this->work_floor !== null
+            || $this->name != null
             || $this->last_name != null 
             || $this->email != null 
             || $this->melicode != null 

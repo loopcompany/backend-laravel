@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <!-- تغییر مهم: ثابت کردن عرض برای جلوگیری از به‌هم‌ریختگی در موبایل -->
     <meta name="viewport" content="width=1000">
-    <title>جزئیات سفارش</title>
+    <title>{{ site_text('جزئیات سفارش') }}</title>
 
     <!-- لود کردن کتابخانه‌های مورد نیاز -->
     <script src="{{ asset('assets/js/jspdf.umd.min.js') }}"></script>
@@ -268,7 +268,7 @@
             <div class="header-right">
                 <div style="display:flex;align-items: center;">
                     <img src="{{ asset('assets/images/reciept/calendar.png') }}" style="height:30px; width:30px" />
-                    <div class="info-label">تاریخ صدور / نمایش</div>
+                    <div class="info-label">{{ site_text('تاریخ صدور / نمایش') }}</div>
                 </div>
                 <div class="date-box">{{ \Morilog\Jalali\Jalalian::forge($order->created_at)->format('Y/m/d') }}</div>
             </div>
@@ -278,8 +278,8 @@
             <div class="header-left company-info">
                 <img src="{{ asset('assets/images/reciept/logo.png') }}"
                     style="height:40px;width:40px;object-fit: contain;" />
-                <h3>حلقه بی نهایت<br>رایانه ایرانیان</h3>
-                <div class="info-label">شناسه ملی : 14011370142</div>
+                <h3>{{ site_text('حلقه بی نهایت') }}<br>{{ site_text('رایانه ایرانیان') }}</h3>
+                <div class="info-label">{{ site_text('شناسه ملی : 14011370142') }}</div>
             </div>
         </div>
 
@@ -296,34 +296,34 @@
         <div class="section-card">
             <div class="section-title">
                 <i class="bi bi-list-check"></i>
-                مشخصات سفارش
+                {{ site_text('مشخصات سفارش') }}
             </div>
             <div class="grid-2col">
                 <div>
                     <div class="info-row">
-                        <span class="info-label"> <i class="bi bi-list-ul"></i> شماره سفارش</span> <span
+                        <span class="info-label"> <i class="bi bi-list-ul"></i> {{ site_text('شماره سفارش') }}</span> <span
                             class="info-value">{{ $order->id }}</span>
                     </div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-person"></i> کد کاربری</span> <span
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-person"></i> {{ site_text('کد کاربری') }}</span> <span
                             class="info-value">{{ $order->user?->code }}</span></div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-person"></i> نام کاربری</span> <span
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-person"></i> {{ site_text('نام کاربری') }}</span> <span
                             class="info-value">{{ $order->user?->name . ' ' . $order->user?->last_name }}</span></div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-phone"></i> ثبت سفارش</span> <span
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-phone"></i> {{ site_text('ثبت سفارش') }}</span> <span
                             class="info-value">{{ $order->platform != 'web' ? 'اپلیکیشن' : 'سایت' }}</span></div>
                 </div>
                 <div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-buildings"></i> وضعیت کاربری</span>
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-buildings"></i> {{ site_text('وضعیت کاربری') }}</span>
                         <span class="info-value">{{ $user_type }}</span>
                     </div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-calendar4-week"></i> تاریخ ثبت
-                            سفارش</span> <span
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-calendar4-week"></i> {{ site_text('تاریخ ثبت
+                            سفارش') }}</span> <span
                             class="info-value">{{ \Morilog\Jalali\Jalalian::forge($order->created_at)->format('Y/m/d') }}</span>
                     </div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-clock"></i> ساعت ثبت سفارش</span>
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-clock"></i> {{ site_text('ساعت ثبت سفارش') }}</span>
                         <span
                             class="info-value">{{ \Morilog\Jalali\Jalalian::forge($order->created_at)->format('H:i') }}</span>
                     </div>
-                    <div class="info-row"><span class="info-label"> <i class="bi bi-box"></i> وضعیت سفارش</span> <span
+                    <div class="info-row"><span class="info-label"> <i class="bi bi-box"></i> {{ site_text('وضعیت سفارش') }}</span> <span
                             class="info-value">{{ $extra_status_label }}</span></div>
                 </div>
             </div>
@@ -331,7 +331,7 @@
 
 
         <div class="section-card">
-            <div class="section-title"> <i class="bi bi-buildings-fill"></i> مشخصات کاربر</div>
+            <div class="section-title"> <i class="bi bi-buildings-fill"></i> {{ site_text('مشخصات کاربر') }}</div>
             <div style="margin-top: 15px; margin-bottom: 15px;" class="grid-3col">
                 <div class="center-row"
                     style="border-left-color: #fbb713;border-left-width: 2px;border-left-style: solid;">
@@ -351,7 +351,7 @@
                 <div class="center-row">
                     <i class="bi bi-telephone"></i>
                     <div>
-                        <span class="info-label"> شماره تماس</span> <span
+                        <span class="info-label"> {{ site_text('شماره تماس') }}</span> <span
                             class="info-value">{{ $order->user?->phone }}</span>
                     </div>
                 </div>
@@ -361,13 +361,13 @@
         <div class="section-card">
             <div class="section-title">
                 <i class="bi bi-laptop"></i>
-                مشخصات محصول
+                {{ site_text('مشخصات محصول') }}
             </div>
             <div class="grid-3col" style="margin-top: 15px;margin-bottom: 15px;">
                 <div style="border-left-color: #fbb713;border-left-width: 2px;border-left-style: solid;"><span
-                        class="info-label">نوع محصول</span><br><b>{{ $order->category?->title }}</b></div>
+                        class="info-label">{{ site_text('نوع محصول') }}</span><br><b>{{ $order->category?->title }}</b></div>
                 <div style="border-left-color: #fbb713;border-left-width: 2px;border-left-style: solid;"><span
-                        class="info-label">برند</span><br><b style="color: #4CAF50;">
+                        class="info-label">{{ site_text('برند') }}</span><br><b style="color: #4CAF50;">
                         @if ($brandSelectedOption?->image_path && $brandDetail?->value)
                             <img src="{{ asset('storage/' . $brandSelectedOption?->image_path) }}"
                                 style="height: 50px; width: 50;">
@@ -378,7 +378,7 @@
                         @endif
                     </b></div>
                 <div><span
-                        class="info-label">مدل</span><br><b>{{ $modelSelectedOption?->title ?? ($modelDetail?->value ?? '-') }}</b>
+                        class="info-label">{{ site_text('مدل') }}</span><br><b>{{ $modelSelectedOption?->title ?? ($modelDetail?->value ?? '-') }}</b>
                 </div>
             </div>
         </div>
@@ -389,21 +389,21 @@
             <div class="section-card">
                 <div class="section-title">
                     <i class="bi bi-box-seam"></i>
-                    اقلام درخواستی
+                    {{ site_text('اقلام درخواستی') }}
                 </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>ردیف</th>
-                            <th>کالا</th>
-                            <th>برند</th>
-                            <th>مدل</th>
-                            <th>گارانتی</th>
-                            <th>مهلت تست</th>
-                            <th>بارکد</th>
-                            <th>تعداد</th>
-                            <th>قیمت واحد (تومان)</th>
-                            <th>قیمت کل (تومان)</th>
+                            <th>{{ site_text('ردیف') }}</th>
+                            <th>{{ site_text('کالا') }}</th>
+                            <th>{{ site_text('برند') }}</th>
+                            <th>{{ site_text('مدل') }}</th>
+                            <th>{{ site_text('گارانتی') }}</th>
+                            <th>{{ site_text('مهلت تست') }}</th>
+                            <th>{{ site_text('بارکد') }}</th>
+                            <th>{{ site_text('تعداد') }}</th>
+                            <th>{{ site_text('قیمت واحد (تومان)') }}</th>
+                            <th>{{ site_text('قیمت کل (تومان)') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -423,7 +423,7 @@
                         @endforeach
 
                         <tr class="table-footer">
-                            <td colspan="9" style="text-align: left;">جمع کل اقلام سفارش (تومان)</td>
+                            <td colspan="9" style="text-align: left;">{{ site_text('جمع کل اقلام سفارش (تومان)') }}</td>
                             <td>{{ number_format($order->extra_price) }}</td>
                         </tr>
                     </tbody>
@@ -436,13 +436,13 @@
         <!-- خدمات درخواستی -->
         @if (!$groupedDetails->isEmpty())
             <div class="section-card">
-                <div class="section-title"><i class="bi bi-box-seam"></i> خدمات درخواستی</div>
+                <div class="section-title"><i class="bi bi-box-seam"></i> {{ site_text('خدمات درخواستی') }}</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>ردیف</th>
-                            <th>عنوان</th>
-                            <th>شرح خدمات درخواستی</th>
+                            <th>{{ site_text('ردیف') }}</th>
+                            <th>{{ site_text('عنوان') }}</th>
+                            <th>{{ site_text('شرح خدمات درخواستی') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -491,7 +491,7 @@
                             </tr>
                         @endforeach
                         <tr class="table-footer">
-                            <td colspan="2" style="text-align: center;">جمع کل مبلغ خدمات درخواستی (تومان)</td>
+                            <td colspan="2" style="text-align: center;">{{ site_text('جمع کل مبلغ خدمات درخواستی (تومان)') }}</td>
                             <td>{{ $order->technician_price ? number_format($order->technician_price) : '-' }}</td>
                         </tr>
                     </tbody>
@@ -502,54 +502,54 @@
         <!-- مشخصات تحویل و پرداخت -->
         <div class="grid-2col">
             <div class="section-card" style="display: flex;flex-direction: column;justify-content: space-between;">
-                <div class="section-title"> <i class="bi bi-truck"></i> مشخصات تحویل</div>
+                <div class="section-title"> <i class="bi bi-truck"></i> {{ site_text('مشخصات تحویل') }}</div>
                 <div class="info-row" style="flex: 1;align-items: center;"><span class="info-label">
                         <i class="bi bi-person"></i>
-                        نام تحویل
-                        گیرنده</span> <span class="info-value">{{ $order->delivery_reports?->name ?? '-' }}</span>
+                        {{ site_text('نام تحویل
+                        گیرنده') }}</span> <span class="info-value">{{ $order->delivery_reports?->name ?? '-' }}</span>
                 </div>
                 <div class="info-row" style="flex: 1;align-items: center;"><span class="info-label">
                         <i class="bi bi-calendar4-week"></i>
-                        تاریخ
-                        تحویل</span>
+                        {{ site_text('تاریخ
+                        تحویل') }}</span>
                     <span
                         class="info-value">{{ $order->delivery_reports ? \Morilog\Jalali\Jalalian::forge($order->delivery_reports?->created_at)->format('Y/m/d') : '-' }}</span>
                 </div>
                 <div class="info-row" style="flex: 1;align-items: center;"><span class="info-label">
                         <i class="bi bi-check-circle" style="color: green"></i>
-                        وضعیت
-                        تحویل</span>
+                        {{ site_text('وضعیت
+                        تحویل') }}</span>
                     <span class="info-value text-green">{{ $order->shipment_status ?? '-' }}</span>
                 </div>
             </div>
             <div class="section-card">
-                <div class="section-title"> <i class="bi bi-credit-card"></i> مشخصات پرداخت</div>
+                <div class="section-title"> <i class="bi bi-credit-card"></i> {{ site_text('مشخصات پرداخت') }}</div>
                 <div class="info-row"><span class="info-label">
                         <i class="bi bi-currency-dollar"></i>
-                        مبلغ کل (تومان)</span> <span
+                        {{ site_text('مبلغ کل (تومان)') }}</span> <span
                         class="info-value">{{ number_format((int) $order->technician_price + (int) $order->extra_price) }}</span>
                 </div>
                 <div class="info-row"><span class="info-label">
                         <i class="bi bi-tag"></i>
-                        کد تشویقی</span> <span
+                        {{ site_text('کد تشویقی') }}</span> <span
                         class="info-value">{{ $order->discountUse?->discount_code ?? '-' }}</span>
                 </div>
                 <div class="info-row"><span class="info-label">
                         <i class="bi bi-dash-circle"></i>
-                        مبلغ کسر شده (تومان)</span> <span
+                        {{ site_text('مبلغ کسر شده (تومان)') }}</span> <span
                         class="info-value">{{ number_format($order->discount_price) ?? '-' }}</span></div>
                 <div class="info-row" style="font-size: 16px;"><span class="info-label">
                         <i class="bi bi-currency-dollar"></i>
-                        مبلغ قابل پرداخت
-                        (تومان)</span> <span class="info-value"
+                        {{ site_text('مبلغ قابل پرداخت
+                        (تومان)') }}</span> <span class="info-value"
                         style="font-size: 18px;">{{ number_format($order->payment_price()) }}</span></div>
                 <div class="info-row"><span class="info-label">
                         <i class="bi bi-check-circle" style="color: green"></i>
-                        وضعیت پرداخت</span>
+                        {{ site_text('وضعیت پرداخت') }}</span>
                     <span class="info-value">{{ $payment_status_label }}</span>
                 </div>
 
-                <div class="info-row"><span class="info-label"><i class="bi bi-bank"></i> روش پرداخت</span>
+                <div class="info-row"><span class="info-label"><i class="bi bi-bank"></i> {{ site_text('روش پرداخت') }}</span>
                     <span class="info-value">{{ $payment_way }}</span>
                 </div>
             </div>
@@ -561,8 +561,8 @@
                 <img src="{{ asset('assets/images/reciept/qr.png') }}" alt="QR Code">
             </div>
             <div class="footer-text">
-                <h2>با تشکر از اعتماد شما</h2>
-                <p>با لوپ تا بی نهایت در کنار شما هستیم</p>
+                <h2>{{ site_text('با تشکر از اعتماد شما') }}</h2>
+                <p>{{ site_text('با لوپ تا بی نهایت در کنار شما هستیم') }}</p>
             </div>
             <div class="badge">
                 <img src="{{ asset('assets/images/reciept/star-image.png') }}" alt="Badge"

@@ -25,7 +25,7 @@
 <section id="connect" class="about-contact-ways">
   <div class="about-contact-inner">
     <div class="about-contact-heading">
-      <h2>راه‌های ارتباط با <span class="en">LOOP</span></h2>
+      <h2>{{ site_text('راه‌های ارتباط با') }} <span class="en">LOOP</span></h2>
       <div class="about-contact-title-mark" aria-hidden="true"><span>∞</span></div>
     </div>
 
@@ -42,15 +42,15 @@
     <div class="about-direct-grid">
       <a href="https://clpiran.com" class="about-direct-card" target="_blank" rel="noopener noreferrer">
         <div class="direct-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.4 4.5 6.4 4.5 9S15 17.6 12 21M12 3c-3 3.4-4.5 6.4-4.5 9S9 17.6 12 21"/></svg></div>
-        <span><strong>وب‌سایت</strong><small class="en">clpiran.com</small></span>
+        <span><strong>{{ site_text('وب‌سایت') }}</strong><small class="en">clpiran.com</small></span>
       </a>
       <a href="mailto:{{ $emails->first()->name ?? 'info@clpiran.com' }}" class="about-direct-card">
         <div class="direct-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></div>
-        <span><strong>ایمیل سازمانی</strong><small class="en">{{ $emails->first()->name ?? 'info@clpiran.com' }}</small></span>
+        <span><strong>{{ site_text('ایمیل سازمانی') }}</strong><small class="en">{{ $emails->first()->name ?? 'info@clpiran.com' }}</small></span>
       </a>
       <a href="tel:{{ $phones->first()->name ?? '91693909' }}" class="about-direct-card">
         <div class="direct-icon"><svg viewBox="0 0 24 24"><path d="M7.5 3.5 10 8 7.8 9.8c1.3 2.8 3.6 5.1 6.4 6.4L16 14l4.5 2.5-.5 3.2c-.2 1-1.1 1.8-2.2 1.8C9.4 21.5 2.5 14.6 2.5 6.2c0-1.1.8-2 1.8-2.2l3.2-.5Z"/></svg></div>
-        <span><strong>تماس تلفنی</strong><small class="en">{{ $phones->first()->name ?? '91693909' }}</small></span>
+        <span><strong>{{ site_text('تماس تلفنی') }}</strong><small class="en">{{ $phones->first()->name ?? '91693909' }}</small></span>
       </a>
     </div>
   </div>
@@ -88,7 +88,7 @@
 <section id="connect" class="about-contact-ways">
     <div class="about-contact-inner">
         <div class="about-contact-heading">
-            <h2>راه‌های ارتباط با <span class="en">LOOP</span></h2>
+            <h2>{{ site_text('راه‌های ارتباط با') }} <span class="en">LOOP</span></h2>
 
             <div class="about-contact-title-mark" aria-hidden="true">
                 <span>∞</span>
@@ -127,15 +127,15 @@
         <div class="about-direct-grid">
           <a href="https://clpiran.com" class="about-direct-card" target="_blank" rel="noopener noreferrer">
             <div class="direct-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.4 4.5 6.4 4.5 9S15 17.6 12 21M12 3c-3 3.4-4.5 6.4-4.5 9S9 17.6 12 21"/></svg></div>
-            <span><strong>وب‌سایت</strong><small class="en">clpiran.com</small></span>
+            <span><strong>{{ site_text('وب‌سایت') }}</strong><small class="en">clpiran.com</small></span>
           </a>
           <a href="mailto:{{ $emails->first()->name ?? 'info@clpiran.com' }}" class="about-direct-card">
             <div class="direct-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></div>
-            <span><strong>ایمیل سازمانی</strong><small class="en">{{ $emails->first()->name ?? 'info@clpiran.com' }}</small></span>
+            <span><strong>{{ site_text('ایمیل سازمانی') }}</strong><small class="en">{{ $emails->first()->name ?? 'info@clpiran.com' }}</small></span>
           </a>
           <a href="tel:{{ $phones->first()->name ?? '91693909' }}" class="about-direct-card">
             <div class="direct-icon"><svg viewBox="0 0 24 24"><path d="M7.5 3.5 10 8 7.8 9.8c1.3 2.8 3.6 5.1 6.4 6.4L16 14l4.5 2.5-.5 3.2c-.2 1-1.1 1.8-2.2 1.8C9.4 21.5 2.5 14.6 2.5 6.2c0-1.1.8-2 1.8-2.2l3.2-.5Z"/></svg></div>
-            <span><strong>تماس تلفنی</strong><small class="en">{{ $phones->first()->name ?? '91693909' }}</small></span>
+            <span><strong>{{ site_text('تماس تلفنی') }}</strong><small class="en">{{ $phones->first()->name ?? '91693909' }}</small></span>
           </a>
         </div>
     </div>
@@ -146,8 +146,8 @@
   <div class="container">
     <div class="reach-grid">
       <div class="reach-form">
-        <h2>پیام خود را برای ما ارسال کنید</h2>
-        <p>کارشناسان ما در اولین فرصت پاسخگوی پیام شما خواهند بود.</p>
+        <h2>{{ site_text('پیام خود را برای ما ارسال کنید') }}</h2>
+        <p>{{ site_text('کارشناسان ما در اولین فرصت پاسخگوی پیام شما خواهند بود.') }}</p>
 
         <form id="contact_form" action="{{ route('submit.contact') }}" method="POST">
           @csrf
@@ -168,11 +168,11 @@
           </div>
           <div class="field">
             <select name="title" required>
-              <option value="" disabled {{ old('title') ? '' : 'selected' }}>موضوع پیام را انتخاب کنید</option>
-              <option value="درخواست مشاوره" {{ old('title')=='درخواست مشاوره' ? 'selected' : '' }}>درخواست مشاوره</option>
-              <option value="گزارش مشکل فنی" {{ old('title')=='گزارش مشکل فنی' ? 'selected' : '' }}>گزارش مشکل فنی</option>
-              <option value="همکاری با LOOP" {{ old('title')=='همکاری با LOOP' ? 'selected' : '' }}>همکاری با LOOP</option>
-              <option value="سایر موارد" {{ old('title')=='سایر موارد' ? 'selected' : '' }}>سایر موارد</option>
+              <option value="" disabled {{ old('title') ? '' : 'selected' }}>{{ site_text('موضوع پیام را انتخاب کنید') }}</option>
+              <option value="درخواست مشاوره" {{ old('title')=='درخواست مشاوره' ? 'selected' : '' }}>{{ site_text('درخواست مشاوره') }}</option>
+              <option value="گزارش مشکل فنی" {{ old('title')=='گزارش مشکل فنی' ? 'selected' : '' }}>{{ site_text('گزارش مشکل فنی') }}</option>
+              <option value="همکاری با LOOP" {{ old('title')=='همکاری با LOOP' ? 'selected' : '' }}>{{ site_text('همکاری با LOOP') }}</option>
+              <option value="سایر موارد" {{ old('title')=='سایر موارد' ? 'selected' : '' }}>{{ site_text('سایر موارد') }}</option>
             </select>
             <svg class="fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
             @error('title')<div class="text-danger mt-1"><small>{{ $message }}</small></div>@enderror
@@ -183,7 +183,7 @@
             @error('message')<div class="text-danger mt-1"><small>{{ $message }}</small></div>@enderror
           </div>
 
-          <button type="submit" class="btn solid">ارسال پیام
+          <button type="submit" class="btn solid">{{ site_text('ارسال پیام') }}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
           </button>
         </form>
@@ -198,7 +198,7 @@
 
       <div>
         @php $office = $contacts->where('type','office')->first(); @endphp
-        <h2 style="font-size:clamp(22px,2.4vw,28px); margin-bottom:10px;">دفتر مرکزی <span class="en">LOOP</span></h2>
+        <h2 style="font-size:clamp(22px,2.4vw,28px); margin-bottom:10px;">{{ site_text('دفتر مرکزی') }} <span class="en">LOOP</span></h2>
         <p style="color:var(--text-mid); font-size:14px; margin-bottom:24px;">{{ $office->name ?? 'تهران، شهرک ولیعصر، خیابان ولی محمدی، پلاک ۶۱، همکف' }}</p>
         <a href="">
           <img src="{{asset('assets/new-style/contact/map.png')}}" />
@@ -214,7 +214,7 @@
             {{ $office->name ?? 'تهران، شهرک ولیعصر، خیابان ولی محمدی، پلاک ۶۱، طبقه همکف' }}
           </div>
           <div class="map-btn-wrap">
-            <a class="btn" href="https://maps.google.com/?q={{ urlencode($office->name ?? 'تهران، شهرک ولیعصر') }}" target="_blank" rel="noopener">مشاهده در نقشه
+            <a class="btn" href="https://maps.google.com/?q={{ urlencode($office->name ?? 'تهران، شهرک ولیعصر') }}" target="_blank" rel="noopener">{{ site_text('مشاهده در نقشه') }}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5-9-10a5 5 0 0 1 9-4 5 5 0 0 1 9 4c-2 5-9 10-9 10Z"/><circle cx="12" cy="11" r="2"/></svg>
             </a>
           </div>
@@ -228,29 +228,29 @@
 <section id="whyus">
   <div class="container">
     <div class="whyus-head">
-      <h2>چرا ارتباط با <span class="en">LOOP</span> تجربه‌ای متفاوت است؟</h2>
+      <h2>{{ site_text('چرا ارتباط با') }} <span class="en">LOOP</span> {{ site_text('تجربه‌ای متفاوت است؟') }}</h2>
       <div class="gold-rule rule-center"></div>
     </div>
     <div class="whyus-grid">
       <div class="whyus-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Zm-18 0a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"/></svg></div>
-        <h4>پاسخگویی سریع</h4>
-        <p>تیم ما در کوتاه‌ترین زمان پاسخگوی شماست.</p>
+        <h4>{{ site_text('پاسخگویی سریع') }}</h4>
+        <p>{{ site_text('تیم ما در کوتاه‌ترین زمان پاسخگوی شماست.') }}</p>
       </div>
       <div class="whyus-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01Z"/></svg></div>
-        <h4>راهکارهای تخصصی</h4>
-        <p>راهکارهایی متناسب با نیاز کسب‌وکار شما ارائه می‌دهیم.</p>
+        <h4>{{ site_text('راهکارهای تخصصی') }}</h4>
+        <p>{{ site_text('راهکارهایی متناسب با نیاز کسب‌وکار شما ارائه می‌دهیم.') }}</p>
       </div>
       <div class="whyus-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div>
-        <h4>اطمینان و امنیت</h4>
-        <p>اطلاعات شما نزد ما محفوظ و محرمانه می‌ماند.</p>
+        <h4>{{ site_text('اطمینان و امنیت') }}</h4>
+        <p>{{ site_text('اطلاعات شما نزد ما محفوظ و محرمانه می‌ماند.') }}</p>
       </div>
       <div class="whyus-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-        <h4>همراهی واقعی</h4>
-        <p>ما فقط به حرف شما گوش می‌دهیم، در کنارتان هستیم.</p>
+        <h4>{{ site_text('همراهی واقعی') }}</h4>
+        <p>{{ site_text('ما فقط به حرف شما گوش می‌دهیم، در کنارتان هستیم.') }}</p>
       </div>
     </div>
   </div>
@@ -260,7 +260,7 @@
 <section id="process">
   <div class="container">
     <div class="process-head">
-      <h2>فرآیند پاسخگویی ما</h2>
+      <h2>{{ site_text('فرآیند پاسخگویی ما') }}</h2>
       <div class="gold-rule rule-center"></div>
     </div>
 
@@ -272,8 +272,8 @@
           <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></div>
           <div class="num-circle en">01</div>
         </div>
-        <h5>ارسال پیام</h5>
-        <p>شما پیام خود را برای ما ارسال می‌کنید.</p>
+        <h5>{{ site_text('ارسال پیام') }}</h5>
+        <p>{{ site_text('شما پیام خود را برای ما ارسال می‌کنید.') }}</p>
       </div>
 
       <div class="process-step">
@@ -281,8 +281,8 @@
           <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
           <div class="num-circle en">02</div>
         </div>
-        <h5>بررسی و تحلیل</h5>
-        <p>تیم ما پیام شما را بررسی و تحلیل می‌کند.</p>
+        <h5>{{ site_text('بررسی و تحلیل') }}</h5>
+        <p>{{ site_text('تیم ما پیام شما را بررسی و تحلیل می‌کند.') }}</p>
       </div>
 
       <div class="process-step">
@@ -290,8 +290,8 @@
           <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></div>
           <div class="num-circle en">03</div>
         </div>
-        <h5>تماس و مشاوره</h5>
-        <p>کارشناسی ما با شما تماس می‌گیرد.</p>
+        <h5>{{ site_text('تماس و مشاوره') }}</h5>
+        <p>{{ site_text('کارشناسی ما با شما تماس می‌گیرد.') }}</p>
       </div>
 
       <div class="process-step">
@@ -299,8 +299,8 @@
           <div class="ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg></div>
           <div class="num-circle en">04</div>
         </div>
-        <h5>آغاز همکاری</h5>
-        <p>بهترین راهکار را ارائه و همکاری را آغاز می‌کنیم.</p>
+        <h5>{{ site_text('آغاز همکاری') }}</h5>
+        <p>{{ site_text('بهترین راهکار را ارائه و همکاری را آغاز می‌کنیم.') }}</p>
       </div>
     </div>
   </div>
@@ -311,9 +311,9 @@
   <div class="cta-collab">
    
     <div class="cta-collab-text">
-      <h2>بیایید آینده را با هم بسازیم.</h2>
-      <p>یک قدم تا شروع همکاری حرفه‌ای با <span class="en">LOOP</span> فاصله دارید.</p>
-      <a href="{{ route('web.contact') }}#reach" class="btn dark" style="width: fit-content;">شروع همکاری
+      <h2>{{ site_text('بیایید آینده را با هم بسازیم.') }}</h2>
+      <p>{{ site_text('یک قدم تا شروع همکاری حرفه‌ای با') }} <span class="en">LOOP</span> {{ site_text('فاصله دارید.') }}</p>
+      <a href="{{ route('web.contact') }}#reach" class="btn dark" style="width: fit-content;">{{ site_text('شروع همکاری') }}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
       </a>
     </div>

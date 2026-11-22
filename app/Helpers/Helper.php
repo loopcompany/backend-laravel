@@ -70,7 +70,6 @@ class Helper
                 'phone' => $phone,
                 'templateId' => $templateId,
                 'names' => $names,
-                'values' => $values,
                 'config_api_key' => config('smsir.api_key') ? 'SET' : 'NOT_SET',
                 'config_line_number' => config('smsir.line_number')
             ]);
@@ -96,7 +95,6 @@ class Helper
                 'templateId' => $templateId,
                 'response' => $res,
                 'response_type' => gettype($res),
-                'response_json' => json_encode($res)
             ]);
 
             // Check if response indicates success
@@ -121,7 +119,7 @@ class Helper
                     'response' => $res,
                     'error_message' => is_object($res) ? ($res->Message ?? 'Unknown error') : 'Invalid response format'
                 ]);
-                return $res;
+                return false;
             }
 
         } catch (\Throwable $th) {
@@ -134,7 +132,7 @@ class Helper
                 'exception_line' => $th->getLine(),
                 'trace' => $th->getTraceAsString()
             ]);
-            return $th;
+            return false;
         }
     }
 

@@ -5,12 +5,12 @@
             {{-- صفحه قبلی --}}
             @if ($paginator->onFirstPage())
                 <li class="disabled" aria-disabled="true">
-                    <span class="page-btn page-nav"><i class="fa fa-angle-right"></i> قبلی</span>
+                    <span class="page-btn page-nav"><i class="fa fa-angle-right"></i> {{ site_text('قبلی') }}</span>
                 </li>
             @else
                 <li>
                     <a class="page-btn page-nav" href="{{ $paginator->previousPageUrl() }}" rel="prev">
-                        <i class="fa fa-angle-right"></i> قبلی
+                        <i class="fa fa-angle-right"></i> {{ site_text('قبلی') }}
                     </a>
                 </li>
             @endif
@@ -36,12 +36,12 @@
             @if ($paginator->hasMorePages())
                 <li>
                     <a class="page-btn page-nav" href="{{ $paginator->nextPageUrl() }}" rel="next">
-                        بعدی <i class="fa fa-angle-left"></i>
+                        {{ site_text('بعدی') }} <i class="fa fa-angle-left"></i>
                     </a>
                 </li>
             @else
                 <li class="disabled" aria-disabled="true">
-                    <span class="page-btn page-nav">بعدی <i class="fa fa-angle-left"></i></span>
+                    <span class="page-btn page-nav">{{ site_text('بعدی') }} <i class="fa fa-angle-left"></i></span>
                 </li>
             @endif
         </ul>

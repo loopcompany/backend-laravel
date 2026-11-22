@@ -170,7 +170,7 @@
         <div class="loop-footer-grid">
             <div class="loop-footer-brand">
                 <a href="{{ route('web.home') }}" class="loop-footer-brand-name">LOOP</a>
-                <p>لوپ یک اکوسیستم یکپارچه از خدمات و تکنولوژی برای سازمان‌ها، کسب‌وکارها و تیم‌های پیشرو است.</p>
+                <p>{{ site_text('لوپ یک اکوسیستم یکپارچه از خدمات و تکنولوژی برای سازمان‌ها، کسب‌وکارها و تیم‌های پیشرو است.') }}</p>
                 <div class="loop-footer-socials">
                     @foreach ($footerSocials as $social)
                         <a href="{{ $social->link }}" target="_blank" rel="noopener noreferrer" title="{{ $social->title ?? '' }}">
@@ -195,38 +195,38 @@
             </div>
 
             <div class="loop-footer-col">
-                <h6>لوپ</h6>
+                <h6>{{ site_text('لوپ') }}</h6>
                 <ul>
-                    <li><a href="{{ route('web.home') }}">خانه</a></li>
-                    <li><a href="{{ route('web.about') }}">درباره ما</a></li>
-                    <li><a href="{{ route('web.contact') }}">تماس با ما</a></li>
-                    <li><a href="{{ route('web.blogs') }}">مقالات و آموزش</a></li>
+                    <li><a href="{{ route('web.home') }}">{{ site_text('خانه') }}</a></li>
+                    <li><a href="{{ route('web.about') }}">{{ site_text('درباره ما') }}</a></li>
+                    <li><a href="{{ route('web.contact') }}">{{ site_text('تماس با ما') }}</a></li>
+                    <li><a href="{{ route('web.blogs') }}">{{ site_text('مقالات و آموزش') }}</a></li>
                 </ul>
             </div>
 
             <div class="loop-footer-col">
-                <h6>خدمات مشتریان</h6>
+                <h6>{{ site_text('خدمات مشتریان') }}</h6>
                 <ul>
-                    <li><a href="{{ route('web.faqs') }}">سوالات متداول</a></li>
-                    <li><a href="{{ route('web.privacy') }}">حریم خصوصی</a></li>
-                    <li><a href="{{ route('web.terms') }}">قوانین و مقررات</a></li>
+                    <li><a href="{{ route('web.faqs') }}">{{ site_text('سوالات متداول') }}</a></li>
+                    <li><a href="{{ route('web.privacy') }}">{{ site_text('حریم خصوصی') }}</a></li>
+                    <li><a href="{{ route('web.terms') }}">{{ site_text('قوانین و مقررات') }}</a></li>
                 </ul>
             </div>
 
             <div class="loop-footer-col">
-                <h6>همکاری و راهنما</h6>
+                <h6>{{ site_text('همکاری و راهنما') }}</h6>
                 <ul>
-                    <li><a href="{{ route('web.careers') }}">همکاری با لوپ</a></li>
-                    <li><a href="{{ route('web.technician.register-form') }}">ثبت‌نام تکنسین لوپ</a></li>
-                    <li><a href="{{ route('loop.learn') }}">کلاس‌های آموزش رایگان</a></li>
-                    <li><a href="{{ asset('assets/guid/tech.pdf') }}">راهنمای اپلیکیشن تکنسین</a></li>
-                    <li><a href="{{ asset('assets/guid/user.pdf') }}">راهنمای اپلیکیشن کاربر</a></li>
-                    <li><a href="{{ asset('assets/guid/organ.pdf') }}">راهنمای کاربر سازمانی</a></li>
+                    <li><a href="{{ route('web.careers') }}">{{ site_text('همکاری با لوپ') }}</a></li>
+                    <li><a href="{{ route('web.technician.register-form') }}">{{ site_text('ثبت‌نام تکنسین لوپ') }}</a></li>
+                    <li><a href="{{ route('loop.learn') }}">{{ site_text('کلاس‌های آموزش رایگان') }}</a></li>
+                    <li><a href="{{ asset('assets/guid/tech.pdf') }}">{{ site_text('راهنمای اپلیکیشن تکنسین') }}</a></li>
+                    <li><a href="{{ asset('assets/guid/user.pdf') }}">{{ site_text('راهنمای اپلیکیشن کاربر') }}</a></li>
+                    <li><a href="{{ asset('assets/guid/organ.pdf') }}">{{ site_text('راهنمای کاربر سازمانی') }}</a></li>
                 </ul>
             </div>
 
             <div class="loop-footer-col loop-footer-contact-col">
-                <h6>اطلاعات تماس</h6>
+                <h6>{{ site_text('اطلاعات تماس') }}</h6>
                 <ul class="loop-footer-contact">
                     @if ($footerPhone)
                         <li>
@@ -255,8 +255,18 @@
         </div>
 
         <div class="loop-footer-bottom">
-            <span>تمامی حقوق این وب‌سایت متعلق به LOOP می‌باشد.</span>
+            <span>{{ site_text('تمامی حقوق این وب‌سایت متعلق به LOOP می‌باشد.') }}</span>
+            <button type="button" data-loop-brand-motion style="border:1px solid #d9a940;border-radius:8px;background:transparent;color:#e1b649;padding:6px 12px;font:inherit;cursor:pointer">{{ site_text('نمایش لوگوموشن لوپ') }}</button>
             <svg viewBox="0 0 46 22" fill="none" aria-hidden="true"><path d="M12 4a7 7 0 1 0 0 14 12 12 0 0 0 11-7 12 12 0 0 1 11-7 7 7 0 1 1 0 14 12 12 0 0 1-11-7 12 12 0 0 0-11-7Z" stroke="#d9a940" stroke-width="1.6"/></svg>
         </div>
     </div>
 </footer>
+
+<dialog id="loop-brand-motion" aria-label="{{ site_text('لوگوموشن لوپ') }}" style="width:min(94vw,960px);max-height:92vh;padding:12px;border:1px solid #d9a940;border-radius:14px;background:#071426;color:#fff">
+    <button type="button" data-loop-brand-close aria-label="{{ site_text('بستن') }}" style="display:block;margin-bottom:8px;padding:6px 14px;border:1px solid #d9a940;border-radius:8px;color:#fff;background:transparent;font:inherit;cursor:pointer"><span aria-hidden="true">× </span><span>{{ site_text('بستن') }}</span></button>
+    <video controls playsinline preload="none" data-portrait="{{ asset('assets/media/loop-brand-portrait.mp4') }}" data-landscape="{{ asset('assets/media/loop-brand-landscape.mp4') }}" style="display:block;width:100%;max-height:80vh;object-fit:contain;background:#000"></video>
+</dialog>
+<script src="{{ asset('assets/js/loop-brand-motion.js') }}?v=20261123" defer></script>
+
+<script src="{{ asset('assets/js/loop-realtime.js') }}?v=20261123" defer></script>
+<script src="{{ asset('assets/js/loop-localization.js') }}?v=20261123" defer></script>

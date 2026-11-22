@@ -14,7 +14,7 @@ class UpdateProfileRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user() instanceof \App\Models\User && $this->user()->hasAccess();
     }
 
     /**
@@ -25,6 +25,13 @@ class UpdateProfileRequest extends FormRequest
         $userId = $this->user()->id;
         
         return [
+            'home_number' => ['sometimes','nullable','integer','min:0'],
+            'home_unit' => ['sometimes','nullable','integer','min:0'],
+            'home_floor' => ['sometimes','nullable','integer','min:0'],
+            'work_number' => ['sometimes','nullable','integer','min:0'],
+            'work_unit' => ['sometimes','nullable','integer','min:0'],
+            'work_floor' => ['sometimes','nullable','integer','min:0'],
+
             'name' => [
                 'sometimes',
                 'required',
@@ -336,4 +343,19 @@ class UpdateProfileRequest extends FormRequest
 
         return false;
     }
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (count(array_diff(array_keys($this->all()), ['password','password_confirmation','_method','current_password','g-recaptcha-response'])) > 0) {
+                $input=$this->all();
+                foreach (app(\App\Services\CustomerProfileCompletion::class)->missing($this->user(),$input,null) as $field=>$message) $validator->errors()->add($field,$message);
+            }
+
+            if ($this->exists('email') && $this->user()?->email &&
+                strcasecmp((string)$this->input('email'), (string)$this->user()->email) !== 0) {
+                $validator->errors()->add('email', 'ایمیل ثبت‌نام از حساب کاربری قابل تغییر نیست.');
+            }
+        });
+    }
+
 }

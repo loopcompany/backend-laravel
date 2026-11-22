@@ -1,0 +1,9 @@
+/* Direction follows the administrator's language metadata, including live edits. */
+html[dir="ltr"] body { direction: ltr; text-align: left; }
+html[dir="ltr"] .loop-topbar-inner,
+html[dir="ltr"] .loop-mobile-drawer,
+html[dir="ltr"] .loop-site-footer { direction: ltr; }
+html[dir="ltr"] .loop-header-contact { order: -1; margin-right: 0; margin-left: auto; }
+html[dir="ltr"] .loop-header-guides > div { left: 0; right: auto; }
+html[dir="ltr"] .loop-menu-panel { left: 0; right: auto; }
+html[dir="ltr"] .hero-copy .col.fa { text-align: left; }

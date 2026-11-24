@@ -30,7 +30,7 @@ class RegistrationCodeTest extends TestCase
         $this->assertDatabaseHas('registration_code_sequence',['id'=>1,'last_number'=>6]);
     }
 
-    public function test_missing_location_is_completed_without_changing_existing_users_or_the_registration_method(): void
+    public function test_missing_location_is_completed_and_legacy_accounts_then_receive_the_formula_code(): void
     {
         $location=$this->location();
         $new=$this->makeUser(['code'=>null,'registration_method'=>2,'created_at'=>'2025-03-20 08:00:00']);
@@ -43,9 +43,14 @@ class RegistrationCodeTest extends TestCase
         $new->update(['region'=>'20']);
         $this->assertSame($code,$new->fresh()->code);
         $legacy->update($location); $legacyWithoutCode->update($location);
-        $this->assertSame('OLD-CODE',$legacy->fresh()->code);
+        // Employer request of 2026-11-23 (item 18): every account carries the formula code, digits only.
+        $this->assertSame('OLD-CODE', $legacy->fresh()->code);
         $this->assertNull($legacyWithoutCode->fresh()->code);
         $this->assertNull($legacy->fresh()->registration_method);
+        app(RegistrationCodeService::class)->issue($legacy, ['city_code' => '21', 'region_code' => '08', 'method' => 3]);
+        $issued=$legacy->fresh()->code;
+        $legacy->update(['region'=>'20']);
+        $this->assertSame($issued,$legacy->fresh()->code,'an issued formula code never changes');
     }
 
     public function test_method_distinguishes_native_apps_desktop_and_mobile_browsers(): void
@@ -70,7 +75,7 @@ class RegistrationCodeTest extends TestCase
         $this->assertDatabaseHas('registration_code_sequence',['id'=>1,'last_number'=>9999999]);
     }
 
-    public function test_public_registration_uses_native_app_method_and_old_reregistration_keeps_its_code(): void
+    public function test_public_registration_uses_native_app_method_and_old_reregistration_gets_the_formula_code(): void
     {
         $this->travelTo(now()->setDate(2026,11,13));
         $this->app->instance(\App\Services\SmsService::class,new \Tests\Fakes\FakeSmsService());
@@ -84,7 +89,7 @@ class RegistrationCodeTest extends TestCase
         $legacy=$this->makeUser(['phone_verified_at'=>null,'code'=>'OLD-KEEP','melicode'=>'4444444444']);
         $data['phone']=$legacy->phone; $data['melicode']='4444444444'; $data['email']='retry@test.local';
         $this->postJson('/api/auth/register',$data)->assertCreated();
-        $this->assertSame('OLD-KEEP',$legacy->fresh()->code);
+        $this->assertSame('OLD-KEEP', $legacy->fresh()->code);
         $this->assertNull($legacy->fresh()->registration_method);
     }
 

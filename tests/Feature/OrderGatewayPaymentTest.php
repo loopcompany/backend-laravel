@@ -15,6 +15,7 @@ class OrderGatewayPaymentTest extends TestCase
     public function test_callback_keeps_the_original_prepayment_kind_after_order_state_changes(): void
     {
         $user = $this->makeUser();
+        $walletBefore = (int) $user->wallet;
         $order = $this->makeOrder($user, [
             'prepayment' => 30,
             'loop_cost_estimate' => 500000,
@@ -77,5 +78,7 @@ class OrderGatewayPaymentTest extends TestCase
         $this->assertSame(1, $gateway->verified);
         $this->assertSame(150000, $gateway->amount);
         $this->assertSame('111222', $gateway->trackId);
+        $this->assertSame($walletBefore + 150000, (int) $user->fresh()->wallet);
+        $this->assertSame(1, UserTransaction::where('referenceId', 'ORDER_REFUND_'.$transaction->id)->count());
     }
 }

@@ -177,10 +177,10 @@ class AdminPanelPhase2Test extends TestCase
 
         // مأمور خرید از فهرست کاربران
         Livewire::test(ListUsers::class)
-            ->callTableAction('referral_agent', $orgUser, ['is_referral_agent' => true, 'commission_percent' => 12, 'discount_percent' => 3])
+            ->callTableAction('referral_agent', $orgUser, ['is_referral_agent' => true])
             ->assertHasNoTableActionErrors();
         $this->assertTrue($orgUser->fresh()->is_referral_agent);
-        $this->assertSame(12, ReferralCode::where('user_id', $orgUser->id)->where('multi_use', true)->value('commission_percent'));
+        $this->assertFalse(ReferralCode::where('user_id', $orgUser->id)->exists());
 
         // صف برداشت: ثبت واریز
         $withdrawal = ReferralWithdrawal::create(['user_id' => $orgUser->id, 'amount' => 100000, 'method' => 'sheba', 'status' => 'pending', 'sheba_number' => 'IR062960000000100324200001']);

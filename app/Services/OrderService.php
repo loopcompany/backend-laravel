@@ -11,7 +11,6 @@ use App\Models\DiscountCode;
 use App\Models\Technician;
 use App\Models\Order;
 use App\Models\OrderQuote;
-use App\Models\ReferralCode;
 use App\Models\PromoCode;
 use App\Models\PromoCodeUsage;
 use Illuminate\Http\UploadedFile;
@@ -103,21 +102,6 @@ class OrderService
             $discountCode = $discountResult['discount_code'];
         }
 
-        $referralCode = null;
-        if (!empty($data['referral_code'])) {
-            $referralResult = $this->resolveReferralCode($data['referral_code'], $userId);
-
-            if (!$referralResult['valid']) {
-                return [
-                    'success' => false,
-                    'message' => $referralResult['message'],
-                    'error_code' => 'INVALID_REFERRAL_CODE'
-                ];
-            }
-
-            $referralCode = $referralResult['referral_code'];
-        }
-
         $promoCode = null;
         if (!empty($data['promo_code'])) {
             $promoResult = $this->resolvePromoCode($data['promo_code'], $userId);
@@ -157,9 +141,6 @@ class OrderService
             'female_count' => $genderCounts['female'],
             'male_count' => $genderCounts['male'],
             'unspecified_count' => $genderCounts['unspecified'],
-            'referral_code_id' => $referralCode?->id,
-            'referral_discount_percent' => $referralCode?->discount_percent ?? 0,
-            'referral_commission_percent' => $referralCode?->commission_percent ?? 0,
             'promo_code_id' => $promoCode?->id,
             'promo_discount_percent' => $promoCode?->discount_percent ?? 0,
             // تامین کالا: تا پیش از این فقط داخل متن description می‌آمد
@@ -216,9 +197,7 @@ class OrderService
         }
 
         $order = $this->repo->create($orderData);
-        if ($referralCode?->policy_version) {
-            $referralCode->update(['status'=>ReferralCode::STATUS_USED,'used_by_user_id'=>$userId,'used_at'=>now(),'used_order_id'=>$order->id]);
-        }
+
 
         // ذخیره جزئیات سفارش (steps)
         if (!empty($data['steps'])) {
@@ -242,11 +221,6 @@ class OrderService
             app(ProcurementService::class)->createForOrder($order, $data['procurement_items'], $data['user']);
         }
 
-        // پورسانت مأمور خرید (در انتظار تا تسویه‌ی کامل سفارش)
-        if ($referralCode) {
-            app(ReferralAgentService::class)->syncForOrder($order);
-        }
-
         // ارسال پیامک تأیید سفارش
         $this->sendOrderConfirmationSms($order, $organizationUser);
 
@@ -258,68 +232,6 @@ class OrderService
                 'order' => $order
             ]
         ];
-    }
-
-    private function resolveReferralCode(string $code, int $userId): array
-    {
-        $normalizedCode = ReferralCode::normalize($code);
-
-        return DB::transaction(function () use ($normalizedCode, $userId): array {
-            $referralCode = ReferralCode::query()
-                ->whereRaw('UPPER(code) = ?', [$normalizedCode])
-                ->lockForUpdate()
-                ->first();
-
-            if (!$referralCode) {
-                return [
-                    'valid' => false,
-                    'message' => 'کد معرف معتبر نیست.',
-                ];
-            }
-
-            if ($referralCode->policy_version) {
-                $valid = (int)$referralCode->user_id === $userId && in_array($referralCode->status,ReferralCode::usableStatuses(),true) && !$referralCode->used_order_id;
-                return ['valid'=>$valid,'referral_code'=>$valid ? $referralCode : null,'message'=>$valid ? '' : 'کد معرف مخصوص این حساب نیست یا قبلاً مصرف شده است.'];
-            }
-
-            // کد مأمور خرید چندبارمصرف است و با هر سفارش مصرف نمی‌شود
-            if ($referralCode->multi_use) {
-                if ($referralCode->status !== ReferralCode::STATUS_ACTIVE || (int) $referralCode->user_id === $userId) {
-                    return [
-                        'valid' => false,
-                        'message' => (int) $referralCode->user_id === $userId
-                            ? 'نمی‌توانید از کد معرف خودتان استفاده کنید.'
-                            : 'این کد معرف غیرفعال است.',
-                    ];
-                }
-
-                return ['valid' => true, 'referral_code' => $referralCode];
-            }
-
-            $alreadyUsedByCurrentUser =
-                $referralCode->status === ReferralCode::STATUS_USED
-                && (int) $referralCode->used_by_user_id === $userId;
-
-            if (!in_array($referralCode->status, ReferralCode::usableStatuses(), true) && !$alreadyUsedByCurrentUser) {
-                return [
-                    'valid' => false,
-                    'message' => 'این کد معرف قبلاً استفاده شده است.',
-                ];
-            }
-
-            if (!$alreadyUsedByCurrentUser) {
-                $referralCode->update([
-                    'status' => ReferralCode::STATUS_USED,
-                    'used_by_user_id' => $userId,
-                    'used_at' => now(),
-                ]);
-            }
-
-            return [
-                'valid' => true,
-                'referral_code' => $referralCode,
-            ];
-        });
     }
 
     private function resolvePromoCode(string $code, int $userId): array

@@ -194,10 +194,7 @@ class OrganizationAccountAndPaymentTest extends TestCase
         ReferralCode::create(['user_id' => $owner->id, 'code' => 'LOOP-BBBBBB', 'discount_percent' => 15, 'commission_percent' => 0, 'status' => 'active']);
         Sanctum::actingAs($buyer);
 
-        $this->postJson('/api/referral-codes/check', ['code' => 'loop-aaaaaa'])
-            ->assertJsonPath('data.discount_percent', 7)
-            ->assertJsonMissingPath('data.commission_percent');
-        $this->postJson('/api/referral-codes/check', ['code' => 'LOOP-BBBBBB'])->assertJsonPath('data.discount_percent', 15);
+        $this->postJson('/api/referral-codes/check', ['code' => 'loop-aaaaaa'])->assertGone();
 
         $order = $this->makeOrder($buyer, ['technician_price' => 1000000, 'referral_discount_percent' => 7, 'referral_commission_percent' => 3]);
         // تخفیف خریدار ۷٪ ← ۹۳۰٬۰۰۰ ؛ پورسانت ۳٪ از آن ← ۲۷٬۹۰۰
@@ -239,6 +236,7 @@ class OrganizationAccountAndPaymentTest extends TestCase
             $role->givePermissionTo(Permission::firstOrCreate(['name' => $p, 'guard_name' => 'admin']));
         }
         $admin = Admin::create(['name' => 'Root', 'email' => 'root@test.local', 'password' => 'password', 'staff_type' => Admin::STAFF_MANAGER]);
+        $admin->forceFill(['is_active' => true])->save();
         $admin->assignRole($role);
         $this->actingAs($admin, 'admin');
 
@@ -246,12 +244,14 @@ class OrganizationAccountAndPaymentTest extends TestCase
         $order = $this->makeOrder($user, ['technician_price' => 800000, 'status' => 2]);
 
         Livewire::test(ListOrders::class)
-            ->callTableAction('record_offline_payment', $order, [
-                'payment_method' => 'card_to_card',
-                'payment_channel' => 'in_person',
+            ->mountTableAction('record_offline_payment', $order)
+            ->setTableActionData([
+                'method' => 'card_to_card',
                 'amount' => 800000,
                 'reference' => '123456',
             ])
+            ->call('callMountedTableAction')
+            ->assertStatus(200)
             ->assertHasNoTableActionErrors();
 
         $order->refresh();

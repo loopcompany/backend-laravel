@@ -12,6 +12,15 @@ use Filament\Resources\Resource;
 class ReferralCodeResource extends Resource
 {
     use HasFilamentPermissions;
+    // Retired business feature: keep historic rows for accounting, expose no management routes.
+    public static function shouldRegisterNavigation(): bool { return false; }
+    public static function canViewAny(): bool { return false; }
+    public static function canView($record): bool { return false; }
+    public static function canCreate(): bool { return false; }
+    public static function canEdit($record): bool { return false; }
+    public static function canDelete($record): bool { return false; }
+    public static function canDeleteAny(): bool { return false; }
+
     protected static ?string $model = ReferralCode::class;
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
     protected static ?string $navigationGroup = 'مدیریت کاربران';

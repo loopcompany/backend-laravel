@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class Order extends Model
 {
     public const PAYMENT_METHODS = [
+        'barter' => 'تهاتر کالا', 'mixed' => 'پرداخت ترکیبی',
         'cash' => 'نقدی',
         'card_to_card' => 'کارت به کارت',
         'sheba' => 'شبا',
@@ -28,6 +29,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
+        'settled_at', 'settled_by_admin_id',
         'delivery_modes',
         'user_id',
         'user_address_id',
@@ -183,6 +185,7 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'in_person_items' => 'array', 'settled_at' => 'datetime',
             'set_off_at' => 'datetime',
             'arrived_at' => 'datetime',
             'started_at' => 'datetime',
@@ -204,9 +207,10 @@ class Order extends Model
 
         static::saved(function (Order $order) {
             // پورسانت مأمور خرید با وضعیت سفارش هم‌گام می‌شود (pending / available / canceled)
-            if ($order->referral_code_id && $order->wasChanged(['status', 'payment_status', 'technician_price', 'extra_price', 'pakar_price'])) {
+            if ($order->wasRecentlyCreated || $order->wasChanged(['status', 'payment_status', 'technician_price', 'extra_price', 'pakar_price'])) {
                 app(\App\Services\ReferralAgentService::class)->syncForOrder($order);
             }
+            if ($order->wasChanged('payment_status') && (int) $order->payment_status === 1) app(\App\Services\OrderSettlementService::class)->reconcile($order);
         });
     }
 
@@ -214,6 +218,8 @@ class Order extends Model
     {
         return $this->hasOne(DeliveryReport::class);
     }
+
+    public function receipts(): HasMany { return $this->hasMany(OrderReceipt::class); }
     public function technician_order_report(): HasOne
     {
         return $this->hasOne(TechnicianOrderReport::class);
@@ -370,8 +376,12 @@ class Order extends Model
      * @param bool $withPlatform آیا قیمت پلتفرم هم اضافه بشه
      * @return float
      */
-    public function payment_price(bool $withPlatform = true): float
+    public function payment_price(bool $withPlatform = true, bool $includeReceipts = true): float
     {
+        if ($includeReceipts && OrderReceipt::where('order_id', $this->id)->where('status', 'approved')->exists()) {
+            $settlement = app(\App\Services\OrderSettlementService::class);
+            return max(0, $settlement->total($this) - $settlement->paid($this));
+        }
         $min_price = MinPrice::orderByDesc('id')->first();
         $price = 0;
 

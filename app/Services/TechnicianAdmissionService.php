@@ -34,6 +34,7 @@ class TechnicianAdmissionService
             app(RegistrationCodeService::class)->issue($locked, $data);
             $locked->refresh()->update(['password'=>Hash::make($password),'approval_status'=>'approved',
                 'approved_at'=>now(),'approved_by'=>$adminId,'rejection_reason'=>null]);
+            if ($locked->has_access && ! $locked->suspended_at) app(TechnicianIdentityService::class)->issue($locked->fresh());
         });
         $technician->refresh();
         $sent = Helper::send_sms($technician->phone, '812565', ['CODE','PASS'], [$technician->referral_code,$password]);

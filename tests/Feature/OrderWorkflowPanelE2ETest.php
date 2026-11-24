@@ -228,7 +228,7 @@ class OrderWorkflowPanelE2ETest extends TestCase
 
         $this->asAdmin();
         Livewire::test(ListOrders::class)
-            ->callTableAction('record_offline_payment', $order, ['payment_method' => 'card_to_card', 'payment_channel' => 'in_person', 'amount' => 800000])
+            ->callTableAction('record_offline_payment', $order, ['method' => 'card_to_card', 'payment_channel' => 'in_person', 'amount' => 800000])
             ->assertHasNoTableActionErrors();
         $this->click($order, 'close_file', [], expectError: true); // Card-to-card receipts require accounting approval.
         $payment=\App\Models\UserTransaction::where('order_id',$order->id)->where('status',100)->latest('id')->firstOrFail();

@@ -29,7 +29,7 @@ class SubmitOrderRequest extends FormRequest
             'unspecified_count' => 'nullable|integer|min:0',
             'discount_code' => 'nullable|string|max:50',
             'promo_code' => 'nullable|string|max:50',
-            'referral_code' => 'nullable|string|max:32',
+            'referral_code' => 'prohibited',
             'steps' => 'nullable|array',
             'delivery_mode' => 'nullable|array',
             'delivery_mode.*' => ['required', Rule::in(['once_short','monthly_short','yearly_long','project'])],

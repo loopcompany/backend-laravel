@@ -17,6 +17,9 @@ use App\Http\Controllers\InvoiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MainController::class, 'index'])->name('web.home'); // Alternative name for navigation
+Route::get('/admin/order-receipts/{receipt}/image', [\App\Http\Controllers\OrderSettlementController::class, 'adminImage'])->middleware('auth:admin')->name('admin.order-receipt.image');
+Route::get('/technician/identity/{uuid}', [\App\Http\Controllers\TechnicianIdentityController::class, 'publicCard'])->whereUuid('uuid')->middleware('throttle:60,1')->name('technician.identity');
+Route::get('/admin/technician-identity/{technician}/download', [\App\Http\Controllers\TechnicianIdentityController::class, 'download'])->middleware(['auth:admin', 'throttle:30,1'])->name('admin.technician-identity.download');
 Route::get('/reciept/{id}', [MainController::class, 'reciept'])->name('web.reciept'); // Alternative name for navigation
 
 // Authentication redirects for Laravel defaults

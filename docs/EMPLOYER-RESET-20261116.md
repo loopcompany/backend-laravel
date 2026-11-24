@@ -22,7 +22,7 @@
 
 پشتیبان برای امکان بازگشت، خصوصی روی سرور و در مسیر زیر نگهداری شده و عمومی نیست:
 
-`C:\Users\Administrator\Desktop\Loop\1\Backups\before-test-reset-20261116T105442Z`
+`C:\Users\Administrator\Desktop\Loop\Security\backups\before-test-reset-20261116T105442Z`
 
 فایل `database-at-reset.sql.gz` وضعیت دقیق زمان حذف، `storage.tar.gz` پیوست‌ها و `reset-manifest.private.json` فهرست فایل‌های حذف‌شده را نگه می‌دارند. این درخواست پاک‌سازی سامانهٔ فعال برای تست بود؛ پشتیبان‌های خصوصی حذف نشدند و وارد Git نمی‌شوند.
 

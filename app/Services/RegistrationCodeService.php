@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Admin;
 use App\Models\EmploymentFile;
 use App\Models\User;
 use App\Models\Technician;
@@ -32,6 +33,91 @@ class RegistrationCodeService
         };
     }
 
+    /**
+     * گروه یک مدیر/پرسنل پنل در فرمول، از روی `admins.staff_type`:
+     * مدیر ۱۰، پرسنل اداری ۳۰، پرسنل میدانی ۳۱ (سند «فرمول کد گزاری»).
+     * درخواست کارفرما (۲۵ آبان ۱۴۰۵، مورد ۱۸): «همه‌ی کاربرها، چه تکنسین و چه کاربر و چه ادمین، باید
+     * این کد را داشته باشند». تا این تغییر کد مدیران متن دلخواهِ واردشده در پنل بود، نه فرمول.
+     */
+    public static function adminStaffType(Admin $admin): int
+    {
+        return match ($admin->staff_type) {
+            Admin::STAFF_MANAGER => 10,
+            Admin::STAFF_OFFICE => 30,
+            Admin::STAFF_FIELD => 31,
+            default => throw ValidationException::withMessages(['staff_type' => 'نوع پرسنل مدیر برای صدور کد مشخص نیست.']),
+        };
+    }
+
+    /** گروه تکنسین در فرمول از روی «نوع تکنسین»: میدانی ۴۱، اداری/داخلی ۴۰. */
+    public static function technicianStaffType(Technician $technician): int
+    {
+        $type = mb_strtolower((string) $technician->technician_type);
+        return (str_contains($type, 'میدانی') || str_contains($type, 'field')) ? 41 : 40;
+    }
+
+    /**
+     * داده‌ی صدور کد برای یک حساب قدیمی که هنوز کدِ فرمول ندارد (برای migration و ابزار ادمین).
+     *
+     * @return array{city_code:string,region_code:string,method:int,staff_type?:int}|null  null = موقعیت حساب برای فرمول کافی نیست
+     */
+    public function legacyIssueData(User|EmploymentFile|Technician $record): ?array
+    {
+        if ($record instanceof User) {
+            $location = $this->location($record);
+            if (!$location) {
+                return null;
+            }
+            $method = (int) $record->registration_method;
+            return isset(self::METHODS[$method]) ? $location + ['method' => $method] : null;
+        }
+        if ($record instanceof Technician) {
+            // تکنسین‌ها از خود اپ ثبت‌نام می‌کنند (روش ۱)؛ گروه در فرمول از «نوع تکنسین» می‌آید.
+            $location = self::technicianLocation($record);
+            $method = (int) $record->registration_method;
+            return $location && isset(self::METHODS[$method]) ? $location + ['method' => $method, 'staff_type' => self::technicianStaffType($record)] : null;
+        }
+        // پرونده‌ی کارکنان ستون موقعیت ندارد؛ شهر و منطقه را ادمین در فرم صدور وارد می‌کند.
+        return null;
+    }
+
+    /**
+     * شهر و منطقه‌ی یک تکنسین. جدول تکنسین‌ها فقط دو متن آزاد دارد: `city` (نام شهر) و
+     * `region` (شماره‌ی منطقه، گاه با رقم فارسی). کد شهر از روی نام شهر به کد استان می‌رسد.
+     * اگر همین شماره موبایل روی یک حساب کاربری با موقعیت کامل باشد، موقعیت همان حساب را
+     * می‌گیریم؛ در غیر این صورت از متن‌های خود تکنسین.
+     */
+    private static function technicianLocation(Technician $technician): ?array
+    {
+        if ($technician->phone) {
+            $owner = User::where('phone', $technician->phone)->orderBy('id')->first();
+            if ($owner && $location = app(self::class)->location($owner)) {
+                return $location;
+            }
+        }
+        $cityTitle = trim((string) $technician->city);
+        $city = $cityTitle !== '' ? City::withTrashed()->where('title', $cityTitle)->orderBy('id')->first() : null;
+        $province = $city ? Province::withTrashed()->find($city->province_id) : null;
+        $cityCode = self::twoDigits($province?->code);
+        $regionCode = self::twoDigits($technician->region);
+        return $cityCode && $regionCode ? ['city_code' => $cityCode, 'region_code' => $regionCode] : null;
+    }
+
+    private static function twoDigits(mixed $value): ?string
+    {
+        $digits=ltrim(trim(self::latinDigits((string)$value)),'0');
+        return preg_match('/^[0-9]{1,2}$/D',$digits) ? str_pad($digits,2,'0',STR_PAD_LEFT) : null;
+    }
+
+    /** ارقام فارسی و عربی را به لاتین برمی‌گرداند (مثل «۲» در ستون منطقه‌ی تکنسین‌ها). */
+    private static function latinDigits(string $value): string
+    {
+        return strtr($value, [
+            '۰'=>'0','۱'=>'1','۲'=>'2','۳'=>'3','۴'=>'4','۵'=>'5','۶'=>'6','۷'=>'7','۸'=>'8','۹'=>'9',
+            '٠'=>'0','١'=>'1','٢'=>'2','٣'=>'3','٤'=>'4','٥'=>'5','٦'=>'6','٧'=>'7','٨'=>'8','٩'=>'9',
+        ]);
+    }
+
     public static function isIssued(?string $code): bool
     {
         if ($code === null) return false;
@@ -49,12 +135,6 @@ class RegistrationCodeService
         if (in_array($platform,['desktop','electron','windows'],true) || str_contains($agent,'electron')) return 2;
         if (in_array($platform,['android','ios'],true) || str_contains($agent,'okhttp') || str_contains($agent,'cfnetwork') || str_contains($agent,'expo')) return 1;
         return 3; // Browser registration, including a mobile browser.
-    }
-
-    private static function twoDigits(mixed $value): ?string
-    {
-        $digits=ltrim(trim((string)$value),'0');
-        return preg_match('/^[0-9]{1,2}$/D',$digits) ? str_pad($digits,2,'0',STR_PAD_LEFT) : null;
     }
 
     public function location(User $user): ?array
@@ -75,8 +155,12 @@ class RegistrationCodeService
 
     public function issueForNewUser(User $user): ?string
     {
-        // Existing accounts have NULL metadata: never renumber them during a profile edit.
-        if (!$user->registration_method || filled($user->code)) return $user->code;
+        // کدی که طبق فرمول صادر شده هرگز عوض نمی‌شود.
+        if (self::isIssued($user->code)) return $user->code;
+        // درخواست کارفرما (۲۵ آبان ۱۴۰۵، مورد ۱۸): «همه‌ی کاربرها ... باید این کد را داشته باشند».
+        // روش اولیهٔ حساب قدیمی از مسیر ویرایش یا ورود مجدد قابل استنتاج نیست؛
+        // تا ثبت اطلاعات واقعی در فرم صدور ادمین، کد قبلی حفظ می‌شود.
+        if (!$user->registration_method) return $user->code;
         if ($user->is_special && $user->by_who !== 'admin') return null;
         $location=$this->location($user);
         if (!$location) return null; // Wait for real location data rather than inventing 00.
@@ -86,11 +170,15 @@ class RegistrationCodeService
         return $code;
     }
 
-    public function issue(User|EmploymentFile|Technician $record, array $data): string
+    public function issue(Admin|User|EmploymentFile|Technician $record, array $data): string
     {
         return DB::transaction(function () use ($record, $data) {
             $locked = $record->newQuery()->lockForUpdate()->findOrFail($record->getKey());
-            $field = match (true) { $locked instanceof User => 'code', $locked instanceof Technician => 'referral_code', default => 'personnel_code' };
+            $field = match (true) {
+                $locked instanceof User => 'code',
+                $locked instanceof Technician => 'referral_code',
+                default => 'personnel_code',
+            };
             if (self::isIssued($locked->$field)) {
                 return $locked->$field;
             }
@@ -111,6 +199,9 @@ class RegistrationCodeService
                 };
                 $type += (int) $locked->is_special;
                 $registeredAt = $locked->created_at;
+            } elseif ($locked instanceof Admin) {
+                $type = self::adminStaffType($locked);
+                $registeredAt = $locked->created_at;
             } else {
                 $type = (int) ($data['staff_type'] ?? 0);
                 if (!isset(self::staffTypes($locked instanceof Technician ? 'technician' : $locked->person_type)[$type])) {
@@ -129,10 +220,18 @@ class RegistrationCodeService
                 $serial = str_pad((string) $number, 7, '0', STR_PAD_LEFT);
                 $code = sprintf('%s%s%02d%02d%d%s%s%s', $city, $region, $year, $type, $method,
                     $serial[0], substr($serial, 1, 3), substr($serial, 4, 3));
-            } while (User::where('code', $code)->exists() || EmploymentFile::withTrashed()->where('personnel_code', $code)->exists() || Technician::where('referral_code', $code)->exists());
+            } while (User::where('code', $code)->exists() || EmploymentFile::withTrashed()->where('personnel_code', $code)->exists() || Technician::where('referral_code', $code)->exists() || Admin::where('personnel_code', $code)->exists());
 
             $sequence->update(['last_number' => $number]);
-            $locked->update([$field => $code]);
+            // روش ثبت‌نام هم ذخیره می‌شود تا حساب قدیمی که روش نداشت، از این به بعد همان را نگه دارد.
+            $changes = [$field => $code];
+            if ($locked instanceof User) {
+                $changes['registration_method'] = $method;
+            }
+            $changes['registration_method'] = $method;
+            $changes['registration_city_code'] = $city;
+            $changes['registration_region_code'] = $region;
+            $locked->forceFill($changes)->save();
 
             return $code;
         }, 3);

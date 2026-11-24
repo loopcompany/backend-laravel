@@ -42,20 +42,31 @@ class PublicSiteRevisionTest extends TestCase
         }
     }
 
-    public function test_download_cards_have_six_ordered_channels_and_three_live_calls_to_action(): void
+    // Employer request of 2026-11-23 (item 5): iOS is shown disabled with «(به زودی)» and the
+    // plain «وب‌اپلیکیشن لوپ» entry is removed; the iOS web-app entry stays. The old test
+    // demanded six live-ordered channels including that web entry.
+    public function test_download_cards_have_five_ordered_channels_with_ios_coming_soon_and_no_web_app_entry(): void
     {
         $xpath=$this->xpath($this->get('/')->assertOk()->getContent());
         $cards=$xpath->query('//div[@class="app-card"]');
         $this->assertCount(3,$cards);
         foreach ($cards as $index=>$card) {
-            $links=$xpath->query('.//div[@class="store-col"]/a',$card);
-            $this->assertCount(6,$links);
-            $this->assertSame('/downloads/android/'.($index===1?'LoopTech-1.0.2.apk':'LoopUser-1.0.3.apk'),parse_url($links[0]->getAttribute('href'),PHP_URL_PATH));
-            foreach (['android','bazaar','myket','ios','ios-web','web'] as $position=>$channel) {
-                $this->assertStringContainsString('store-btn--'.$channel,$links[$position]->getAttribute('class'));
+            $buttons=$xpath->query('.//div[@class="store-col"]/*[contains(@class,"store-btn")]',$card);
+            $this->assertCount(5,$buttons);
+            foreach (['android','bazaar','myket','ios','ios-web'] as $position=>$channel) {
+                $this->assertStringContainsString('store-btn--'.$channel,$buttons[$position]->getAttribute('class'));
             }
+            $links=$xpath->query('.//div[@class="store-col"]/a',$card);
+            $this->assertCount(4,$links);
+            $this->assertSame('/downloads/android/'.($index===1?'LoopTech-1.0.2.apk':'LoopUser-1.0.3.apk'),parse_url($links[0]->getAttribute('href'),PHP_URL_PATH));
             $this->assertSame('#',$links[1]->getAttribute('href'));
-            $this->assertNotSame('#',$links[5]->getAttribute('href'));
+            $ios=$buttons[3];
+            $this->assertSame('span',$ios->tagName,'iOS must not be a link');
+            $this->assertStringContainsString('is-soon',$ios->getAttribute('class'));
+            $this->assertSame('true',$ios->getAttribute('aria-disabled'));
+            $this->assertStringContainsString('به زودی',trim(preg_replace('/\s+/u',' ',$ios->textContent)));
+            $this->assertNotSame('#',$links[3]->getAttribute('href'));
+            $this->assertCount(0,$xpath->query('.//*[contains(@class,"store-btn--web")]',$card),'the plain web-app entry is removed');
         }
         $this->assertCount(0,$xpath->query('//a[contains(@class,"get-btn")]'));
         $cta=$xpath->query('//div[@class="eco-cta reveal"]/a');

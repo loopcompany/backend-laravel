@@ -671,7 +671,6 @@ class OrderController extends Controller
         // بارگذاری discountUse برای محاسبه تخفیف
         $order->load('discountUse.discount_code');
 
-        $pay_type = 'order';
 
         // بررسی وضعیت پرداخت
         if ($order->payment_status == 1) {
@@ -682,16 +681,8 @@ class OrderController extends Controller
             ], 409);
         }
 
-        $amount = $order->payment_price(true);
-
-        if ((($order?->status == 4 && $order?->technician_cancel_reason != 'اعلام حضور / لغو از سوی تکنسین') || ($order?->status == 3 && $order?->arrived_at))) {
-            $pay_type = 'order';
-            $amount = 200000;
-        } elseif (!is_null($order->prepayment) && $order->prepayment != 0 && $order->prepayment_payment_status == 0 && !is_null($order->loop_cost_estimate) && $order->loop_cost_estimate > 0) {
-            $pay_type = 'prepay';
-        }
-
-        $amount = (int) $amount; // همان مبلغ تومانی که در فاکتور درگاه ارسال می‌شود.
+        app(\App\Services\OrderSettlementService::class)->assertOnlinePaymentAllowed($order);
+        [$amount, $pay_type] = $this->gatewayPaymentQuote($order);
 
         // بررسی حداقل مبلغ
         if ($amount < 1000) {
@@ -713,7 +704,13 @@ class OrderController extends Controller
 
         try {
             // ثبت تراکنش pending
-            $transaction = $this->walletRepo->createTransaction([
+            $transaction = DB::transaction(function () use ($orderId, $user, $amount, $pay_type, $linkingUrl) {
+                $locked = Order::query()->lockForUpdate()->findOrFail($orderId);
+                app(\App\Services\OrderSettlementService::class)->assertOnlinePaymentAllowed($locked);
+                if ((int) $locked->payment_status === 1 || $this->gatewayPaymentQuote($locked) !== [$amount, $pay_type]) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['payment' => 'مانده سفارش تغییر کرده است. پرداخت را از نو آغاز کنید.']);
+                }
+                return $this->walletRepo->createTransaction([
                 'user_id' => $user->id,
                 'price' => $amount,
                 'type' => 2, // پرداخت سفارش از طریق درگاه
@@ -726,7 +723,8 @@ class OrderController extends Controller
                     : 'پرداخت سفارش شماره ' . $orderId . ' از طریق درگاه',
                 'linking_url' => $linkingUrl,
                 'order_id' => $orderId
-            ]);
+                ]);
+            });
 
             // ساخت invoice برای زیبال
             $invoice = new Invoice();
@@ -774,6 +772,8 @@ class OrderController extends Controller
                 ]
             ]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('خطا در ایجاد لینک پرداخت سفارش زیبال', [
                 'user_id' => $user->id,
@@ -790,6 +790,19 @@ class OrderController extends Controller
                 'error_code' => 'PAYMENT_GATEWAY_ERROR'
             ], 500);
         }
+    }
+
+    private function gatewayPaymentQuote(Order $order): array
+    {
+        if (($order->status == 4 && $order->technician_cancel_reason !== 'اعلام حضور / لغو از سوی تکنسین')
+            || ($order->status == 3 && $order->arrived_at)) {
+            return [200000, 'order'];
+        }
+
+        $prepayment = $order->prepayment > 0 && $order->prepayment_payment_status == 0 && $order->loop_cost_estimate > 0
+            && ! $order->receipts()->where('status', 'approved')->exists();
+
+        return [(int) $order->payment_price(), $prepayment ? 'prepay' : 'order'];
     }
 
 
@@ -880,15 +893,29 @@ class OrderController extends Controller
             DB::beginTransaction();
 
             try {
+                $order = Order::query()->lockForUpdate()->findOrFail($orderId);
                 $transaction = UserTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
                 if ((int) $transaction->status === 100) {
                     DB::commit();
                     return redirect()->route('redirect', ['linkingUri' => $transaction->linking_url, 'status' => 'OK']);
                 }
-                $order = Order::query()->lockForUpdate()->findOrFail($orderId);
                 // تراکنش‌های قدیمی نوع پرداخت را در توضیحی که هنگام ساخت لینک ثبت شده نگه می‌دارند.
                 $pay_type = $transaction->order_payment_kind
                     ?? (str_starts_with((string) $transaction->description, 'پیش پرداخت سفارش شماره ') ? 'prepay' : 'order');
+                $alreadyPaid = $pay_type === 'prepay' ? (int) $order->prepayment_payment_status === 1 : (int) $order->payment_status === 1;
+                $hasReceipts = $order->receipts()->whereIn('status', ['pending', 'approved'])->exists();
+                $staleMixedPayment = $hasReceipts && ($order->receipts()->where('status', 'pending')->exists()
+                    || $this->gatewayPaymentQuote($order) !== [(int) $transaction->price, $pay_type]);
+                if ($alreadyPaid || $staleMixedPayment) {
+                    $owner = \App\Models\User::lockForUpdate()->findOrFail($transaction->user_id);
+                    $owner->increment('wallet', (int) $transaction->price);
+                    $this->walletRepo->updateTransactionStatus($transaction->id, 100, $referenceId);
+                    UserTransaction::create(['order_id' => $orderId, 'user_id' => $owner->id, 'status' => 100, 'type' => 1,
+                        'price' => $transaction->price, 'referenceId' => 'ORDER_REFUND_'.$transaction->id,
+                        'description' => 'بازگشت پرداخت تکراری یا قدیمی سفارش به کیف پول']);
+                    DB::commit();
+                    return redirect()->route('redirect', ['linkingUri' => $transaction->linking_url, 'status' => 'OK']);
+                }
 
                 // Load discountUse برای محاسبه تخفیف
                 $order->load('discountUse.discount_code.club');
@@ -943,6 +970,7 @@ class OrderController extends Controller
                     100,
                     $referenceId
                 );
+                app(\App\Services\OrderSettlementService::class)->reconcile($order->fresh());
 
                 // واریز سهم تکنسین در زمان پایان سفارش
                 $this->service->processTechnicianPayment($order);

@@ -11,7 +11,11 @@ class UserTransaction extends Model
 
     public function requiresAccountingReview(): bool
     {
-        return (int) $this->status === 100 && (in_array((int) $this->type, [1, 2], true)
+        if (str_starts_with((string) $this->referenceId, 'ORDER_REFUND_') || str_starts_with((string) $this->referenceId, 'PROC_REFUND_')) {
+            return false;
+        }
+
+        return (int) $this->status === 100 && (in_array((int) $this->type, [1, 2, \App\Services\ProcurementService::TRANSACTION_TYPE_GATEWAY], true)
             || in_array($this->payment_method, ['card_to_card', 'sheba', 'bank_transfer'], true));
     }
 
@@ -28,6 +32,7 @@ class UserTransaction extends Model
         });
     }
     protected $fillable = [
+        'order_receipt_id',
         'user_id',
         'price',
         'referenceId',

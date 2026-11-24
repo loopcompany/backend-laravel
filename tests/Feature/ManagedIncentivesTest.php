@@ -23,6 +23,14 @@ class ManagedIncentivesTest extends TestCase
         return [$user,$code];
     }
 
+    private function commissionReviewer(): \App\Models\Admin
+    {
+        $admin = \App\Models\Admin::create(['name' => 'حسابدار', 'email' => 'reviewer@test.local', 'password' => 'secret', 'is_active' => true]);
+        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'edit-referral-withdrawals', 'guard_name' => 'admin']));
+
+        return $admin;
+    }
+
     public function test_workbook_pairs_and_unknown_amounts_are_not_interpolated(): void
     {
         $calculator=app(ReferralCommissionTable::class);
@@ -32,27 +40,12 @@ class ManagedIncentivesTest extends TestCase
         foreach ([1,699999,700001,50000000001] as $amount) $this->assertNull($calculator->calculate($amount,0));
     }
 
-    public function test_code_validation_is_read_only_and_private_to_recipient(): void
+    public function test_referral_endpoint_no_longer_accepts_even_previously_issued_codes(): void
     {
-        [$owner,$code]=$this->managed();
+        [$owner, $code] = $this->managed();
         Sanctum::actingAs($owner);
-        $this->postJson('/api/referral-codes/check',['code'=>$code->code])->assertOk()->assertJsonPath('valid',true);
+        $this->postJson('/api/referral-codes/check', ['code' => $code->code])->assertGone()->assertJsonPath('error_code', 'REFERRAL_CODES_RETIRED');
         $this->assertNull($code->fresh()->used_at);
-        Sanctum::actingAs($this->makeUser());
-        $this->postJson('/api/referral-codes/check',['code'=>$code->code])->assertOk()->assertJsonPath('valid',false);
-    }
-
-    public function test_code_is_single_use_when_an_order_is_committed(): void
-    {
-        [$owner,$code]=$this->managed();
-        $order=$this->makeOrder($owner);
-        $data=['address_id'=>$order->user_address_id,'category_id'=>$order->category_id,'total_price'=>700000,'date'=>now()->addDay()->format('Y-m-d'),'time'=>'10 - 12','platform'=>'web','referral_code'=>$code->code,'user'=>$owner];
-        $this->mock(SmsService::class, fn ($mock)=>$mock->shouldReceive('sendOrderCreatedToUser','sendOrderConfirmation')->andReturn(true));
-        $first=app(\App\Services\OrderService::class)->submitOrder($data,$owner->id);
-        $this->assertTrue($first['success']);
-        $this->assertSame($first['data']['order_id'],(int)$code->fresh()->used_order_id);
-        $second=app(\App\Services\OrderService::class)->submitOrder($data,$owner->id);
-        $this->assertFalse($second['success']);
     }
 
     public function test_invalid_recipient_cannot_receive_a_new_policy_code(): void
@@ -62,7 +55,7 @@ class ManagedIncentivesTest extends TestCase
         ReferralCode::create(['user_id'=>$user->id,'policy_version'=>ReferralCode::CURRENT_POLICY]);
     }
 
-    public function test_commission_requires_both_full_payment_and_closed_file_and_is_not_duplicated(): void
+    public function test_commission_requires_settlement_and_is_not_duplicated(): void
     {
         [$owner,$code]=$this->managed();
         $order=$this->makeOrder($owner,['pakar_price'=>700000,'technician_price'=>700000]);
@@ -70,16 +63,17 @@ class ManagedIncentivesTest extends TestCase
         $order->updateQuietly(['referral_code_id'=>$code->id,'payment_status'=>1]);
         $service=app(ReferralAgentService::class);
         $this->assertSame('pending',$service->syncForOrder($order)->status);
-        $order->updateQuietly(['status'=>2,'finished_at'=>now()]);
+        $order->updateQuietly(['settled_at'=>now()]);
+        $this->assertSame('pending',$service->syncForOrder($order)->status);
+        $reviewer = $this->commissionReviewer();
+        $service->approveForWithdrawal($service->syncForOrder($order), $reviewer);
+        $service->approveForWithdrawal($service->syncForOrder($order), $reviewer);
         $this->assertSame('available',$service->syncForOrder($order)->status);
         $this->assertSame(100000,$service->balances($owner)['available']);
         $service->syncForOrder($order);
         $this->assertSame(1,ReferralCommission::count());
         $this->assertSame(100000,$service->balances($owner)['available']);
-        // A second order cannot claim the same code through a legacy update path.
-        $other=$this->makeOrder($owner);
-        $other->updateQuietly(['referral_code_id'=>$code->id]);
-        $this->assertNull($service->syncForOrder($other));
+
     }
 
     public function test_unknown_amount_waits_for_manual_settlement(): void
@@ -87,12 +81,14 @@ class ManagedIncentivesTest extends TestCase
         [$owner,$code]=$this->managed();
         $order=$this->makeOrder($owner,['technician_price'=>777777]);
         $code->update(['used_order_id'=>$order->id,'status'=>'used']);
-        $order->updateQuietly(['referral_code_id'=>$code->id,'payment_status'=>1,'status'=>2,'finished_at'=>now()]);
+        $order->updateQuietly(['referral_code_id'=>$code->id,'payment_status'=>1,'settled_at'=>now()]);
         $service=app(ReferralAgentService::class);
         $commission=$service->syncForOrder($order);
         $this->assertSame('pending',$commission->status);
         $this->assertSame(0,$service->balances($owner)['available']);
         $service->settleManual($commission,123456);
+        $this->assertSame(0,$service->balances($owner)['available']);
+        $service->approveForWithdrawal($commission, $this->commissionReviewer());
         $this->assertSame(123456,$service->balances($owner)['available']);
         $this->assertSame('available',$commission->fresh()->status);
     }
@@ -108,8 +104,9 @@ class ManagedIncentivesTest extends TestCase
         $service->settleManual($commission,34567);
         $this->assertSame('pending',$commission->fresh()->status);
         $service->syncForOrder($order);
-        $order->updateQuietly(['payment_status'=>1,'status'=>2,'finished_at'=>now()]);
+        $order->updateQuietly(['payment_status'=>1,'settled_at'=>now()]);
         $this->assertSame(34567,$service->syncForOrder($order)->commission_amount);
+        $service->approveForWithdrawal($commission, $this->commissionReviewer());
         $this->assertSame(34567,$service->balances($owner)['available']);
     }
 

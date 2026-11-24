@@ -10,7 +10,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 
 /**
- * پورسانت‌های مأموران خرید (فقط مشاهده؛ وضعیت با وضعیت سفارش خودکار هم‌گام می‌شود).
+ * پورسانت‌های مأموران خرید و تأیید برداشت پس از تسویهٔ کامل سفارش.
  */
 class ReferralCommissionResource extends Resource
 {
@@ -62,9 +62,7 @@ class ReferralCommissionResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')->label('مأمور خرید')
                     ->formatStateUsing(fn ($state, ReferralCommission $r) => trim($state . ' ' . $r->user?->last_name))
                     ->searchable(),
-                Tables\Columns\TextColumn::make('referralCode.code')->label('کد معرف')->searchable(),
                 Tables\Columns\TextColumn::make('order_amount')->label('مبلغ مبنا')->formatStateUsing(fn ($state) => number_format($state) . ' تومان'),
-                Tables\Columns\TextColumn::make('commission_percent')->label('درصد')->suffix('%'),
                 Tables\Columns\TextColumn::make('commission_amount')->label('پورسانت')->formatStateUsing(fn ($state) => number_format($state) . ' تومان')->sortable(),
                 Tables\Columns\TextColumn::make('status')->label('وضعیت')
                     ->formatStateUsing(fn ($state) => ReferralCommission::STATUSES[$state] ?? $state)
@@ -79,8 +77,14 @@ class ReferralCommissionResource extends Resource
                 Tables\Columns\TextColumn::make('settled_at')->label('تاریخ تسویه')->jalaliDateTime('Y/m/d H:i')->placeholder('-'),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve_withdrawal')->label('تأیید تسویهٔ پورسانت')
+                    ->visible(fn (ReferralCommission $record) => $record->status === ReferralCommission::STATUS_PENDING
+                        && $record->order?->settled_at && auth('admin')->user()?->is_active
+                        && (auth('admin')->user()->isSuperAdmin() || auth('admin')->user()->can('edit-referral-withdrawals')))
+                    ->requiresConfirmation()
+                    ->action(fn (ReferralCommission $record) => app(\App\Services\ReferralAgentService::class)->approveForWithdrawal($record, auth('admin')->user())),
                 Tables\Actions\Action::make('manual')->label('تعیین پورسانت دستی')
-                    ->visible(fn ($record)=>!$record->settled_at && $record->referralCode?->policy_version && auth('admin')->user()?->can('edit-referral-withdrawals'))
+                    ->visible(fn ($record)=>!$record->settled_at && auth('admin')->user()?->can('edit-referral-withdrawals'))
                     ->authorize(fn()=>auth('admin')->user()?->can('edit-referral-withdrawals') ?? false)
                     ->form([\Filament\Forms\Components\TextInput::make('amount')->label('پورسانت نهایی (تومان)')->numeric()->integer()->minValue(0)->required()])
                     ->action(function ($record,$data) {

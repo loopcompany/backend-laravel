@@ -20,18 +20,7 @@ class TechnicianRegistrationService
 
     public function register(array $data): array
     {
-        // اگر کد پرسنلی دیگران وارد شده، اعتبار آن را چک کن
-        if (!empty($data['other_referral_code'])) {
-            $referrer = $this->repo->findByReferralCode($data['other_referral_code']);
-            if (!$referrer) {
-                return [
-                    'success' => false,
-                    'message' => 'کد پرسنلی وارد شده معتبر نیست.',
-                    'error_code' => 'INVALID_REFERRAL_CODE'
-                ];
-            }
-        }
-        Log::info($data['phone']);
+        unset($data['other_referral_code']);
         // چک کردن وجود تکنسین با همین شماره
         $existingTechnician = $this->repo->findByPhone($data['phone']);
 
@@ -168,6 +157,7 @@ class TechnicianRegistrationService
 
         // ایجاد تکنسین
         $technician = $this->repo->create($data);
+        $technician->forceFill(['registration_method' => 1])->saveQuietly();
 
         // اتصال تخصص‌ها اگر وجود داشته باشند
         if (!empty($expertiseIds)) {

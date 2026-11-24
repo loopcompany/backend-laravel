@@ -7,7 +7,7 @@ class AdminPermissionCatalog
 {
     public static function definitions(): array
     {
-        $result=['access-admin-panel'=>'دسترسی به پنل ادمین','manage-admins'=>'مدیریت کارکنان و مدیران','view-dashboard'=>'مشاهده داشبورد','view-map'=>'مشاهده محدوده سرویس','edit-map'=>'ویرایش محدوده سرویس',
+        $result=['review-order-settlements'=>'تأیید یا رد دریافت و تسویه سفارش', 'receive-technician-custody'=>'تأیید تحویل امانت تکنسین به شرکت', 'view-technician-custody'=>'مشاهده امانت‌های تکنسین‌ها', 'access-admin-panel'=>'دسترسی به پنل ادمین','manage-admins'=>'مدیریت کارکنان و مدیران','view-dashboard'=>'مشاهده داشبورد','view-map'=>'مشاهده محدوده سرویس','edit-map'=>'ویرایش محدوده سرویس',
             'review-order-payments'=>'بررسی وصول پرداخت‌ها توسط حسابداری','assign-paid-orders'=>'ارجاع سفارش‌های پرداخت‌شده توسط مدیر تکنسین',
             'view-roles'=>'مشاهده سمت‌ها','create-roles'=>'ایجاد سمت','edit-roles'=>'ویرایش سمت','delete-roles'=>'حذف سمت','assign-roles'=>'واگذاری سمت به ادمین',
             'view-permissions'=>'مشاهده مجوزها','create-permissions'=>'ساخت مجوز','edit-permissions'=>'ویرایش عنوان مجوز','delete-permissions'=>'حذف مجوز سفارشی','assign-permissions'=>'واگذاری مجوز به سمت‌ها'];

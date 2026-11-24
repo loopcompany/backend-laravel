@@ -33,6 +33,7 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
      * @var array<int, string>
      */
     protected $fillable = [
+        'registration_city_code', 'registration_region_code', 'registration_method',
         'name',
         'email',
         'personnel_code',
@@ -52,6 +53,16 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar
         'password',
         'remember_token',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $admin) {
+            if ($admin->registration_city_code && $admin->registration_region_code && $admin->registration_method) {
+                app(\App\Services\RegistrationCodeService::class)->issue($admin, ['city_code' => $admin->registration_city_code, 'region_code' => $admin->registration_region_code, 'method' => $admin->registration_method]);
+                $admin->refresh();
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -27,7 +27,7 @@ class ReferralAgentController extends Controller
     public function commissions(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user->is_referral_agent) {
+        if (!$this->agents->canAccessWallet($user)) {
             return $this->notAgent();
         }
 
@@ -50,7 +50,7 @@ class ReferralAgentController extends Controller
     public function withdrawals(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user->is_referral_agent) {
+        if (!$this->agents->canAccessWallet($user)) {
             return $this->notAgent();
         }
 

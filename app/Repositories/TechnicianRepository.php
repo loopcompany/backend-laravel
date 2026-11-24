@@ -22,7 +22,13 @@ class TechnicianRepository
 
     public function findByReferralCode(string $referralCode): ?Technician
     {
-        return Technician::where('referral_code', $referralCode)->first();
+        $technician = Technician::where('referral_code', $referralCode)->first();
+        if ($technician) return $technician;
+        // Preserve login for a technician whose number was replaced by the audited migration.
+        $recordId = \Illuminate\Support\Facades\DB::table('registration_code_format_changes')
+            ->where('table_name', 'technicians')->where('field_name', 'referral_code')
+            ->where('old_value', $referralCode)->latest('id')->value('record_id');
+        return $recordId ? Technician::find($recordId) : null;
     }
 
     public function create(array $data): Technician

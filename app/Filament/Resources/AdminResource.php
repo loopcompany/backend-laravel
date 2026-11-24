@@ -82,8 +82,12 @@ class AdminResource extends Resource
                             ->native(false),
                         Forms\Components\TextInput::make('personnel_code')
                             ->label('شناسه پرسنلی')
+                            ->disabled()->dehydrated(false)
                             ->unique(ignoreRecord: true)
                             ->maxLength(50),
+                        Forms\Components\TextInput::make('registration_city_code')->label('کد دو رقمی شهر ثبت‌نام')->regex('/^[0-9]{2}$/D')->maxLength(2)->required(fn (string $operation) => $operation === 'create'),
+                        Forms\Components\TextInput::make('registration_region_code')->label('کد دو رقمی منطقه ثبت‌نام')->regex('/^[0-9]{2}$/D')->maxLength(2)->required(fn (string $operation) => $operation === 'create'),
+                        Forms\Components\Select::make('registration_method')->label('روش ثبت‌نام اولیه')->options(\App\Services\RegistrationCodeService::METHODS)->required(fn (string $operation) => $operation === 'create'),
                         Forms\Components\TextInput::make('phone')
                             ->label('شماره تلفن موبایل')
                             ->tel()
@@ -210,6 +214,7 @@ class AdminResource extends Resource
                     ->native(false),
             ])
             ->actions([
+                \App\Filament\Actions\IssueRegistrationCode::make(fn (Admin $record) => static::canEdit($record)),
                 Tables\Actions\EditAction::make()
                     ->label('ویرایش'),
                 Tables\Actions\DeleteAction::make()

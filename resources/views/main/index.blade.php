@@ -519,14 +519,18 @@
   $existingMockupImage = asset('assets/new-style/mockup1-1.png');
   $existingMockupImage2 = asset('assets/new-style/mockup22-2.png');
   $existingMockupImage3 = asset('assets/new-style/mockup3-3.png');
-  $downloadLinks = function (string $app, string $web) {
+  $androidDownloads = app(\App\Services\AppReleaseService::class)->latestDownloads('android');
+  $downloadLinks = function (string $app, string $web) use ($androidDownloads) {
+    $release = $androidDownloads[($app === 'technician' ? 'technician' : 'customer').':universal'] ?? null;
     return [
-      'android' => asset($app === 'technician' ? 'downloads/android/LoopTech-1.0.2.apk' : 'downloads/android/LoopUser-1.0.3.apk'),
+      'android' => asset('downloads/android/'.($release?->artifact ?? ($app === 'technician' ? 'LoopTech-1.0.2.apk' : 'LoopUser-1.0.3.apk'))),
       'bazaar' => config("downloads.$app.bazaar") ?: '#',
       'myket' => config("downloads.$app.myket") ?: '#',
-      'ios' => config("downloads.$app.ios") ?: '#',
+      // The native iOS build is not released: the button is always shown disabled
+      // with «(به زودی)». The plain «وب‌اپلیکیشن لوپ» entry was removed at the
+      // employer's request (2026-11-23); the iOS web-app entry stays.
+      'ios' => null,
       'ios-web' => $web,
-      'web' => $web,
     ];
   };
   $applications = [
@@ -552,9 +556,8 @@
     ['key'=>'android','label'=>'دانلود مستقیم','icon'=>$androidIcon],
     ['key'=>'bazaar','label'=>'کافه‌بازار','icon'=>'<img src="'.asset('assets/images/stores/cafebazaar.png').'" width="24" height="24" alt="" aria-hidden="true" loading="lazy">'],
     ['key'=>'myket','label'=>'مایکت','icon'=>'<img src="'.asset('assets/images/stores/myket.png').'" width="24" height="24" alt="" aria-hidden="true" loading="lazy">'],
-    ['key'=>'ios','label'=>'نسخه iOS','icon'=>$iosIcon],
+    ['key'=>'ios','label'=>'نسخه iOS','icon'=>$iosIcon,'soon'=>true],
     ['key'=>'ios-web','label'=>'وب‌اپلیکیشن لوپ (iOS)','icon'=>$webIcon],
-    ['key'=>'web','label'=>'وب‌اپلیکیشن لوپ','icon'=>$webIcon],
   ];
 @endphp
 <section id="apps">
@@ -588,6 +591,10 @@
                      @if ($platform['key'] === 'android') download @elseif ($app['links'][$platform['key']] !== '#') target="_blank" rel="noopener noreferrer" @endif>
                     {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong></span>
                   </a>
+                @elseif (!empty($platform['soon']))
+                  <span class="store-btn store-btn--{{ $platform['key'] }} is-unavailable is-soon" aria-disabled="true" title="{{ site_text('به زودی') }}">
+                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }} ({{ site_text('به زودی') }})</strong></span>
+                  </span>
                 @else
                   <span class="store-btn store-btn--{{ $platform['key'] }} is-unavailable" aria-disabled="true" title="در حال حاضر در دسترس نیست">
                     {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong><small>{{ site_text('در دسترس نیست') }}</small></span>
@@ -1318,6 +1325,8 @@
     font-family:'Vazirmatn', sans-serif; font-weight:700; font-size:clamp(15px,1.2vw,17px); letter-spacing:0;
   }
   .store-btn.is-unavailable{opacity:.45;cursor:default}
+  /* «به زودی» (نسخه‌ی iOS): غیرفعال و بدون لینک، ولی نوشته‌ی پرانتز خوانا می‌ماند */
+  .store-btn.is-soon{opacity:.72;border-style:dashed}
   .store-btn .st-text strong{font-size:13px}
   .store-btn--ios-web .st-text strong{font-size:12px}
   .eco-cta .btn{font-weight:800}

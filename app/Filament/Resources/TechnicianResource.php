@@ -86,8 +86,6 @@ class TechnicianResource extends Resource
                                         ->helperText('کد ترتیبی با اقدام تأیید مدارک صادر می‌شود.')
                                         ->unique(ignoreRecord: true)
                                         ->label('کد تکنسین'),
-                                    Forms\Components\TextInput::make('other_referral_code')
-                                        ->label('کد تکنسینی معرف'),
                                     Forms\Components\Select::make('technician_type')
                                         ->options([
                                             'تکنسین میدانی' => 'تکنسین میدانی',
@@ -456,6 +454,13 @@ class TechnicianResource extends Resource
                     }),
             ])
             ->actions([
+                \App\Filament\Actions\IssueRegistrationCode::make(fn (Technician $record) => static::canEdit($record)),
+                Tables\Actions\Action::make('identity_card')->label('دانلود کارت QR')->icon('heroicon-o-qr-code')
+                    ->visible(fn (Technician $record) => static::canEdit($record) && $record->isApproved() && \App\Services\RegistrationCodeService::isIssued($record->referral_code))
+                    ->url(fn (Technician $record) => route('admin.technician-identity.download', $record)),
+                Tables\Actions\Action::make('regenerate_identity')->label('ابطال کارت قبلی و صدور QR جدید')->icon('heroicon-o-arrow-path')->requiresConfirmation()
+                    ->visible(fn (Technician $record) => static::canEdit($record) && (bool) $record->identity_badge_uuid)
+                    ->action(function (Technician $record) { abort_unless(static::canEdit($record), 403); app(\App\Services\TechnicianIdentityService::class)->issue($record, true); }),
                 Tables\Actions\Action::make('approve')
                     ->label('تایید')
                     ->icon('heroicon-o-check')

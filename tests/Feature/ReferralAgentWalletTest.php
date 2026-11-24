@@ -34,24 +34,8 @@ class ReferralAgentWalletTest extends TestCase
     private function agent(): array
     {
         $agent = $this->makeUser(['account_type' => 'company']);
-        $code = app(ReferralAgentService::class)->assignAgent($agent, 10, 5);
-
-        return [$agent->fresh(), $code];
-    }
-
-    private function submit(User $buyer, string $code, int $price = 1000000)
-    {
-        $this->completeCustomerProfile($buyer);
-        Sanctum::actingAs($buyer);
-        $addressId = DB::table('user_addresses')->insertGetId([
-            'user_id' => $buyer->id, 'title' => 'خانه', 'fname' => 'a', 'lname' => 'b', 'mobile' => '09120000000',
-            'city' => 'تهران', 'region' => '1', 'address' => 'x', 'created_at' => now(), 'updated_at' => now(),
-        ]);
-
-        return $this->postJson('/api/orders/submit', [
-            'address_id' => $addressId, 'category_id' => $this->makeCategory(), 'total_price' => $price,
-            'date' => now()->addDay()->format('Y-m-d'), 'time' => '10 - 12', 'platform' => 'android', 'referral_code' => $code,
-        ]);
+        app(ReferralAgentService::class)->setAgent($agent, true);
+        return [$agent->fresh()];
     }
 
     public function test_summary_for_non_agent(): void
@@ -64,41 +48,30 @@ class ReferralAgentWalletTest extends TestCase
         $this->getJson('/api/referral-agent/commissions')->assertForbidden();
     }
 
-    public function test_agent_code_is_multi_use_and_commission_follows_order_status(): void
+    public function test_commission_follows_the_buyers_flag_and_audited_settlement(): void
     {
-        [$agent, $code] = $this->agent();
-        $this->assertTrue($code->multi_use);
-        $this->assertMatchesRegularExpression('/^LOOP-[A-Z0-9]{6}$/', $code->code);
-
-        $first = $this->submit($this->makeUser(), $code->code)->assertCreated()->json('data.order_id');
-        $second = $this->submit($this->makeUser(), $code->code)->assertCreated()->json('data.order_id');
-        $canceled = $this->submit($this->makeUser(), $code->code)->assertCreated()->json('data.order_id');
-
-        // صاحب کد نمی‌تواند از کد خودش استفاده کند
-        $this->submit($agent, $code->code)->assertStatus(409);
-        $this->assertSame('active', $code->fresh()->status);
-
-        // هر سفارش: مبنا = ۱,۰۰۰,۰۰۰ − ۵٪ تخفیف = ۹۵۰,۰۰۰ ← پورسانت ۱۰٪ = ۹۵,۰۰۰
-        $this->assertSame(3, ReferralCommission::where('status', 'pending')->count());
-        $this->assertSame(95000, ReferralCommission::where('order_id', $first)->value('commission_amount'));
-
-        \App\Models\Order::find($first)->update(['payment_status' => 1, 'status' => 2]);
-        \App\Models\Order::whereKey($canceled)->update(['status' => 3]); // query builder: بدون رویداد مدل
+        [$agent] = $this->agent();
+        $paid = $this->makeOrder($agent, ['technician_price' => 700000]);
+        $pending = $this->makeOrder($agent, ['technician_price' => 700000]);
+        $canceled = $this->makeOrder($agent, ['technician_price' => 700000]);
+        $this->makeOrder($this->makeUser(), ['technician_price' => 700000]);
+        $paid->updateQuietly(['settled_at' => now(), 'payment_status' => 1]);
+        $admin = \App\Models\Admin::create(['name' => 'حسابدار', 'email' => 'commission@test.local', 'password' => 'secret', 'is_active' => true]);
+        $admin->givePermissionTo(\Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'edit-referral-withdrawals', 'guard_name' => 'admin']));
+        app(ReferralAgentService::class)->approveForWithdrawal(ReferralCommission::where('order_id', $paid->id)->firstOrFail(), $admin);
+        \App\Models\Order::whereKey($canceled->id)->update(['status' => 3]);
 
         Sanctum::actingAs($agent);
         $this->getJson('/api/referral-agent/summary')->assertOk()
             ->assertJsonPath('data.is_agent', true)
-            ->assertJsonPath('data.referral_code', $code->code)
-            ->assertJsonPath('data.commission_percent', 10)
-            ->assertJsonPath('data.available_balance', 95000)
-            ->assertJsonPath('data.pending_balance', 95000)
-            ->assertJsonPath('data.total_earned', 95000)
-            ->assertJsonPath('data.min_withdraw_amount', 500000);
-
+            ->assertJsonMissingPath('data.referral_code')
+            ->assertJsonPath('data.available_balance', 100000)
+            ->assertJsonPath('data.pending_balance', 100000);
         $statuses = collect($this->getJson('/api/referral-agent/commissions')->assertOk()->json('data'))->pluck('status', 'order_id');
-        $this->assertSame('available', $statuses[$first]);
-        $this->assertSame('pending', $statuses[$second]);
-        $this->assertSame('canceled', $statuses[$canceled]);
+        $this->assertSame('available', $statuses[$paid->id]);
+        $this->assertSame('pending', $statuses[$pending->id]);
+        $this->assertSame('canceled', $statuses[$canceled->id]);
+        $this->assertCount(3, $statuses);
     }
 
     public function test_offset_and_sheba_withdrawals(): void

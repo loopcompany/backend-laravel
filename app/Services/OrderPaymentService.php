@@ -43,6 +43,7 @@ class OrderPaymentService
 
             // بارگذاری discountUse برای محاسبه تخفیف
             $order->load('discountUse.discount_code');
+            app(OrderSettlementService::class)->assertOnlinePaymentAllowed($order);
 
             // 2. بررسی اینکه سفارش قبلاً پرداخت نشده باشد
             if ($order->payment_status == 1) {
@@ -91,6 +92,10 @@ class OrderPaymentService
 
             // محاسبه تخفیف از discount_uses
 
+            if (\App\Models\OrderReceipt::where('order_id', $order->id)->where('status', 'approved')->exists()) {
+                $pay_type = 'order';
+                $totalPrice = $order->payment_price();
+            }
             if ($totalPrice <= 0) {
                 DB::rollBack();
                 return [

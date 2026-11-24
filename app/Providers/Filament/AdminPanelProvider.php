@@ -59,6 +59,7 @@ class AdminPanelProvider extends PanelProvider
             ->profile(\App\Filament\Pages\Auth\EditProfile::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling(null)
+            ->globalSearch(\App\Filament\GlobalSearch\AdminNavigationSearchProvider::class)
             ->renderHook(\Filament\View\PanelsRenderHook::BODY_END, fn () => view('filament.hooks.realtime'))
             ->renderHook(\Filament\View\PanelsRenderHook::STYLES_AFTER, fn () => view('filament.hooks.order-stage-styles'))
             ->colors([

@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * پورسانت مأمور خرید از یک سفارش ثبت‌شده با کد معرف او.
- * pending (تا تسویه‌ی کامل) → available | canceled
+ * پورسانت مأمور خرید پس از تسویهٔ سفارش و تأیید ادمین قابل برداشت است.
  */
 class ReferralCommission extends Model
 {
@@ -18,7 +17,7 @@ class ReferralCommission extends Model
     public const STATUS_CANCELED = 'canceled';
 
     public const STATUSES = [
-        self::STATUS_PENDING => 'در انتظار تسویه‌ی سفارش',
+        self::STATUS_PENDING => 'در انتظار تسویه یا تأیید ادمین',
         self::STATUS_AVAILABLE => 'قابل برداشت',
         self::STATUS_WITHDRAWN => 'برداشت شده',
         self::STATUS_OFFSET => 'تهاتر شده',

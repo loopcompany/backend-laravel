@@ -197,6 +197,8 @@ class ProcurementService
     {
         if ($method === 'wallet') {
             return DB::transaction(function () use ($order, $user, $stage) {
+                $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+                $this->assertSeparatePaymentAllowed($order);
                 $procurement = $this->lockedFor($order);
                 $amount = $this->payableAmount($procurement, $stage);
 
@@ -226,26 +228,29 @@ class ProcurementService
             });
         }
 
-        $procurement = $order->procurement()->firstOrFail();
-        $amount = $this->payableAmount($procurement, $stage);
+        $transaction = DB::transaction(function () use ($order, $user, $stage, $linkingUrl) {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $this->assertSeparatePaymentAllowed($order);
+            $amount = $this->payableAmount($this->lockedFor($order), $stage);
 
-        if ($amount > 99000000) {
-            throw new BusinessRuleException('مبلغ بیش از سقف درگاه (۹۹,۰۰۰,۰۰۰ تومان) است. لطفاً از کیف پول استفاده کنید.', 'AMOUNT_TOO_HIGH');
-        }
+            if ($amount > 99000000) {
+                throw new BusinessRuleException('مبلغ بیش از سقف درگاه (۹۹,۰۰۰,۰۰۰ تومان) است. لطفاً از کیف پول استفاده کنید.', 'AMOUNT_TOO_HIGH');
+            }
 
-        $transaction = UserTransaction::create([
-            'user_id' => $user->id,
-            'price' => $amount,
-            'type' => self::TRANSACTION_TYPE_GATEWAY,
-            'status' => 0,
-            'description' => $this->transactionDescription($order, $stage) . ' از طریق درگاه',
-            'linking_url' => $linkingUrl,
-            'order_id' => $order->id,
-            'payment_method' => 'in_app',
-            'payment_channel' => $this->channel($order),
-            // مرحله‌ی پرداخت برای callback
-            'referenceId' => 'PROC_PENDING_' . $stage . '_' . uniqid(),
-        ]);
+            return UserTransaction::create([
+                'user_id' => $user->id,
+                'price' => $amount,
+                'type' => self::TRANSACTION_TYPE_GATEWAY,
+                'status' => 0,
+                'description' => $this->transactionDescription($order, $stage) . ' از طریق درگاه',
+                'linking_url' => $linkingUrl,
+                'order_id' => $order->id,
+                'payment_method' => 'in_app',
+                'payment_channel' => $this->channel($order),
+                'referenceId' => 'PROC_PENDING_' . $stage . '_' . uniqid(),
+            ]);
+        });
+        $amount = (int) $transaction->price;
 
         $invoice = (new Invoice())->amount($amount)->detail([
             'transactionId' => $transaction->id,
@@ -266,7 +271,12 @@ class ProcurementService
     public function completeGatewayPayment(UserTransaction $transaction, string $stage, string $referenceId): void
     {
         DB::transaction(function () use ($transaction, $stage, $referenceId) {
-            $order = Order::findOrFail($transaction->order_id);
+            $order = Order::query()->lockForUpdate()->findOrFail($transaction->order_id);
+            $transaction = UserTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+            if ((int) $transaction->status === 100) {
+                return;
+            }
+            $this->assertSeparatePaymentAllowed($order);
             $procurement = $this->lockedFor($order);
 
             if ((int) round((float) $transaction->price) !== $this->payableAmount($procurement, $stage)) {
@@ -282,6 +292,10 @@ class ProcurementService
     public function refundToWallet(UserTransaction $transaction, string $referenceId): void
     {
         DB::transaction(function () use ($transaction, $referenceId) {
+            $transaction = UserTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+            if ((int) $transaction->status === 100) {
+                return;
+            }
             $user = User::query()->lockForUpdate()->findOrFail($transaction->user_id);
             $amount = (int) round((float) $transaction->price);
 
@@ -304,6 +318,13 @@ class ProcurementService
     }
 
     // -----------------------------------------------------------------
+    private function assertSeparatePaymentAllowed(Order $order): void
+    {
+        if ($order->receipts()->whereIn('status', ['pending', 'approved'])->exists()) {
+            throw new BusinessRuleException('ثبت دریافت حضوری انجام شده است. مانده را پس از تأیید دریافت از بخش تسویه سفارش پرداخت کنید.', 'ORDER_SETTLEMENT_REQUIRED');
+        }
+    }
+
 
     private function payableAmount(OrderProcurement $procurement, string $stage): int
     {
@@ -348,9 +369,9 @@ class ProcurementService
         }
 
         // مبلغ کالای تامین‌شده در پورسانت مأمور خرید حساب می‌شود
-        if ($order->referral_code_id) {
-            app(ReferralAgentService::class)->syncForOrder($order);
-        }
+        $order->refresh();
+        app(OrderSettlementService::class)->reconcile($order);
+        app(ReferralAgentService::class)->syncForOrder($order->fresh());
 
         Log::info('procurement payment completed', [
             'order_id' => $order->id,

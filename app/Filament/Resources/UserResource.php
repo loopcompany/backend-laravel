@@ -174,14 +174,6 @@ class UserResource extends Resource
 
                 Forms\Components\Section::make('کدهای معرف')
                     ->schema([
-                        Forms\Components\TextInput::make('referral_code')
-                            ->maxLength(191)
-                            ->label('کد معرف (خودکار تولید می‌شود)')
-                            ->disabled()
-                            ->dehydrated(false),
-                        Forms\Components\TextInput::make('other_referral_code')
-                            ->maxLength(191)
-                            ->label('ثبت نام شده با معرف:'),
                     ])->columns(2),
 
                 Forms\Components\Section::make('تنظیمات سیستمی')
@@ -567,46 +559,17 @@ class UserResource extends Resource
             ])
             ->actions([
                 \App\Filament\Actions\IssueRegistrationCode::make(fn (User $record) => static::canEdit($record)),
-                // مأمور خرید: کد معرف چندبارمصرف + درصد پورسانت (کیف پول مأمور خرید در اپ)
                 Tables\Actions\Action::make('referral_agent')
-                    ->label(fn(User $record) => $record->is_referral_agent ? 'مأمور خرید ✓' : 'مأمور خرید')
+                    ->label(fn (User $record) => $record->is_referral_agent ? 'مسئول خرید ✓' : 'مسئول خرید')
                     ->icon('heroicon-o-briefcase')
-                    ->color(fn(User $record) => $record->is_referral_agent ? 'success' : 'gray')
-                    ->visible(fn(User $record) => static::canEdit($record))
-                    ->modalHeading('تنظیم مأمور خرید')
-                    ->modalDescription('مأمور خرید یک کد معرف چندبارمصرف دارد و از هر سفارشِ تسویه‌شده با کد او پورسانت می‌گیرد.')
-                    ->fillForm(function (User $record) {
-                        $code = app(\App\Services\ReferralAgentService::class)->agentCode($record);
-
-                        return [
-                            'is_referral_agent' => (bool) $record->is_referral_agent,
-                            'commission_percent' => $code?->commission_percent ?? 0,
-                            'discount_percent' => $code?->discount_percent ?? 0,
-                        ];
-                    })
-                    ->form([
-                        Forms\Components\Toggle::make('is_referral_agent')->label('مأمور خرید است')->live(),
-                        Forms\Components\TextInput::make('commission_percent')
-                            ->label('درصد پورسانت مأمور')
-                            ->numeric()->minValue(0)->maxValue(100)->suffix('%')->required()
-                            ->visible(fn(Forms\Get $get) => $get('is_referral_agent')),
-                        Forms\Components\TextInput::make('discount_percent')
-                            ->label('درصد تخفیف خریدار با این کد')
-                            ->numeric()->minValue(0)->maxValue(100)->suffix('%')->required()
-                            ->visible(fn(Forms\Get $get) => $get('is_referral_agent')),
-                    ])
+                    ->visible(fn (User $record) => static::canEdit($record))
+                    ->modalDescription('پورسانت خریدهای این کاربر طبق جدول خدمات و کالا محاسبه می‌شود؛ تا تسویه کامل در انتظار می‌ماند.')
+                    ->fillForm(fn (User $record) => ['is_referral_agent' => (bool) $record->is_referral_agent])
+                    ->form([Forms\Components\Toggle::make('is_referral_agent')->label('مسئول خرید است')])
                     ->action(function (User $record, array $data) {
-                        $service = app(\App\Services\ReferralAgentService::class);
-
-                        if (!empty($data['is_referral_agent'])) {
-                            $code = $service->assignAgent($record, (int) $data['commission_percent'], (int) $data['discount_percent']);
-                            \Filament\Notifications\Notification::make()->title("مأمور خرید با کد {$code->code} فعال شد")->success()->send();
-
-                            return;
-                        }
-
-                        $record->forceFill(['is_referral_agent' => false])->save();
-                        \Filament\Notifications\Notification::make()->title('مأمور خرید غیرفعال شد')->success()->send();
+                        abort_unless(static::canEdit($record), 403);
+                        app(\App\Services\ReferralAgentService::class)->setAgent($record, (bool) $data['is_referral_agent']);
+                        \Filament\Notifications\Notification::make()->title('وضعیت مسئول خرید ذخیره شد')->success()->send();
                     }),
 
                 // Actions مربوط به سازمان

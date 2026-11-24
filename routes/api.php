@@ -1,8 +1,13 @@
 <?php
 
 Route::get('/localization/bootstrap', [\App\Http\Controllers\LocalizationController::class, 'bootstrap'])->middleware('throttle:120,1');
+Route::get('/app-updates/check', [\App\Http\Controllers\AppUpdateController::class, 'check'])->middleware('throttle:60,1');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/technician/in-person-orders', [\App\Http\Controllers\InPersonOrderController::class, 'store'])->middleware([\App\Http\Middleware\EnsureTechnicianHasAccess::class, 'throttle:15,1']);
+    Route::get('/technician/orders/{order}/settlement', [\App\Http\Controllers\OrderSettlementController::class, 'show'])->middleware(\App\Http\Middleware\EnsureTechnicianHasAccess::class);
+    Route::post('/technician/orders/{order}/settlement/receipts', [\App\Http\Controllers\OrderSettlementController::class, 'store'])->middleware([\App\Http\Middleware\EnsureTechnicianHasAccess::class, 'throttle:30,1']);
+    Route::post('/technicians/identity/verify', [\App\Http\Controllers\TechnicianIdentityController::class, 'verify'])->middleware(['throttle:30,1', \App\Http\Middleware\EnsureUserAccount::class]);
     Route::post('/procurement-consultations', [\App\Http\Controllers\ProcurementConsultationController::class, 'store'])->middleware('throttle:10,1');
     Route::get('/realtime/config', [\App\Http\Controllers\RealtimeController::class, 'config']);
     Route::get('/organization/agreements', [\App\Http\Controllers\OrganizationAgreementController::class, 'index']);

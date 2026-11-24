@@ -642,61 +642,19 @@ class OrderResource extends Resource
                     ->openUrlInNewTab(),
                 
                 Tables\Actions\Action::make('record_offline_payment')
-                    ->label('ثبت پرداخت خارج از برنامه')
-                    ->icon('heroicon-o-banknotes')
-                    ->color('success')
-                    ->visible(fn (Order $record): bool => (int) $record->payment_status !== 1 && static::canEdit($record))
-                    ->modalDescription('پرداخت نقدی، کارت‌به‌کارت، شبا یا درون‌بانکی که در سایت یا حضوری انجام شده است. در اپ کاربر با همین روش و کانال نمایش داده می‌شود.')
+                    ->label('ثبت دریافت خارج از برنامه')->icon('heroicon-o-banknotes')->color('success')
+                    ->visible(fn (Order $record) => !$record->settled_at && auth('admin')->user()?->is_active && (auth('admin')->user()->isSuperAdmin() || auth('admin')->user()->can('review-order-settlements')))
+                    ->modalDescription('مانده توسط سرور محاسبه می‌شود. وجه یا کالایی را که شرکت تحویل گرفته ثبت کنید؛ دریافت تکنسین از بخش دریافت‌ها تأیید می‌شود.')
                     ->form([
-                        Forms\Components\Select::make('payment_method')
-                            ->label('روش پرداخت')
-                            ->options(\Illuminate\Support\Arr::only(Order::PAYMENT_METHODS, ['cash', 'card_to_card', 'sheba', 'bank_transfer']))
-                            ->required(),
-                        Forms\Components\Select::make('payment_channel')
-                            ->label('کانال پرداخت')
-                            ->options(\Illuminate\Support\Arr::only(Order::PAYMENT_CHANNELS, ['in_person', 'site']))
-                            ->default('in_person')
-                            ->required(),
-                        Forms\Components\TextInput::make('amount')
-                            ->label('مبلغ دریافت‌شده (تومان)')
-                            ->numeric()
-                            ->minValue(1)
-                            ->required(),
-                        Forms\Components\TextInput::make('remaining_amount')
-                            ->label('مانده (تومان)')
-                            ->helperText('اگر کل مبلغ دریافت شده، خالی یا صفر بگذارید.')
-                            ->numeric()
-                            ->minValue(0),
-                        Forms\Components\TextInput::make('reference')
-                            ->label('شماره پیگیری / توضیح')
-                            ->maxLength(191),
-                    ])
-                    ->action(function (Order $record, array $data): void {
-                        $remaining = (int) ($data['remaining_amount'] ?? 0);
-
-                        \Illuminate\Support\Facades\DB::transaction(function () use ($record, $data, $remaining) {
-                            $record->forceFill([
-                                'payment_method' => $remaining > 0 ? 'remaining' : $data['payment_method'],
-                                'payment_channel' => $data['payment_channel'],
-                                'remaining_amount' => $remaining > 0 ? $remaining : null,
-                                'payment_status' => $remaining > 0 ? $record->payment_status : 1,
-                            ])->save();
-
-                            \App\Models\UserTransaction::create([
-                                'user_id' => $record->user_id,
-                                'order_id' => $record->id,
-                                'price' => $data['amount'],
-                                'type' => \App\Models\UserTransaction::TYPE_OFFLINE_PAYMENT,
-                                'status' => 100,
-                                'payment_method' => $data['payment_method'],
-                                'payment_channel' => $data['payment_channel'],
-                                'referenceId' => $data['reference'] ?? null,
-                                'description' => 'پرداخت ' . Order::PAYMENT_METHODS[$data['payment_method']] . ' سفارش شماره ' . $record->id
-                                    . ' — ثبت توسط ' . (auth('admin')->user()?->name ?? 'ادمین'),
-                            ]);
-                        });
-
-                        \Filament\Notifications\Notification::make()->title('پرداخت ثبت شد.')->success()->send();
+                        Forms\Components\Select::make('method')->label('روش دریافت')->options(\App\Models\OrderReceipt::COMPANY_METHODS)->required()->live(),
+                        Forms\Components\Select::make('payment_channel')->label('کانال پرداخت')->options(['in_person' => 'حضوری', 'site' => 'سایت'])->default('in_person')->required(),
+                        Forms\Components\TextInput::make('amount')->label('مبلغ / ارزش (تومان)')->numeric()->integer()->minValue(1)->required(),
+                        Forms\Components\Textarea::make('item_description')->label('مشخصات کالای تهاتری')->required(fn (Forms\Get $get) => $get('method') === 'barter')->visible(fn (Forms\Get $get) => $get('method') === 'barter')->maxLength(500),
+                        Forms\Components\TextInput::make('reference')->label('پیگیری / توضیح')->maxLength(191),
+                        Forms\Components\Hidden::make('request_uuid')->default(fn () => (string) \Illuminate\Support\Str::uuid()),
+                    ])->action(function (Order $record, array $data) {
+                        app(\App\Services\OrderSettlementService::class)->record($record, auth('admin')->user(), $data + ['collection_target' => 'company']);
+                        \Filament\Notifications\Notification::make()->title('دریافت شرکت ثبت شد')->success()->send();
                     }),
 
                 Tables\Actions\Action::make('assign_technician')
@@ -781,6 +739,7 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\ReceiptsRelationManager::class,
             RelationManagers\FieldServiceVisitsRelationManager::class,
             RelationManagers\OrderGalleriesRelationManager::class,
             RelationManagers\ExtraServicesRelationManager::class,

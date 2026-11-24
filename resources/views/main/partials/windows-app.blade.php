@@ -1,13 +1,17 @@
 @php
   // فایل‌های نصب ویندوز روی سرور در public/downloads/windows قرار می‌گیرند (در گیت و ایمیج داکر نیستند)
-  $windowsVersion = '1.1.9';
+  $fallbackVersion = '1.1.9';
+  $windowsDownloads = app(\App\Services\AppReleaseService::class)->latestDownloads('windows');
   $faDigits = fn ($v) => strtr((string) $v, ['0'=>'۰','1'=>'۱','2'=>'۲','3'=>'۳','4'=>'۴','5'=>'۵','6'=>'۶','7'=>'۷','8'=>'۸','9'=>'۹']);
   $windowsBuilds = collect([
-    ['key' => 'win10-64', 'os' => 'ویندوز ۱۰ و ۱۱', 'arch' => '۶۴ بیتی', 'file' => "Loop-{$windowsVersion}-Windows-10-11-64bit-Setup.exe"],
-    ['key' => 'win10-32', 'os' => 'ویندوز ۱۰ و ۱۱', 'arch' => '۳۲ بیتی', 'file' => "Loop-{$windowsVersion}-Windows-10-11-32bit-Setup.exe"],
-    ['key' => 'win7-64',  'os' => 'ویندوز ۷ و ۸',   'arch' => '۶۴ بیتی', 'file' => "Loop-{$windowsVersion}-Windows-7-8-64bit-Setup.exe"],
-    ['key' => 'win7-32',  'os' => 'ویندوز ۷ و ۸',   'arch' => '۳۲ بیتی', 'file' => "Loop-{$windowsVersion}-Windows-7-8-32bit-Setup.exe"],
-  ])->map(function ($build) use ($faDigits) {
+    ['key' => 'win10-64', 'variant' => 'win10-x64', 'os' => 'ویندوز ۱۰ و ۱۱', 'arch' => '۶۴ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-10-11-64bit-Setup.exe"],
+    ['key' => 'win10-32', 'variant' => 'win10-ia32', 'os' => 'ویندوز ۱۰ و ۱۱', 'arch' => '۳۲ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-10-11-32bit-Setup.exe"],
+    ['key' => 'win7-64',  'variant' => 'win7-x64', 'os' => 'ویندوز ۷ و ۸',   'arch' => '۶۴ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-7-8-64bit-Setup.exe"],
+    ['key' => 'win7-32',  'variant' => 'win7-ia32', 'os' => 'ویندوز ۷ و ۸',   'arch' => '۳۲ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-7-8-32bit-Setup.exe"],
+  ])->map(function ($build) use ($faDigits, $windowsDownloads, $fallbackVersion) {
+    $release = $windowsDownloads['desktop:'.$build['variant']] ?? null;
+    $build['file'] = $release?->artifact ?? $build['file'];
+    $build['version'] = $release?->version ?? $fallbackVersion;
     $path = public_path('downloads/windows/'.$build['file']);
     $build['url'] = asset('downloads/windows/'.$build['file']);
     $build['size'] = is_file($path) ? $faDigits(round(filesize($path) / 1048576)).' مگابایت' : null;
@@ -54,7 +58,7 @@
 {{ site_text('برای نصب نرم‌افزار، لطفاً این صفحه را در رایانه‌ای با سیستم‌عامل ویندوز باز کنید') }}
     </p>
 
-    <p class="win-hint">{{ site_text('نسخه نرم‌افزار:') }} <b>{{ $windowsVersion }}</b> {{ site_text('· نمی‌دانید ویندوز شما ۳۲ یا ۶۴ بیتی است؟ در ویندوز به مسیر') }} <b>Settings › System › About</b> {{ site_text('بروید و بخش') }} <b>System type</b> {{ site_text('را ببینید.') }}</p>
+    <p class="win-hint">{{ site_text('نسخه نرم‌افزار:') }} <b>{{ $suggestedBuild['version'] }}</b> {{ site_text('· نمی‌دانید ویندوز شما ۳۲ یا ۶۴ بیتی است؟ در ویندوز به مسیر') }} <b>Settings › System › About</b> {{ site_text('بروید و بخش') }} <b>System type</b> {{ site_text('را ببینید.') }}</p>
   </div>
 </section>
 

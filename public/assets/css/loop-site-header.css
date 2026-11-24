@@ -21,6 +21,19 @@ html,body{overflow-x:clip!important}
 .loop-primary-links{display:flex;align-items:center;justify-content:space-evenly;gap:18px;flex:1;min-width:0}
 .loop-primary-links a{font-size:clamp(12px,1.15vw,18px);white-space:nowrap}
 .loop-menu-toggle{display:none}
+.loop-header-actions{display:flex;align-items:center;gap:10px;flex:none;margin-inline-start:auto}
+.loop-language-toggle,.loop-language-title button{display:grid;place-items:center;width:44px;height:44px;border:1px solid #ecc87380;border-radius:8px;background:#10213d99;color:#ecc873;cursor:pointer}
+.loop-language-toggle:hover,.loop-language-title button:hover{background:#ecc87320}
+.loop-language-toggle:focus-visible,.loop-language-dialog :is(button,a):focus-visible{outline:2px solid #ecc873;outline-offset:3px}
+.loop-language-dialog{position:fixed;inset:0;margin:auto;width:min(calc(100% - 32px),400px);max-height:min(75vh,540px);padding:0;overflow:auto;overscroll-behavior:contain;border:1px solid #ecc87380;border-radius:18px;background:linear-gradient(145deg,#192d48,#081322);color:#f5f5f5;box-shadow:0 18px 60px #0009;font-family:"Vazirmatn FD",sans-serif}
+.loop-language-dialog::backdrop{background:#050b16b8;backdrop-filter:blur(4px)}
+.loop-language-panel{padding:20px}
+.loop-language-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.loop-language-title h2{margin:0;font:inherit;font-size:1.2rem;font-weight:800;color:#f5f5f5}
+.loop-language-title button{font-size:1.5rem;line-height:1}
+.loop-language-options{list-style:none;display:grid;gap:8px;margin:0;padding:0}
+.loop-language-options a{display:block;padding:12px 14px;border:1px solid #ffffff26;border-radius:10px;background:#ffffff08;color:#f5f5f5;text-decoration:none;font-weight:700;text-align:start}
+.loop-language-options a:hover,.loop-language-options a[aria-current="true"]{border-color:#ecc87380;background:#ecc87320;color:#ecc873}
 .loop-mobile-drawer[hidden]{display:none!important}
 .loop-mobile-drawer{position:fixed;inset:0;z-index:10050;font-family:"Vazirmatn FD",sans-serif;direction:rtl}
 .loop-menu-backdrop{position:absolute;inset:0;border:0;background:#0009;width:100%;height:100%;cursor:pointer}

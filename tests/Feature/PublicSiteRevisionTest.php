@@ -16,6 +16,23 @@ class PublicSiteRevisionTest extends TestCase
         return new \DOMXPath($document);
     }
 
+    public function test_language_dialog_uses_only_active_catalog_languages_and_lives_in_the_sticky_header(): void
+    {
+        \App\Models\LocalizationLanguage::create([
+            'code' => 'fr', 'name' => 'فرانسوی', 'native_name' => 'Français', 'direction' => 'ltr', 'is_enabled' => false,
+        ]);
+        $response = $this->get('/?lang=en&ref=preview')->assertOk();
+        $xpath = $this->xpath($response->getContent());
+        $trigger = $xpath->query('//header[contains(@class,"loop-glass-header")]//button[@data-loop-language-open]')->item(0);
+        $this->assertSame('', trim($trigger->textContent));
+        $this->assertSame('loop-language-dialog', $trigger->getAttribute('aria-controls'));
+        $this->assertCount(0, $xpath->query('//*[@id="site-language"]'));
+        $this->assertCount(0, $xpath->query('//dialog[@id="loop-language-dialog"]//a[@hreflang="fr"]'));
+        $selected = $xpath->query('//dialog[@id="loop-language-dialog"]//a[@aria-current="true"]')->item(0);
+        $this->assertSame('en', $selected->getAttribute('hreflang'));
+        $this->assertStringContainsString('ref=preview', $selected->getAttribute('href'));
+    }
+
     public function test_public_pages_share_desktop_and_mobile_navigation_with_real_destinations(): void
     {
         if (getenv('LOOP_SITE_PREVIEW')) \Illuminate\Support\Facades\URL::forceRootUrl('http://127.0.0.1:8765');

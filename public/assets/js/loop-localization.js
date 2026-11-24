@@ -16,8 +16,22 @@
    if(node.closest('[data-no-translate]'))continue;
    for(const attribute of ['title','placeholder','aria-label','alt'])if(node.hasAttribute(attribute))node.setAttribute(attribute,translate(node.getAttribute(attribute)));
   }
-  const picker=document.getElementById('site-language');
-  if(picker){picker.replaceChildren(...payload.languages.map((language)=>{const option=document.createElement('option');option.value=language.code;option.textContent=language.native_name+' — '+language.code.toUpperCase();option.selected=language.code===payload.locale;return option;}));}
+  const picker=document.querySelector('[data-loop-language-options]');
+  if(picker){
+   const focusedCode=picker.contains(document.activeElement)?document.activeElement.hreflang:null;
+   const options=payload.languages.map((language)=>{
+    const item=document.createElement('li'),link=document.createElement('a');
+    const url=new URL(window.location.href);url.searchParams.set('lang',language.code);
+    link.href=url.href;link.hreflang=language.code;link.lang=language.code;link.dir=language.direction;link.textContent=language.native_name;
+    if(language.code===payload.locale)link.setAttribute('aria-current','true');
+    item.append(link);return item;
+   });
+   picker.replaceChildren(...options);
+   if(focusedCode){
+    const option=options.map((item)=>item.firstElementChild).find((link)=>link.hreflang===focusedCode);
+    (option||picker.closest('dialog').querySelector('button'))?.focus();
+   }
+  }
   document.title=translate(document.title);
   for(const node of document.querySelectorAll('meta[name="description"],meta[property="og:title"],meta[property="og:description"],meta[name="twitter:title"],meta[name="twitter:description"]'))if(node.content)node.content=translate(node.content);
   document.documentElement.lang=payload.locale;

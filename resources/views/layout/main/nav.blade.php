@@ -20,7 +20,7 @@
         ['label'=>'راهنمای اپلیکیشن تکنسین', 'url'=>asset('assets/guid/tech.pdf')],
     ];
 @endphp
-<link rel="stylesheet" href="{{ asset('assets/css/loop-site-header.css') }}?v=20261115-2">
+<link rel="stylesheet" href="{{ asset('assets/css/loop-site-header.css') }}?v=20261125">
 <div class="loop-topbar">
     <div class="loop-topbar-inner">
         <nav class="loop-top-links" aria-label="دسترسی‌های سایت">
@@ -40,7 +40,12 @@
     <div class="loop-header-inner">
         <a class="loop-header-logo" href="{{ route('web.home') }}" aria-label="صفحهٔ نخست لوپ"><img src="{{ asset('assets/images/logo.png') }}" alt="LOOP" width="115" height="54"></a>
         <nav class="loop-primary-links" aria-label="منوی اصلی">@foreach ($primaryLinks as $link)<a href="{{ $link['url'] }}">{{ site_text($link['label']) }}</a>@endforeach</nav>
-        <button type="button" class="loop-menu-toggle" data-loop-menu-open aria-controls="loop-mobile-menu" aria-expanded="false" aria-label="باز کردن منوی سایت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg></button>
+        <div class="loop-header-actions">
+            <button type="button" class="loop-menu-toggle" data-loop-menu-open aria-controls="loop-mobile-menu" aria-expanded="false" aria-label="باز کردن منوی سایت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg></button>
+            <button type="button" class="loop-language-toggle" data-loop-language-open aria-controls="loop-language-dialog" aria-haspopup="dialog" aria-label="{{ site_text('تغییر زبان') }}">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>
+            </button>
+        </div>
     </div>
 </header>
 <div class="loop-mobile-drawer" id="loop-mobile-menu" hidden>
@@ -54,13 +59,17 @@
         <div class="loop-menu-visual"><img src="{{ asset('assets/new-style/mobile/hero-home.webp') }}" alt="هر اتصال، یک شروع" width="1023" height="1537" loading="lazy"></div>
     </div>
 </div>
-<script src="{{ asset('assets/js/loop-site-header.js') }}?v=20261115-2" defer></script>
-
-<div class="loop-language-picker" style="text-align:center;padding:6px;background:#102435;color:#fff">
- <label for="site-language">{{ site_text('زبان') }}</label>
- <select id="site-language" aria-label="Language" style="color:#fff;background:#17334f;border:1px solid #c7a24d;border-radius:6px;padding:4px" onchange="const next=new URL(window.location.href);next.searchParams.set('lang',this.value);window.location.assign(next.href)">
- @foreach(app(\App\Services\LocalizationCatalog::class)->languages() as $language)
-  <option value="{{ $language['code'] }}" @selected(app()->getLocale()===$language['code'])>{{ $language['native_name'] }} — {{ strtoupper($language['code']) }}</option>
- @endforeach
- </select>
-</div>
+<dialog class="loop-language-dialog" id="loop-language-dialog" aria-labelledby="loop-language-title">
+    <div class="loop-language-panel">
+        <div class="loop-language-title">
+            <h2 id="loop-language-title">{{ site_text('تغییر زبان') }}</h2>
+            <form method="dialog"><button type="submit" autofocus aria-label="{{ site_text('بستن') }}"><span aria-hidden="true">×</span></button></form>
+        </div>
+        <ul class="loop-language-options" data-loop-language-options data-no-translate>
+            @foreach(app(\App\Services\LocalizationCatalog::class)->languages() as $language)
+                <li><a href="{{ request()->fullUrlWithQuery(['lang' => $language['code']]) }}" lang="{{ $language['code'] }}" hreflang="{{ $language['code'] }}" dir="{{ $language['direction'] }}" @if(app()->getLocale() === $language['code']) aria-current="true" @endif>{{ $language['native_name'] }}</a></li>
+            @endforeach
+        </ul>
+    </div>
+</dialog>
+<script src="{{ asset('assets/js/loop-site-header.js') }}?v=20261125" defer></script>

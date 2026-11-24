@@ -1,5 +1,20 @@
 (() => {
   document.querySelectorAll('.store-btn[href="#"]').forEach((link) => link.addEventListener('click', (event) => event.preventDefault()));
+  const languageButton = document.querySelector('[data-loop-language-open]');
+  const languageDialog = document.getElementById('loop-language-dialog');
+  if (languageButton && languageDialog) {
+    languageButton.addEventListener('click', () => languageDialog.showModal());
+    languageDialog.addEventListener('close', () => languageButton.focus());
+    languageDialog.addEventListener('click', (event) => {
+      if (event.target === languageDialog) languageDialog.close();
+      const link = event.target.closest('[data-loop-language-options] a');
+      if (link) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', link.hreflang);
+        link.href = url.href;
+      }
+    });
+  }
   const header = document.querySelector('[data-loop-header]');
   const drawer = document.getElementById('loop-mobile-menu');
   const toggle = document.querySelector('[data-loop-menu-open]');

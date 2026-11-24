@@ -49728,5 +49728,11 @@
     "message_key": "زبان",
     "source_fa": "زبان",
     "translations_data": {}
+  },
+  {
+    "scope": "website",
+    "message_key": "تغییر زبان",
+    "source_fa": "تغییر زبان",
+    "translations_data": { "en": "Change language" }
   }
 ]

@@ -269,4 +269,4 @@
 <script src="{{ asset('assets/js/loop-brand-motion.js') }}?v=20261123" defer></script>
 
 <script src="{{ asset('assets/js/loop-realtime.js') }}?v=20261123" defer></script>
-<script src="{{ asset('assets/js/loop-localization.js') }}?v=20261123" defer></script>
+<script src="{{ asset('assets/js/loop-localization.js') }}?v=20261125" defer></script>

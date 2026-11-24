@@ -1,5 +1,11 @@
 # Referral Codes - Frontend Integration
 
+**Archived behavior.** New signup and orders no longer accept a referral code.
+The legacy check endpoint returns HTTP 410 with `REFERRAL_CODES_RETIRED`.
+Historical records are retained. The purchase agent's own orders earn commission
+from the configured table, and the admin approves withdrawal eligibility after
+the order is fully settled. Discount codes remain separate.
+
 ## Concept
 
 Referral codes are different from personal discount codes:

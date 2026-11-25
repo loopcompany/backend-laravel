@@ -17,6 +17,7 @@ class TechnicianPasswordSMSTest extends TestCase
  {
   config(['smsir.enabled'=>true,'smsir.technician_approved_template_id'=>null,'firebase.enabled'=>false]);
   $technician=$this->makeTechnician(['approval_status'=>'pending','phone_verified_at'=>now(),'referral_code'=>null,'melicode'=>'1234567891']);
+  $technician->forceFill(['registration_method'=>3])->saveQuietly();
   $failure=null;\Illuminate\Support\Facades\Log::listen(function($event)use(&$failure){if(isset($event->context['exception_message']))$failure=$event->context['exception_message'];});
   $captured=null;$sender=\Mockery::mock(\Cryptommer\Smsir\Classes\Send::class);
   $sender->shouldReceive('Verify')->once()->withArgs(function($phone,$template,$parameters)use($technician,&$captured){
@@ -28,6 +29,7 @@ class TechnicianPasswordSMSTest extends TestCase
   $data=['city_code'=>'21','region_code'=>'08','staff_type'=>41,'method'=>1,'documents_confirmed'=>true];
   $service=app(TechnicianAdmissionService::class);$sent=$service->admit($technician,$data,null);$this->assertTrue($sent,(string)$failure);
   $technician->refresh();$this->assertTrue($technician->isApproved());$this->assertMatchesRegularExpression('/^[0-9]{16}$/',$technician->referral_code);
+  $this->assertSame('3', $technician->referral_code[8]);
   $this->assertSame($technician->referral_code,$captured[0]);$this->assertGreaterThanOrEqual(12,strlen($captured[1]));
   $this->assertTrue(Hash::check($captured[1],$technician->password));$hash=$technician->password;
   $this->assertThrows(fn()=>$service->admit($technician,$data,null),ValidationException::class);

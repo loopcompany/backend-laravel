@@ -23,15 +23,13 @@ class TechnicianRegistrationController extends Controller
 
 
         $data = $request->validated();
-        \Log::info('Technician Registration Data:', $data);
-        // اضافه کردن فایل رزومه به داده‌ها اگر وجود داشته باشد
         if ($request->hasFile('resume')) {
             $data['resume'] = $request->file('resume');
-
-        } else {
         }
 
-        $result = $service->register($data);
+        $browser = $request->headers->has('Sec-Fetch-Mode')
+            || str_starts_with((string) $request->userAgent(), 'Mozilla/');
+        $result = $service->register($data, registrationMethod: $browser ? 3 : 1);
 
         if (!$result['success']) {
             $statusCode = match ($result['error_code'] ?? '') {

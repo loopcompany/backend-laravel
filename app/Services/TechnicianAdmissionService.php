@@ -10,13 +10,15 @@ use Illuminate\Validation\ValidationException;
 
 class TechnicianAdmissionService
 {
-    public static function fields(): array
+    public static function fields(?Technician $technician = null): array
     {
+        $method = (int) $technician?->registration_method;
         return [
             \Filament\Forms\Components\TextInput::make('city_code')->label('کد شهر طبق فرمول')->required()->regex('/^[0-9]{2}$/'),
             \Filament\Forms\Components\TextInput::make('region_code')->label('کد منطقه')->required()->regex('/^[0-9]{2}$/'),
             \Filament\Forms\Components\Select::make('staff_type')->label('گروه تکنسین')->options(RegistrationCodeService::staffTypes('technician'))->required(),
-            \Filament\Forms\Components\Select::make('method')->label('روش ثبت‌نام اولیه')->options(RegistrationCodeService::METHODS)->default(1)->required(),
+            \Filament\Forms\Components\Select::make('method')->label('روش ثبت‌نام اولیه')->options(RegistrationCodeService::METHODS)
+                ->default(isset(RegistrationCodeService::METHODS[$method]) ? $method : null)->required(),
             \Filament\Forms\Components\Checkbox::make('documents_confirmed')->label('مراجعه حضوری، اطلاعات کامل و مدارک این تکنسین بررسی و تأیید شده است')->accepted(),
         ];
     }
@@ -30,6 +32,9 @@ class TechnicianAdmissionService
             if ($locked->isApproved()) throw ValidationException::withMessages(['documents_confirmed'=>'این تکنسین قبلاً تأیید شده است؛ برای ارسال دوباره از بازنشانی رمز استفاده کنید.']);
             if (!$locked->phone_verified_at || !$locked->name || !$locked->melicode || !$locked->home_address) {
                 throw ValidationException::withMessages(['documents_confirmed'=>'ابتدا شماره موبایل، کد ملی، نام و آدرس تکنسین تکمیل و تأیید شود.']);
+            }
+            if (isset(RegistrationCodeService::METHODS[(int) $locked->registration_method])) {
+                $data['method'] = (int) $locked->registration_method;
             }
             app(RegistrationCodeService::class)->issue($locked, $data);
             $locked->refresh()->update(['password'=>Hash::make($password),'approval_status'=>'approved',

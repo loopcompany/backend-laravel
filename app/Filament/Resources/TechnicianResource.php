@@ -469,7 +469,7 @@ class TechnicianResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('تایید تکنسین')
                     ->modalDescription('پس از تأیید مدارک، کد و رمز تازه به موبایل تکنسین ارسال می‌شود.')
-                    ->form(\App\Services\TechnicianAdmissionService::fields())
+                    ->form(fn (Technician $record) => \App\Services\TechnicianAdmissionService::fields($record))
                     ->action(function (Technician $record, array $data) {
                         abort_unless(static::canEdit($record),403);
                         $sent=app(\App\Services\TechnicianAdmissionService::class)->admit($record, $data, Auth::id());

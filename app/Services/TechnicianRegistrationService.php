@@ -18,7 +18,7 @@ class TechnicianRegistrationService
     {
     }
 
-    public function register(array $data): array
+    public function register(array $data, int $registrationMethod = 1): array
     {
         unset($data['other_referral_code']);
         // چک کردن وجود تکنسین با همین شماره
@@ -37,7 +37,7 @@ class TechnicianRegistrationService
             $technician = $this->updateTechnicianData($existingTechnician, $data);
         } else {
             // ایجاد تکنسین جدید
-            $technician = $this->createNewTechnician($data);
+            $technician = $this->createNewTechnician($data, $registrationMethod);
         }
 
         // ارسال کد تأیید
@@ -133,7 +133,7 @@ class TechnicianRegistrationService
         ];
     }
 
-    private function createNewTechnician(array $data): object
+    private function createNewTechnician(array $data, int $registrationMethod): object
     {
         // تولید کد پرسنلی یکتا
 
@@ -157,7 +157,11 @@ class TechnicianRegistrationService
 
         // ایجاد تکنسین
         $technician = $this->repo->create($data);
-        $technician->forceFill(['registration_method' => 1])->saveQuietly();
+        $technician->forceFill(['registration_method' => $registrationMethod])->saveQuietly();
+        Log::info('Technician registration created', [
+            'technician_id' => $technician->id,
+            'registration_method' => $registrationMethod,
+        ]);
 
         // اتصال تخصص‌ها اگر وجود داشته باشند
         if (!empty($expertiseIds)) {

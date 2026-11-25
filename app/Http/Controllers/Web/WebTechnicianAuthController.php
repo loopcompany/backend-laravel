@@ -63,7 +63,7 @@ class WebTechnicianAuthController extends Controller
             $data['resume'] = $request->file('resume');
         }
         
-        $result = $this->service->register($data);
+        $result = $this->service->register($data, registrationMethod: 3);
         
         if (!$result['success']) {
             return back()

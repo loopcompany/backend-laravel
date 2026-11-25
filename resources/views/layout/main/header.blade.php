@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="platform-verification" content="pljfodpclt" />
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>@yield('meta_title', 'لوپ | پلتفرم خدمات تعمیرات لپ تاپ و کامپیوتر')</title>
-    <meta name="description" content="@yield('meta_description', 'لوپ ارائه‌دهنده خدمات تخصصی تعمیرات لپ‌تاپ، کامپیوتر با تیمی مجرب و قیمت‌های مناسب')">
+    <title>@yield('meta_title', site_text('لوپ | پلتفرم خدمات تعمیرات لپ تاپ و کامپیوتر'))</title>
+    <meta name="description" content="@yield('meta_description', site_text('لوپ ارائه‌دهنده خدمات تخصصی تعمیرات لپ‌تاپ، کامپیوتر با تیمی مجرب و قیمت‌های مناسب'))">
     @yield('meta')
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Favicon -->
@@ -157,8 +157,7 @@
                             <ul id="menu-quick-link" class="menu">
                                 <li><a href="{{ asset('assets/guid/tech.pdf') }}">{{ site_text('راهنمای اپلیکیشن تکنسین') }}</a></li>
                                 <li><a href="{{ asset('assets/guid/user.pdf') }}">{{ site_text('راهنمای اپلیکیشن کاربر') }}</a></li>
-                                <li><a href="{{ asset('assets/guid/organ.pdf') }}">{{ site_text('راهنمای اپلیکیشن کاربری سازمانی
-                                        شرکتی') }}</a>
+                                <li><a href="{{ asset('assets/guid/organ.pdf') }}">{{ site_text('راهنمای اپلیکیشن سازمانی/شرکتی') }}</a>
                                 </li>
                             </ul>
                         </div>

@@ -3,12 +3,12 @@
   <div class="partner-wide">
     <div class="partner-head reveal">
       <span class="eyebrow rule-center">{{ site_text('همکاری‌ها') }}</span>
-      <h2>{{ site_text('سوابق') }} <span class="gold-text">{{ site_text('همکاری') }}</span></h2>
+      <h2>{{ site_text('سوابق همکاری') }}</h2>
     </div>
 
     <div class="partner-banner reveal">
       <img src="{{ asset('assets/new-style/partnership.jpg') }}" width="1672" height="941" loading="lazy"
-           alt="سوابق همکاری لوپ — دست دادن دو مدیر در دفتر لوپ با چشم‌انداز تهران">
+           alt="{{ site_text('سوابق همکاری') }}">
     </div>
 
     {{-- فقط نام و لوگو؛ لینک سایت پشت لوگو است و نمایش داده نمی‌شود (همکاران از پنل › مدیریت محتوا › همکاران) --}}
@@ -16,8 +16,8 @@
       <ul class="partner-grid reveal">
         @foreach ($partners as $partner)
           <li class="partner-item">
-            <a href="{{ $partner->website_url }}" target="_blank" rel="noopener" class="partner-logo" aria-label="سایت {{ $partner->name }}">
-              <img src="{{ asset('storage/' . $partner->logo) }}" alt="لوگوی {{ $partner->name }}" loading="lazy">
+            <a href="{{ $partner->website_url }}" target="_blank" rel="noopener" class="partner-logo" aria-label="{{ $partner->name }}">
+              <img src="{{ asset('storage/' . $partner->logo) }}" alt="" loading="lazy">
             </a>
             <span class="partner-name">{{ $partner->name }}</span>
           </li>
@@ -41,7 +41,7 @@
   .partner-banner img{width:100%; height:auto; display:block;}
 
   .partner-grid{
-    list-style:none; margin:40px 0 0; padding:0; direction:rtl;
+    list-style:none; margin:40px 0 0; padding:0;
     display:flex; flex-wrap:wrap; justify-content:center; gap:28px 22px;
   }
   .partner-item{width:180px; display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center;}

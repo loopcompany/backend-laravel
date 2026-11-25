@@ -2,7 +2,7 @@
 
 @extends('layout.main.header')
 @section('meta')
-<meta property="og:title" content="لوپ">
+<meta property="og:title" content="{{ site_text('لوپ') }}">
 <meta property="og:image" content="{{ asset('assets/images/logo.png') }}">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
@@ -13,11 +13,12 @@
 
 <!-- ================= HERO ================= -->
 <section class="hero" id="hero">
+  @if (app()->getLocale() === 'fa')
   <a
     href="{{ rtrim(config('app.user_panel_url'), '/') }}"
     target="_blank"
     rel="noopener noreferrer"
-    aria-label="ورود به پنل کاربری لوپ"
+    aria-label="{{ site_text('ورود به پنل کاربری لوپ') }}"
   >
     <picture>
       <source
@@ -29,13 +30,14 @@
       <img
         class="hero-image"
         src="{{ asset('assets/new-style/hero-home.webp') }}"
-        alt="LOOP — Every connection creates a new path"
+        alt="{{ site_text('هر اتصال، یک شروع') }}"
         width="1774"
         height="887"
         fetchpriority="high"
       >
     </picture>
   </a>
+  @else
   <div class="container hero-inner">
 
     <div class="road-wrap reveal">
@@ -82,18 +84,7 @@
     </div>
 
     <div class="hero-copy">
-      <div class="col en">
-        <span class="eyebrow">LOOP</span>
-        <h1 class="en">Every connection<br><span class="gold-text">creates a new path.</span></h1>
-        <p class="en">LOOP is where opportunities connect, trust grows, and the future is reimagined.</p>
-        <a href="#ecosystem" class="btn">Explore the Journey
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-      </div>
-
-      <div class="hero-divider"></div>
-
-      <div class="col fa" dir="rtl">
+      <div class="hero-intro">
         <span class="eyebrow" style="direction:ltr; display:inline-flex;">LOOP</span>
         <h1>{{ site_text('هر اتصال،') }}<br><span class="gold-text">{{ site_text('یک شروع') }}</span></h1>
         <p>{{ site_text('LOOP جایی است که ارتباط‌ها به فرصت، اعتماد و آینده تبدیل می‌شوند.') }}</p>
@@ -110,6 +101,7 @@
       </svg>
     </div>
   </div>
+  @endif
 </section>
 
 <!-- ================= ABOUT ================= -->
@@ -125,7 +117,7 @@
 
     <div class="about-banner-text">
       <span class="eyebrow">LOOP</span>
-      <h2>{{ site_text('درباره') }} <span class="gold-text en">LOOP</span></h2>
+      <h2>{{ site_text('درباره لوپ') }}</h2>
       <p>{{ site_text('لوپ یک شرکت متعهد و متخصص می‌باشد که با استفاده از تکنولوژی و دانش روز، بهترین راهکارها را برای شما فراهم می‌کند.') }}</p>
       <a href="{{ route('web.about') }}" class="btn solid">{{ site_text('بیشتر درباره ما') }}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
@@ -133,7 +125,7 @@
     </div>
 
     <div class="about-banner-media">
-      <img src="{{ asset('assets/new-style/aboutsec1.jpeg') }}" alt="تیم LOOP" loading="lazy">
+      <img src="{{ asset('assets/new-style/aboutsec1.jpeg') }}" alt="{{ site_text('تیم LOOP') }}" loading="lazy">
     </div>
   </div>
 </section>
@@ -169,7 +161,7 @@
   </div>
   <div class="container">
     <div class="eco-head reveal">
-      <h2>{{ site_text('اکوسیستم') }} <span class="gold-text en">LOOP</span></h2>
+      <h2>{{ site_text('اکوسیستم لوپ') }}</h2>
       <p class="sub">{{ site_text('همه چیز به هم متصل است.') }}</p>
       <div class="gold-rule"></div>
       <p>{{ site_text('اکوسیستم LOOP مجموعه‌ای یکپارچه از وب‌سایت، اپلیکیشن‌ها، خدمات، آموزش و پشتیبانی است.') }}<br>{{ site_text('که برای ایجاد تجربه‌ای هوشمند، سریع و مطمئن طراحی شده است.') }}</p>
@@ -432,42 +424,42 @@
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/2.png') }}"/>
         </div>
-        <h4>Website</h4><p>{{ site_text('دسترسی سریع') }}<br>{{ site_text('به خدمات') }}<br><span class="site en">clpiran.com</span></p>
+        <h4>{{ site_text('وب‌سایت') }}</h4><p>{{ site_text('دسترسی سریع به خدمات') }}<br><span class="site en">clpiran.com</span></p>
       </div>
       <div class="eco-node pos-tr">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/4.png') }}"/>
         </div>
-        <h4>User<br>App</h4><p>{{ site_text('درخواست خدمات') }}<br>{{ site_text('مدیریت کاربران') }}</p>
+        <h4>{{ site_text('اپ کاربر') }}</h4><p>{{ site_text('درخواست خدمات') }}<br>{{ site_text('مدیریت کاربران') }}</p>
       </div>
       <div class="eco-node pos-ml">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/1.png') }}"/>
         </div>
-        <h4>Enterprise</h4><p>{{ site_text('سازمان‌ها و شرکت‌ها') }}<br>{{ site_text('مدیریت پروژه‌ها') }}</p>
+        <h4>{{ site_text('سازمانی') }}</h4><p>{{ site_text('سازمان‌ها و شرکت‌ها') }}<br>{{ site_text('مدیریت پروژه‌ها') }}</p>
       </div>
       <div class="eco-node pos-mr">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 1 5 5l-2.4-.7-1.9 1.9-2-2 1.9-1.9-.6-2.3z"/><path d="M15.4 12.6 20 17.2a2 2 0 0 1-2.8 2.8l-4.6-4.6"/><path d="M9 6.5 6.5 9 3 5.5 5.5 3 9 6.5z"/><path d="m9 6.5 8.5 8.5"/><path d="M8 14.5 3.5 19a2 2 0 0 0 2.8 2.8l4.5-4.5"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/5.png') }}"/>
         </div>
-        <h4>Technician<br>App</h4><p>{{ site_text('مدیریت مأموریت‌ها') }}<br>{{ site_text('عملیات میدانی') }}</p>
+        <h4>{{ site_text('اپ تکنسین') }}</h4><p>{{ site_text('مدیریت مأموریت‌ها') }}<br>{{ site_text('عملیات میدانی') }}</p>
       </div>
       <div class="eco-node pos-bl">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/3.png') }}"/>
         </div>
-        <h4>Academy</h4><p>{{ site_text('آموزش تخصصی') }}<br>{{ site_text('کلاس‌ها و دوره‌ها') }}</p>
+        <h4>{{ site_text('آکادمی') }}</h4><p>{{ site_text('آموزش تخصصی') }}<br>{{ site_text('کلاس‌ها و دوره‌ها') }}</p>
       </div>
       <div class="eco-node pos-br">
         <div class="icon">
           {{-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5-9-10a5 5 0 0 1 9-4 5 5 0 0 1 9 4c-2 5-9 10-9 10Z"/><circle cx="12" cy="11" r="2"/></svg> --}}
           <img src="{{ asset('assets/new-style/icon/6.png') }}"/>
         </div>
-        <h4>Service<br>Center</h4><p>{{ site_text('پشتیبانی حضوری') }}<br>{{ site_text('عملیات فیزیکی') }}</p>
+        <h4>{{ site_text('مرکز خدمات') }}</h4><p>{{ site_text('پشتیبانی حضوری') }}<br>{{ site_text('عملیات فیزیکی') }}</p>
       </div>
     </div>
 
@@ -494,7 +486,7 @@
     <div class="academy-banner-content">
       <div class="academy-banner-dots"></div>
       <div class="academy-banner-text">
-        <h2>{{ site_text('آکادمی') }} <span class="gold-text en">LOOP</span></h2>
+        <h2>{{ site_text('آکادمی لوپ') }}</h2>
         <p class="sub">{{ site_text('دانش، کلید پیشرفت است') }}</p>
         <p class="desc">{{ site_text('دوره‌های تخصصی از مقدماتی تا پیشرفته') }}</p>
         <a href="{{ route('loop.learn') }}" class="btn solid">{{ site_text('مشاهده دوره‌ها') }}</a>
@@ -503,7 +495,7 @@
     <div
       class="academy-banner-media"
       role="img"
-      aria-label="کلاس آموزشی آکادمی لوپ"
+      aria-label="{{ site_text('کلاس آموزشی آکادمی لوپ') }}"
       style="background-image:url('{{ asset('assets/new-style/academysec1.jpeg') }}')"
     >
       <div class="academy-banner-fade"></div>
@@ -573,7 +565,7 @@
   <div class="apps-wide">
     <div class="apps-head reveal">
       <span class="eyebrow rule-center">{{ site_text('اپلیکیشن‌ها') }}</span>
-      <h2>{{ site_text('اپلیکیشن‌های') }} <span class="gold-text en">LOOP</span></h2>
+      <h2>{{ site_text('اپلیکیشن‌های لوپ') }}</h2>
       <p>{{ site_text('همراه شما در هر لحظه و هر زمان') }}</p>
     </div>
 
@@ -583,8 +575,8 @@
         <div class="app-card-text">
           <div>
             <h3><span class="en gold-text">{{ $app['gold'] }}</span><span class="en">{{ $app['name'] }}</span></h3>
-            <p class="tag">{{ $app['tag'] }}</p>
-            <p class="desc">{{ $app['desc'] }}</p>
+            <p class="tag">{{ site_text($app['tag']) }}</p>
+            <p class="desc">{{ site_text($app['desc']) }}</p>
           </div>
 
           <div class="store-block">
@@ -593,15 +585,15 @@
                 @if (!empty($app['links'][$platform['key']]))
                   <a href="{{ $app['links'][$platform['key']] }}" class="store-btn store-btn--{{ $platform['key'] }}"
                      @if ($app['links'][$platform['key']] === '#') aria-disabled="true" @elseif ($platform['key'] === 'android') download @else target="_blank" rel="noopener noreferrer" @endif>
-                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong></span>
+                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ site_text($platform['label']) }}</strong></span>
                   </a>
                 @elseif (!empty($platform['soon']))
                   <span class="store-btn store-btn--{{ $platform['key'] }} is-unavailable is-soon" aria-disabled="true" title="{{ site_text('به زودی') }}">
-                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }} ({{ site_text('به زودی') }})</strong></span>
+                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ site_text($platform['label']) }} ({{ site_text('به زودی') }})</strong></span>
                   </span>
                 @else
-                  <span class="store-btn store-btn--{{ $platform['key'] }} is-unavailable" aria-disabled="true" title="در حال حاضر در دسترس نیست">
-                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong><small>{{ site_text('در دسترس نیست') }}</small></span>
+                  <span class="store-btn store-btn--{{ $platform['key'] }} is-unavailable" aria-disabled="true" title="{{ site_text('در دسترس نیست') }}">
+                    {!! $platform['icon'] !!}<span class="st-text"><strong>{{ site_text($platform['label']) }}</strong><small>{{ site_text('در دسترس نیست') }}</small></span>
                   </span>
                 @endif
               @endforeach
@@ -612,7 +604,7 @@
         </div>
 
         <div class="app-card-phone">
-          <img src="{{ $app['mockupImage'] }}" alt="نمای اپلیکیشن {{ $app['gold'] }} {{ $app['name'] }}">
+          <img src="{{ $app['mockupImage'] }}" alt="{{ site_text($app['tag']) }}">
         </div>
       </div>
       @endforeach
@@ -742,11 +734,10 @@
     display:block; min-height:0; padding:0;
     background:var(--navy-950);
   }
-  .hero > .hero-inner{display:none;}
   .hero > a{display:block;}
   .hero-image{width:100%; height:auto; display:block;}
-  .hero-inner{position:relative; z-index:2;}
-  .road-wrap{position:relative; width:100%; max-width:1200px; margin:0 auto 56px; aspect-ratio:16/8.4;}
+  .hero-inner{position:relative; isolation:isolate; overflow:hidden; padding-block:clamp(72px,12vw,160px) 42px;}
+  .road-wrap{position:absolute; inset:0; z-index:-1; opacity:.48;}
   .road-wrap svg{width:100%; height:100%;}
   .pulse-ring{ animation:pulseRing 3.2s ease-in-out infinite; transform-origin:center; }
   @keyframes pulseRing{
@@ -756,26 +747,15 @@
   .flow-line{ stroke-dasharray:6 10; animation:flowMove 2.4s linear infinite; }
   @keyframes flowMove{ to{ stroke-dashoffset:-64; } }
 
-  .hero-copy{
-    display:grid; grid-template-columns:1fr auto 1fr; align-items:start; gap:36px;
-  }
-  .hero-copy .col{max-width:420px;}
-  .hero-copy .col.en{text-align:left;}
-  .hero-copy .col.fa{text-align:right; margin-inline-start:auto;}
+  .hero-copy{text-align:center;}
+  .hero-intro{max-width:620px;margin-inline:auto;}
   .hero-copy h1{font-size:clamp(28px, 3.4vw, 42px); line-height:1.22; margin:18px 0 20px;}
   .hero-copy p{color:var(--text-mid); font-size:15px; margin-bottom:26px;}
-  .hero-divider{width:1px; align-self:stretch; background:linear-gradient(var(--gold-700), transparent);}
   .hero-tagline{
     text-align:center; margin-top:64px; color:var(--text-lo); font-size:14px;
     display:flex; flex-direction:column; align-items:center; gap:14px;
   }
   .infinity{width:46px; height:22px;}
-  @media (max-width:860px){
-    .hero-copy{grid-template-columns:1fr;}
-    .hero-copy .col.fa{text-align:right; margin:0;}
-    .hero-copy .col.en{text-align:left; order:2;}
-    .hero-divider{display:none;}
-  }
 
   /* ================= ABOUT BANNER ================= */
   #about{
@@ -805,10 +785,10 @@
   }
   .about-banner-text{
     position:relative; z-index:2; flex:0 0 40%;
-    direction:rtl;
+    direction:inherit;
     padding:58px clamp(42px,5vw,92px);
     display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
-    text-align:right;
+    text-align:start;
   }
   .about-banner-text .eyebrow{display:none;}
   .about-banner-text h2{font-size:clamp(32px,3.2vw,46px); margin:0 0 28px;}
@@ -1124,7 +1104,7 @@
     justify-content:center;
     padding:56px 48px;
   }
-  .academy-banner-text{width:100%; max-width:410px; text-align:right;}
+  .academy-banner-text{width:100%; max-width:410px; text-align:start;}
   .academy-banner-text h2{font-size:clamp(30px,3.6vw,44px); margin:0 0 16px;}
   .academy-banner-text .sub{font-size:clamp(18px,2vw,22px); font-weight:700; color:var(--text-hi); margin-bottom:10px;}
   .academy-banner-text .desc{color:var(--text-mid); font-size:15.5px; line-height:1.85; margin-bottom:30px;}
@@ -1288,11 +1268,11 @@
 
   .app-card-text{
     position:relative; z-index:2; flex:0 0 54%;
-    direction:rtl; text-align:right;
+    direction:inherit; text-align:start;
     display:flex; flex-direction:column; justify-content:space-between;
     padding:32px 10px 28px 16px;
   }
-  .app-card h3{direction:ltr; text-align:right;}
+  .app-card h3{direction:ltr; text-align:inherit;}
   .app-card h3 .en{font-size:clamp(24px,2.2vw,34px); font-weight:600;}
   .app-card h3 .en.gold-text{margin-inline-end:6px;}
   .app-card .tag{color:var(--text-hi); font-size:clamp(18px,1.7vw,24px); font-weight:500; margin-top:14px;}
@@ -1311,7 +1291,7 @@
 
   .store-col{display:flex; flex-direction:column; gap:clamp(6px,.8vw,9px); align-items:stretch; flex:none; min-width:0; width:clamp(132px,11.5vw,158px);}
   .store-btn{
-    direction:rtl; text-align:right; color:inherit; transition:border-color .3s var(--ease), background .3s var(--ease);
+    direction:inherit; text-align:start; color:inherit; transition:border-color .3s var(--ease), background .3s var(--ease);
     display:flex; align-items:center; gap:clamp(6px,.8vw,9px);
     padding:clamp(5px,.6vw,8px) clamp(8px,1vw,14px); border-radius:10px;
     border:1px solid var(--navy-600); background:rgba(255,255,255,.02);
@@ -1388,8 +1368,8 @@
       grid-column:1;
       min-width:0;
       padding:24px 0 20px 18px;
-      direction:rtl;
-      text-align:right;
+      direction:inherit;
+      text-align:start;
       justify-content:space-between;
     }
 

@@ -7,6 +7,30 @@ use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 class DynamicLocalizationTest extends TestCase {
  use RefreshDatabase;
+ public function test_landing_translations_render_on_the_server_in_all_requested_languages():void {
+  LocalizationLanguage::create(['code'=>'ar','name'=>'عربی','native_name'=>'العربية','direction'=>'ltr','is_enabled'=>false]);
+  LocalizationMessage::create(['scope'=>'website','message_key'=>'تغییر زبان','source_fa'=>'گزینش زبان','translations'=>['en'=>'Choose a language']]);
+  $this->artisan('localization:seed-landing')->assertSuccessful();
+  $this->artisan('localization:seed-landing')->expectsOutput('Landing translations filled: 0.')->assertSuccessful();
+  $this->assertSame(['fa','en','zh','ms','fr','ar'],array_column(app(LocalizationCatalog::class)->languages(),'code'));
+  config(['downloads.site_paused'=>true]);
+  $data=json_decode(file_get_contents(resource_path('localization/website-landing.json')),true,512,JSON_THROW_ON_ERROR);
+  foreach($data['locales'] as $i=>$locale) {
+   $body=$this->get('/?lang='.$locale)->assertOk()
+    ->assertSee('<html lang="'.$locale.'" dir="'.($locale==='ar'?'rtl':'ltr').'">',false)
+    ->assertSee($data['messages']['لوپ | پلتفرم خدمات تعمیرات لپ تاپ و کامپیوتر'][$i])
+    ->assertSee($data['messages']['هر اتصال،'][$i])
+    ->assertSee($data['messages']['درخواست خدمات، پیگیری، پرداخت'][$i])
+    ->assertSee($data['messages']['دانلود نسخه ویندوز لوپ'][$i])
+    ->assertSee($data['messages']['خدمات مشتریان'][$i])
+    ->assertDontSee('new-style/hero-home.webp',false)
+    ->assertDontSee('new-style/windows-banner.jpg',false);
+   if($locale==='en')$body->assertSee('Choose a language');
+   if($locale==='ar')$body->assertSee('id="site-rtl-styles" media="all"',false);
+  }
+  $this->get('/?lang=fa')->assertOk()->assertSee('new-style/hero-home.webp',false)
+   ->assertSee('new-style/windows-banner.jpg',false)->assertSee('گزینش زبان');
+ }
  public function test_public_resources_use_editable_persian_fallback_and_never_mix_application_namespaces():void {
   LocalizationLanguage::create(['code'=>'fr','name'=>'فرانسوی','native_name'=>'Français','direction'=>'ltr','is_enabled'=>true,'sort_order'=>4]);
   LocalizationMessage::create(['scope'=>'customer','message_key'=>'Hello','source_fa'=>'درود','translations'=>['fr'=>'Bonjour']]);

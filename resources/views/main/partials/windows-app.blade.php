@@ -15,7 +15,8 @@
     $build['version'] = $release?->version ?? $fallbackVersion;
     $path = public_path('downloads/windows/'.$build['file']);
     $build['url'] = $siteDownloadsPaused ? '#' : asset('downloads/windows/'.$build['file']);
-    $build['size'] = !$siteDownloadsPaused && is_file($path) ? $faDigits(round(filesize($path) / 1048576)).' مگابایت' : null;
+    $size = !$siteDownloadsPaused && is_file($path) ? round(filesize($path) / 1048576) : null;
+    $build['size'] = $size === null ? null : (app()->getLocale() === 'fa' ? $faDigits($size) : $size).' '.site_text('مگابایت');
     return $build;
   });
   // حدس اولیه‌ی سمت سرور؛ اسکریپت پایین صفحه با navigator.userAgentData دقیق‌ترش می‌کند
@@ -26,17 +27,22 @@
 @endphp
 <section id="windows-app">
   <div class="win-wide">
-    <div class="win-banner reveal">
+    <div class="win-banner reveal @if(app()->getLocale() !== 'fa') win-banner-localized @endif">
+      @if (app()->getLocale() === 'fa')
       <img src="{{ asset('assets/new-style/windows-banner.jpg') }}" width="1774" height="887" loading="lazy"
-           alt="نسخه نرم‌افزار ویندوز لوپ — تجربه‌ی یکپارچه از خدمات و امکانات لوپ، روی رایانه شما">
+           alt="{{ site_text('نسخه ویندوز لوپ') }}">
+      @else
+        <h2>{{ site_text('نسخه ویندوز لوپ') }}</h2>
+      @endif
       {{-- ناحیه‌ی کلیک روی دکمه‌ی «دانلود نسخه ویندوز» داخل تصویر: روی ویندوز مستقیم نسخه‌ی پیشنهادی را دانلود می‌کند --}}
       @if ($siteDownloadsPaused)
-        <a href="#" class="win-banner-hotspot" aria-disabled="true" aria-label="دانلود نسخه ویندوز"></a>
+        <a href="#" class="win-banner-hotspot" aria-disabled="true" aria-label="{{ site_text('دانلود نسخه ویندوز لوپ') }}">
       @elseif ($winDetected['is_windows'])
-        <a href="{{ $suggestedBuild['url'] }}" download class="win-banner-hotspot" aria-label="دانلود نسخه ویندوز (پیشنهادی)"></a>
+        <a href="{{ $suggestedBuild['url'] }}" download class="win-banner-hotspot" aria-label="{{ site_text('دانلود نسخه ویندوز لوپ') }}">
       @else
-        <a href="#windows-downloads" class="win-banner-hotspot" aria-label="دانلود نسخه ویندوز"></a>
+        <a href="#windows-downloads" class="win-banner-hotspot" aria-label="{{ site_text('دانلود نسخه ویندوز لوپ') }}">
       @endif
+      @if(app()->getLocale() !== 'fa'){{ site_text('دانلود نسخه ویندوز لوپ') }}@endif</a>
     </div>
 
     <div id="windows-downloads" class="win-downloads reveal">
@@ -44,8 +50,8 @@
         <a href="{{ $build['url'] }}" @if($siteDownloadsPaused) aria-disabled="true" @else download @endif class="win-dl {{ $build['key'] === $suggestedBuild['key'] ? 'is-suggested' : '' }}" data-build="{{ $build['key'] }}">
           <span class="win-dl-icon">{!! $winIcon !!}</span>
           <span class="win-dl-text">
-            <strong>{{ $build['os'] }}</strong>
-            <small>{{ $build['arch'] }}@if ($build['size']) · {{ $build['size'] }}@endif</small>
+            <strong>{{ site_text($build['os']) }}</strong>
+            <small>{{ site_text($build['arch']) }}@if ($build['size']) · {{ $build['size'] }}@endif</small>
           </span>
           <span class="win-dl-pill">{{ site_text('پیشنهادی') }}</span>
           <svg class="win-dl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0-4-4m4 4 4-4M5 21h14"/></svg>
@@ -54,14 +60,14 @@
     </div>
 
     <p class="win-detected" id="win-detected" @unless ($winDetected['is_windows']) hidden @endunless>
-      {{ site_text('سیستم شما:') }} <b id="win-detected-os">{{ $winDetected['family'] === 'win7' ? 'ویندوز ۷ یا ۸' : 'ویندوز ۱۰ یا ۱۱' }} ({{ $winDetected['bits'] === '64' ? '۶۴' : '۳۲' }} بیتی)</b>
-      {{ site_text('— نسخه‌ی') }} <span class="win-detected-pill">{{ site_text('پیشنهادی') }}</span> {{ site_text('مناسب رایانه‌ی شما مشخص شده است.') }}
+      {{ site_text('سیستم شما:') }} <b id="win-detected-os">{{ site_text($suggestedBuild['os']) }} ({{ site_text($suggestedBuild['arch']) }})</b>
+      <span class="win-detected-pill">{{ site_text('نسخه مناسب رایانه شما مشخص شده است.') }}</span>
     </p>
     <p class="win-detected win-detected--other" id="win-not-windows" @if ($winDetected['is_windows']) hidden @endif>
 {{ site_text('برای نصب نرم‌افزار، لطفاً این صفحه را در رایانه‌ای با سیستم‌عامل ویندوز باز کنید') }}
     </p>
 
-    <p class="win-hint">{{ site_text('نسخه نرم‌افزار:') }} <b>{{ $suggestedBuild['version'] }}</b> {{ site_text('· نمی‌دانید ویندوز شما ۳۲ یا ۶۴ بیتی است؟ در ویندوز به مسیر') }} <b>Settings › System › About</b> {{ site_text('بروید و بخش') }} <b>System type</b> {{ site_text('را ببینید.') }}</p>
+    <p class="win-hint">{{ site_text('نسخه نرم‌افزار:') }} <b>{{ $suggestedBuild['version'] }}</b> · {{ site_text('برای تشخیص ۳۲ یا ۶۴ بیتی بودن ویندوز، در Settings › System › About بخش System type را بررسی کنید.') }}</p>
   </div>
 </section>
 
@@ -75,11 +81,13 @@
     box-shadow:0 20px 40px rgba(0,0,0,.4), 0 30px 60px -22px rgba(217,169,64,.18);
   }
   .win-banner img{width:100%; height:auto; display:block;}
+  .win-banner-localized{padding:clamp(32px,7vw,88px) 20px;text-align:center;background:radial-gradient(ellipse at top,#243e5c,#071426 75%);}
+  .win-banner-localized .win-banner-hotspot{position:static;display:inline-block;width:auto;height:auto;margin-top:16px;padding:12px 20px;color:var(--gold-300);border:1px solid currentColor;}
   /* مختصات دکمه‌ی طلایی در تصویر ۱۷۷۴×۸۸۷ (x: 128–493 ، y: 586–659) */
   .win-banner-hotspot{position:absolute; left:7.2%; top:66.1%; width:20.6%; height:8.3%; border-radius:999px;}
   .win-banner-hotspot:focus-visible{outline:2px solid var(--gold-300); outline-offset:3px;}
 
-  .win-downloads{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:26px; direction:rtl; scroll-margin-top:120px;}
+  .win-downloads{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:26px; scroll-margin-top:120px;}
   .win-dl{
     position:relative; display:flex; align-items:center; gap:12px;
     padding:14px 16px; border-radius:14px;
@@ -137,8 +145,10 @@
   // (navigator.userAgentData) نسخه‌ی واقعی ویندوز و ۳۲/۶۴ بیتی بودن خوانده می‌شود و User-Agent فقط پشتیبان است.
   (function () {
     const ua = navigator.userAgent;
-    const faDigits = s => String(s).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
-    const labels = { win7: 'ویندوز ۷ یا ۸', win10: 'ویندوز ۱۰', win11: 'ویندوز ۱۱' };
+    const labels = @js([
+      'win7' => site_text('ویندوز ۷ و ۸'), 'win10' => site_text('ویندوز ۱۰'), 'win11' => site_text('ویندوز ۱۱'),
+      '64' => site_text('۶۴ بیتی'), '32' => site_text('۳۲ بیتی'),
+    ]);
 
     function apply(isWindows, os, bits) {
       document.getElementById('win-detected').hidden = !isWindows;
@@ -150,13 +160,12 @@
       if (!target) return;
       document.querySelectorAll('.win-dl.is-suggested').forEach(el => el.classList.remove('is-suggested'));
       target.classList.add('is-suggested');
-      document.getElementById('win-detected-os').textContent = labels[os] + ' (' + faDigits(bits) + ' بیتی)';
+      document.getElementById('win-detected-os').textContent = labels[os] + ' (' + labels[bits] + ')';
 
       const hotspot = document.querySelector('.win-banner-hotspot');
       if (target.hasAttribute('download')) {
         hotspot.href = target.href;
         hotspot.setAttribute('download', '');
-        hotspot.setAttribute('aria-label', 'دانلود نسخه ویندوز (پیشنهادی)');
       }
     }
 

@@ -184,11 +184,11 @@
                     <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
                         <img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=756399&Code=JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa' alt='' style='cursor:pointer' code='JqYnk84jEHOMnmsQ6dG36pA2uEMBmdYa'>
                     </a>
-                    <img src="{{ asset('assets/images/samandehi.png') }}" alt="نشان ساماندهی" width="64" height="64">
+                    <img src="{{ asset('assets/images/samandehi.png') }}" alt="{{ site_text('نشان ساماندهی') }}" width="64" height="64">
                     <a href="https://ecunion.ir/verify/clpiran.com?token=73466486ae842901896d"
                        referrerpolicy="origin" rel="noopener">
                         <img class="loop-union-badge" src="{{ asset('assets/images/ecunion-verification.svg') }}"
-                             alt="استعلام عضویت در اتحادیه کشوری کسب‌وکارهای مجازی"
+                             alt="{{ site_text('استعلام عضویت در اتحادیه کشوری کسب‌وکارهای مجازی') }}"
                              width="96" height="144" loading="lazy">
                     </a>
                 </div>

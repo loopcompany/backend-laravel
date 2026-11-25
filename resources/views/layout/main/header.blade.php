@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="platform-verification" content="pljfodpclt" />
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>@yield('meta_title', 'لوپ | پلتفرم خدمات تعمیرات لپ تاپ و کامپیوتر')</title>
     <meta name="description" content="@yield('meta_description', 'لوپ ارائه‌دهنده خدمات تخصصی تعمیرات لپ‌تاپ، کامپیوتر با تیمی مجرب و قیمت‌های مناسب')">

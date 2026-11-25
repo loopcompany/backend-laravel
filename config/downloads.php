@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'site_paused' => env('SITE_APP_DOWNLOADS_PAUSED', true),
     // Store URLs are supplied by the product owner; never substitute a store homepage.
     'user' => [
         'bazaar' => env('USER_BAZAAR_URL'),

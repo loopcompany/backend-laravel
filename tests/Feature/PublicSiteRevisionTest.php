@@ -35,6 +35,7 @@ class PublicSiteRevisionTest extends TestCase
 
     public function test_public_pages_share_desktop_and_mobile_navigation_with_real_destinations(): void
     {
+        config(['downloads.site_paused' => false]);
         if (getenv('LOOP_SITE_PREVIEW')) \Illuminate\Support\Facades\URL::forceRootUrl('http://127.0.0.1:8765');
         $reference=null;
         foreach (['/','/about','/faqs','/contact','/blogs','/careers'] as $path) {
@@ -64,6 +65,7 @@ class PublicSiteRevisionTest extends TestCase
     // demanded six live-ordered channels including that web entry.
     public function test_download_cards_have_five_ordered_channels_with_ios_coming_soon_and_no_web_app_entry(): void
     {
+        config(['downloads.site_paused' => false]);
         $xpath=$this->xpath($this->get('/')->assertOk()->getContent());
         $cards=$xpath->query('//div[@class="app-card"]');
         $this->assertCount(3,$cards);
@@ -89,5 +91,19 @@ class PublicSiteRevisionTest extends TestCase
         $cta=$xpath->query('//div[@class="eco-cta reveal"]/a');
         $this->assertCount(3,$cta);
         $this->assertSame('#windows-app',$cta[1]->getAttribute('href'));
+    }
+
+    public function test_paused_site_downloads_do_not_emit_file_or_store_links(): void
+    {
+        config(['downloads.site_paused' => true]);
+        $response = $this->withHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')->get('/')->assertOk();
+        $xpath = $this->xpath($response->getContent());
+        $links = $xpath->query('//section[@id="apps"]//a[contains(@class,"store-btn")] | //section[@id="windows-app"]//a');
+        $this->assertCount(17, $links);
+        foreach ($links as $link) {
+            $this->assertSame('#', $link->getAttribute('href'));
+            $this->assertFalse($link->hasAttribute('download'));
+        }
+        $this->assertCount(2, $xpath->query('//nav[@class="loop-primary-links"]/a[@href="#"]'));
     }
 }

@@ -519,8 +519,12 @@
   $existingMockupImage = asset('assets/new-style/mockup1-1.png');
   $existingMockupImage2 = asset('assets/new-style/mockup22-2.png');
   $existingMockupImage3 = asset('assets/new-style/mockup3-3.png');
-  $androidDownloads = app(\App\Services\AppReleaseService::class)->latestDownloads('android');
-  $downloadLinks = function (string $app, string $web) use ($androidDownloads) {
+  $siteDownloadsPaused = config('downloads.site_paused');
+  $androidDownloads = $siteDownloadsPaused ? [] : app(\App\Services\AppReleaseService::class)->latestDownloads('android');
+  $downloadLinks = function (string $app, string $web) use ($androidDownloads, $siteDownloadsPaused) {
+    if ($siteDownloadsPaused) {
+      return ['android' => '#', 'bazaar' => '#', 'myket' => '#', 'ios' => null, 'ios-web' => '#'];
+    }
     $release = $androidDownloads[($app === 'technician' ? 'technician' : 'customer').':universal'] ?? null;
     return [
       'android' => asset('downloads/android/'.($release?->artifact ?? ($app === 'technician' ? 'LoopTech-1.0.2.apk' : 'LoopUser-1.0.3.apk'))),
@@ -588,7 +592,7 @@
               @foreach ($appPlatforms as $platform)
                 @if (!empty($app['links'][$platform['key']]))
                   <a href="{{ $app['links'][$platform['key']] }}" class="store-btn store-btn--{{ $platform['key'] }}"
-                     @if ($platform['key'] === 'android') download @elseif ($app['links'][$platform['key']] !== '#') target="_blank" rel="noopener noreferrer" @endif>
+                     @if ($app['links'][$platform['key']] === '#') aria-disabled="true" @elseif ($platform['key'] === 'android') download @else target="_blank" rel="noopener noreferrer" @endif>
                     {!! $platform['icon'] !!}<span class="st-text"><strong>{{ $platform['label'] }}</strong></span>
                   </a>
                 @elseif (!empty($platform['soon']))

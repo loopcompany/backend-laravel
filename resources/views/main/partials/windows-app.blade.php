@@ -1,6 +1,7 @@
 @php
   // فایل‌های نصب ویندوز روی سرور در public/downloads/windows قرار می‌گیرند (در گیت و ایمیج داکر نیستند)
   $fallbackVersion = '1.1.9';
+  $siteDownloadsPaused = config('downloads.site_paused');
   $windowsDownloads = app(\App\Services\AppReleaseService::class)->latestDownloads('windows');
   $faDigits = fn ($v) => strtr((string) $v, ['0'=>'۰','1'=>'۱','2'=>'۲','3'=>'۳','4'=>'۴','5'=>'۵','6'=>'۶','7'=>'۷','8'=>'۸','9'=>'۹']);
   $windowsBuilds = collect([
@@ -8,13 +9,13 @@
     ['key' => 'win10-32', 'variant' => 'win10-ia32', 'os' => 'ویندوز ۱۰ و ۱۱', 'arch' => '۳۲ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-10-11-32bit-Setup.exe"],
     ['key' => 'win7-64',  'variant' => 'win7-x64', 'os' => 'ویندوز ۷ و ۸',   'arch' => '۶۴ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-7-8-64bit-Setup.exe"],
     ['key' => 'win7-32',  'variant' => 'win7-ia32', 'os' => 'ویندوز ۷ و ۸',   'arch' => '۳۲ بیتی', 'file' => "Loop-{$fallbackVersion}-Windows-7-8-32bit-Setup.exe"],
-  ])->map(function ($build) use ($faDigits, $windowsDownloads, $fallbackVersion) {
+  ])->map(function ($build) use ($faDigits, $windowsDownloads, $fallbackVersion, $siteDownloadsPaused) {
     $release = $windowsDownloads['desktop:'.$build['variant']] ?? null;
     $build['file'] = $release?->artifact ?? $build['file'];
     $build['version'] = $release?->version ?? $fallbackVersion;
     $path = public_path('downloads/windows/'.$build['file']);
-    $build['url'] = asset('downloads/windows/'.$build['file']);
-    $build['size'] = is_file($path) ? $faDigits(round(filesize($path) / 1048576)).' مگابایت' : null;
+    $build['url'] = $siteDownloadsPaused ? '#' : asset('downloads/windows/'.$build['file']);
+    $build['size'] = !$siteDownloadsPaused && is_file($path) ? $faDigits(round(filesize($path) / 1048576)).' مگابایت' : null;
     return $build;
   });
   // حدس اولیه‌ی سمت سرور؛ اسکریپت پایین صفحه با navigator.userAgentData دقیق‌ترش می‌کند
@@ -29,7 +30,9 @@
       <img src="{{ asset('assets/new-style/windows-banner.jpg') }}" width="1774" height="887" loading="lazy"
            alt="نسخه نرم‌افزار ویندوز لوپ — تجربه‌ی یکپارچه از خدمات و امکانات لوپ، روی رایانه شما">
       {{-- ناحیه‌ی کلیک روی دکمه‌ی «دانلود نسخه ویندوز» داخل تصویر: روی ویندوز مستقیم نسخه‌ی پیشنهادی را دانلود می‌کند --}}
-      @if ($winDetected['is_windows'])
+      @if ($siteDownloadsPaused)
+        <a href="#" class="win-banner-hotspot" aria-disabled="true" aria-label="دانلود نسخه ویندوز"></a>
+      @elseif ($winDetected['is_windows'])
         <a href="{{ $suggestedBuild['url'] }}" download class="win-banner-hotspot" aria-label="دانلود نسخه ویندوز (پیشنهادی)"></a>
       @else
         <a href="#windows-downloads" class="win-banner-hotspot" aria-label="دانلود نسخه ویندوز"></a>
@@ -38,7 +41,7 @@
 
     <div id="windows-downloads" class="win-downloads reveal">
       @foreach ($windowsBuilds as $build)
-        <a href="{{ $build['url'] }}" download class="win-dl {{ $build['key'] === $suggestedBuild['key'] ? 'is-suggested' : '' }}" data-build="{{ $build['key'] }}">
+        <a href="{{ $build['url'] }}" @if($siteDownloadsPaused) aria-disabled="true" @else download @endif class="win-dl {{ $build['key'] === $suggestedBuild['key'] ? 'is-suggested' : '' }}" data-build="{{ $build['key'] }}">
           <span class="win-dl-icon">{!! $winIcon !!}</span>
           <span class="win-dl-text">
             <strong>{{ $build['os'] }}</strong>
@@ -150,9 +153,11 @@
       document.getElementById('win-detected-os').textContent = labels[os] + ' (' + faDigits(bits) + ' بیتی)';
 
       const hotspot = document.querySelector('.win-banner-hotspot');
-      hotspot.href = target.href;
-      hotspot.setAttribute('download', '');
-      hotspot.setAttribute('aria-label', 'دانلود نسخه ویندوز (پیشنهادی)');
+      if (target.hasAttribute('download')) {
+        hotspot.href = target.href;
+        hotspot.setAttribute('download', '');
+        hotspot.setAttribute('aria-label', 'دانلود نسخه ویندوز (پیشنهادی)');
+      }
     }
 
     function fromUserAgent() {

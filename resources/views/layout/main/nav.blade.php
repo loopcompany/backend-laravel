@@ -1,8 +1,8 @@
 @php
     $headerPhone = $globalContacts->where('type', 'phone')->first();
     $primaryLinks = [
-        ['label'=>'دانلود اپلیکیشن‌های هوشمند', 'url'=>route('web.home').'#apps'],
-        ['label'=>'دانلود نسخه ویندوز لوپ', 'url'=>route('web.home').'#windows-app'],
+        ['label'=>'دانلود اپلیکیشن‌های هوشمند', 'url'=>config('downloads.site_paused') ? '#' : route('web.home').'#apps'],
+        ['label'=>'دانلود نسخه ویندوز لوپ', 'url'=>config('downloads.site_paused') ? '#' : route('web.home').'#windows-app'],
         ['label'=>'پنل کاربر', 'url'=>rtrim(config('app.user_panel_url'), '/')],
         ['label'=>'پنل تکنسین', 'url'=>rtrim(config('app.technician_panel_url'), '/')],
         ['label'=>'ثبت‌نام تکنسین', 'url'=>route('web.technician.register-form')],
